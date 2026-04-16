@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Đăng ký</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="card-header">
+        <h1 class="title">Đăng ký</h1>
+        <a href="login.html" class="switch-link">Đăng nhập <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <form class="form-main" action="#" method="post">
+        <div class="input-group">
+          <label for="fullname" class="input-label">Họ và tên</label>
+          <div class="input-field">
+            <i class="fas fa-user-circle"></i>
+            <input type="text" id="fullname" name="fullname" placeholder="Nguyễn Văn A" autocomplete="name" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="contact" class="input-label">Số điện thoại / Email</label>
+          <div class="input-field">
+            <i class="fas fa-envelope"></i>
+            <input type="text" id="contact" name="contact" placeholder="Nhập số điện thoại hoặc email" autocomplete="email" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="password" class="input-label">Mật khẩu</label>
+          <div class="input-field">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" name="password" placeholder="Ít nhất 8 ký tự" autocomplete="new-password" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="confirm_password" class="input-label">Xác nhận mật khẩu</label>
+          <div class="input-field">
+            <i class="fas fa-check-circle"></i>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Nhập lại mật khẩu" autocomplete="new-password" required>
+          </div>
+        </div>
+
+        <button type="submit" class="auth-btn">
+          Đăng ký
+          <i class="fas fa-user-plus"></i>
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>hoặc</span>
+      </div>
+
+      <p class="switch-prompt">
+        Đã có tài khoản? 
+        <a href="login.html" class="prompt-link">Đăng nhập</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
