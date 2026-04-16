@@ -3,110 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Bác sĩ - TT Medical Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>Dashboard - TT Medical</title>
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="../../assets/images/logo.png" alt="Logo TT Medical" class="logo-img">
+                <span class="logo-text">TT Medical</span>
+            </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <img src="../../assets/images/logo.png" alt="Logo" class="sidebar-logo">
-            <span>TT Medical</span>
-        </div>
-        <ul class="menu">
-            <div class="menu-title">Quản lý chung</div>
-            <li class="menu-item active"><i class="fa-solid fa-user-doctor"></i> Quản lý Bác sĩ</li>
-            <li class="menu-item"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
-            <li class="menu-item"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
-            <li class="menu-item"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
-        </ul>
-    </aside>
+            <div class="sidebar-menu">
+                <p class="menu-label">QUẢN LÝ CHUNG</p>
+                <ul>
+                    <li class="active">
+                        <a href="#"><i class="fas fa-user-md"></i> Quản lý Bác sĩ</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-users"></i> Quản lý Tài khoản</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-newspaper"></i> Quản lý Bài viết</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-calendar-check"></i> Quản lý Lịch hẹn</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-stethoscope"></i> Quản lý Chuyên khoa</a>
+                    </li>
+                    <li>
+                        <a href="#"><i class="fas fa-comments-medical"></i> Quản lý Hỏi đáp</a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
 
-    <main class="main-wrapper">
-        <header class="topbar">
-            <div class="bars"><i class="fa-solid fa-bars" style="cursor:pointer; font-size: 20px;"></i></div>
-            
-            <div class="user-profile" onclick="confirmLogout()" title="Nhấn để đăng xuất">
-                <div style="background-color: var(--primary-color); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <i class="fa-solid fa-user"></i>
+        <main class="main-content">
+            <header class="topbar">
+                <h2>Tổng quan hệ thống</h2>
+                <div class="user-profile">
+                    <span>Xin chào, <strong>Admin</strong></span>
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=10b981&color=fff" alt="Avatar" class="avatar">
                 </div>
-                <span>Admin</span>
-                <i class="fa-solid fa-caret-down" style="font-size: 14px; margin-left: 2px;"></i>
-            </div>
-        </header>
+            </header>
 
-        <section class="content">
-            <div class="page-header">
-                <h1 class="page-title">Quản lý Bác sĩ</h1>
-                <button class="btn-add" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ảnh</th>
-                            <th>Họ và tên</th>
-                            <th>Ngày sinh</th>
-                            <th>Giới tính</th>
-                            <th>Địa chỉ</th>
-                            <th>Chức vụ</th>
-                            <th>Khoa</th>
-                            <th>SĐT</th>
-                            <th>Email</th>
-                            <th>Tên đăng nhập</th>
-                            <th>Mật khẩu</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="doctorTableBody">
-                        </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-
-    <div id="doctorModal" class="modal">
-        <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
-                <h2 id="modalTitle" style="font-size: 20px;">Thêm mới Bác sĩ</h2>
-                <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
-            </div>
-            
-            <form id="doctorForm">
-                <input type="hidden" id="d_id">
-                
-                <div class="form-grid">
-                    <div class="form-group"><label>Họ và tên</label><input type="text" id="d_name" required></div>
-                    <div class="form-group"><label>Ngày sinh</label><input type="date" id="d_dob" required></div>
-                    <div class="form-group"><label>Giới tính</label>
-                        <select id="d_gender" required>
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                        </select>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>Tổng Bác Sĩ</h3>
+                        <h2 id="total-doctors">124</h2>
+                        <p class="text-success"><i class="fas fa-arrow-up"></i> Tăng 2% tháng này</p>
                     </div>
-                    <div class="form-group"><label>Địa chỉ</label><input type="text" id="d_address" required></div>
-                    <div class="form-group"><label>Chức vụ</label><input type="text" id="d_role" required></div>
-                    <div class="form-group"><label>Khoa</label><input type="text" id="d_dept" required></div>
-                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="d_phone" required></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="d_email" required></div>
-                    <div class="form-group"><label>Tên đăng nhập</label><input type="text" id="d_username" required></div>
-                    <div class="form-group"><label>Mật khẩu</label><input type="text" id="d_password" required></div>
-                    <div class="form-group" style="grid-column: span 2;"><label>Link Ảnh Đại Diện (Tuỳ chọn)</label><input type="text" id="d_img"></div>
+                    <div class="stat-icon icon-green">
+                        <i class="fas fa-user-md"></i>
+                    </div>
                 </div>
-                
-                <div style="text-align: right; margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="closeModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
-                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu dữ liệu</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <script src="../../assets/js/doctor.js"></script>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>Tổng Bệnh Nhân</h3>
+                        <h2 id="total-patients">1,042</h2>
+                        <p class="text-success"><i class="fas fa-arrow-up"></i> Tăng 15% tháng này</p>
+                    </div>
+                    <div class="stat-icon icon-blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>Lịch Khám Hôm Nay</h3>
+                        <h2 id="total-appointments">48</h2>
+                        <p class="text-warning"><i class="fas fa-clock"></i> 12 lịch đang chờ</p>
+                    </div>
+                    <div class="stat-icon icon-orange">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>Tổng Bài Viết</h3>
+                        <h2 id="total-news">85</h2>
+                        <p class="text-muted">Đã xuất bản</p>
+                    </div>
+                    <div class="stat-icon icon-purple">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="content-box">
+                    <h3>Khu vực hiển thị danh sách (Bảng)</h3>
+                    <p style="color: #6b7280; margin-top: 10px;">(Sau này bạn sẽ nhúng thẻ <code>&lt;table&gt;</code> danh sách bác sĩ hoặc tài khoản vào đây)</p>
+                </div>
+            </div>
+        </main>
+    </div>
 </body>
 </html>
