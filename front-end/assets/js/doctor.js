@@ -1,4 +1,4 @@
-// Khởi tạo mảng rỗng, dữ liệu sẽ do bạn tự thêm trên web
+// Khởi tạo mảng rỗng
 let doctors = [];
 
 const tbody = document.getElementById('doctorTableBody');
@@ -6,17 +6,45 @@ const modal = document.getElementById('doctorModal');
 const form = document.getElementById('doctorForm');
 const modalTitle = document.getElementById('modalTitle');
 
-// Format hiển thị số tiền VND
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+// =======================================================
+// TỰ ĐỘNG THÊM DẤU PHẨY KHI GÕ TIỀN VÀO Ô PHÍ KHÁM
+// =======================================================
+const phiKhamInput = document.getElementById('d_phi_kham');
+if (phiKhamInput) {
+    phiKhamInput.addEventListener('input', function(e) {
+        // Loại bỏ mọi ký tự không phải là số (để tránh lỗi)
+        let value = this.value.replace(/\D/g, '');
+        // Nếu có giá trị thì format thêm dấu phẩy
+        if (value !== '') {
+            this.value = Number(value).toLocaleString('en-US');
+        } else {
+            this.value = '';
+        }
+    });
 }
 
+// Format hiển thị số tiền VND ngoài bảng
+function formatCurrency(amount) {
+    if (!amount) return "0 VNĐ";
+    return Number(amount).toLocaleString('en-US') + ' VNĐ';
+}
+
+// Format hiển thị ngày sinh (Từ YYYY-MM-DD sang DD/MM/YYYY)
+function formatDate(dateString) {
+    if (!dateString) return "";
+    const parts = dateString.split("-");
+    if (parts.length !== 3) return dateString;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+// =======================================================
+// HÀM RENDER DỮ LIỆU RA BẢNG
+// =======================================================
 function renderTable() {
     tbody.innerHTML = '';
     
-    // Nếu mảng trống, có thể hiển thị một thông báo nhỏ (Tùy chọn)
     if (doctors.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có dữ liệu bác sĩ nào. Vui lòng thêm mới.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có dữ liệu bác sĩ nào. Vui lòng thêm mới.</td></tr>`;
         return;
     }
 
@@ -27,14 +55,20 @@ function renderTable() {
             `<span class="badge" style="background-color: #fee2e2; color: #991b1b;">Đã khóa</span>`;
 
         const tr = document.createElement('tr');
+        // Cập nhật đầy đủ 14 cột tương ứng với thead
         tr.innerHTML = `
-            <td><img src="${doc.anh_dai_dien || 'https://ui-avatars.com/api/?name=BS&background=random'}" class="doctor-avatar" width="40" style="border-radius:50%"></td>
-            <td class="doctor-name">${doc.ho_ten}</td>
+            <td><img src="${doc.anh_dai_dien || 'https://ui-avatars.com/api/?name=BS&background=random'}" class="doctor-avatar" width="40" height="40" style="border-radius:50%; object-fit: cover;"></td>
+            <td class="doctor-name" style="font-weight: 600;">${doc.ho_ten}</td>
+            <td>${formatDate(doc.ngay_sinh)}</td>
             <td>${genderText}</td>
             <td>${doc.so_dien_thoai}</td>
+            <td>${doc.email}</td>
+            <td>${doc.dia_chi}</td>
             <td>${doc.chuyen_khoa}</td>
             <td>${doc.nam_kinh_nghiem} năm</td>
             <td style="color: #ef4444; font-weight: 600;">${formatCurrency(doc.phi_kham)}</td>
+            <td>${doc.ten_dang_nhap}</td>
+            <td>${doc.mat_khau}</td>
             <td>${statusBadge}</td>
             <td>
                 <button class="action-btn edit" onclick="editDoctor(${doc.id})"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -73,7 +107,10 @@ function editDoctor(id) {
     
     document.getElementById('d_chuyen_khoa').value = doc.chuyen_khoa;
     document.getElementById('d_nam_kinh_nghiem').value = doc.nam_kinh_nghiem;
-    document.getElementById('d_phi_kham').value = doc.phi_kham;
+    
+    // Khi mở form sửa, cũng format lại tiền có dấu phẩy
+    document.getElementById('d_phi_kham').value = doc.phi_kham ? Number(doc.phi_kham).toLocaleString('en-US') : '';
+    
     document.getElementById('d_anh_dai_dien').value = doc.anh_dai_dien;
     document.getElementById('d_tieu_su').value = doc.tieu_su;
 
@@ -92,22 +129,29 @@ form.addEventListener('submit', function(e) {
     e.preventDefault();
 
     const idValue = document.getElementById('d_id').value;
+    
+    // Lấy giá trị tiền và TÁCH DẤU PHẨY RA trước khi lưu vào mảng
+    let rawPhiKham = document.getElementById('d_phi_kham').value.replace(/,/g, '');
+
     const newDoc = {
         ten_dang_nhap: document.getElementById('d_ten_dang_nhap').value,
         mat_khau: document.getElementById('d_mat_khau').value,
         email: document.getElementById('d_email').value,
-        trang_thai: 1, // Mặc định hoạt động
+        trang_thai: 1, 
         
         ho_ten: document.getElementById('d_ho_ten').value,
         ngay_sinh: document.getElementById('d_ngay_sinh').value,
-        gioi_tinh: parseInt(document.getElementById('d_gioi_tinh').value), // 1 là Nam, 0 là Nữ
+        gioi_tinh: parseInt(document.getElementById('d_gioi_tinh').value), 
         so_dien_thoai: document.getElementById('d_so_dien_thoai').value,
         dia_chi: document.getElementById('d_dia_chi').value,
         anh_dai_dien: document.getElementById('d_anh_dai_dien').value,
         
         chuyen_khoa: document.getElementById('d_chuyen_khoa').value,
         nam_kinh_nghiem: parseInt(document.getElementById('d_nam_kinh_nghiem').value),
-        phi_kham: parseFloat(document.getElementById('d_phi_kham').value),
+        
+        // Lưu giá trị tiền đã sạch dấu phẩy (dạng số thực)
+        phi_kham: parseFloat(rawPhiKham),
+        
         tieu_su: document.getElementById('d_tieu_su').value
     };
 
@@ -117,7 +161,7 @@ form.addEventListener('submit', function(e) {
             doctors[index] = { ...doctors[index], ...newDoc };
         }
     } else {
-        newDoc.id = Date.now(); // Tạo ID tạm thời
+        newDoc.id = Date.now(); 
         doctors.push(newDoc);
     }
 
@@ -125,5 +169,4 @@ form.addEventListener('submit', function(e) {
     closeModal();
 });
 
-// Chạy lần đầu
 renderTable();

@@ -22,6 +22,7 @@
             <li class="menu-item" onclick="switchTab('account', this)"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
             <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
             <li class="menu-item" onclick="switchTab('appointment', this)"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
+            <li class="menu-item" onclick="switchTab('qa', this)"><i class="fa-solid fa-circle-question"></i> Quản lý Câu hỏi</li>
         </ul>
     </aside>
 
@@ -45,16 +46,21 @@
             </div>
 
             <div class="table-container">
-                <table>
+                <table style="white-space: nowrap;">
                     <thead>
                         <tr>
                             <th>Ảnh</th>
                             <th>Họ và tên</th>
+                            <th>Ngày sinh</th>
                             <th>Giới tính</th>
                             <th>SĐT</th>
+                            <th>Email</th>
+                            <th>Địa chỉ</th>
                             <th>Chuyên khoa</th>
                             <th>Kinh nghiệm</th>
                             <th>Phí khám (VNĐ)</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Mật khẩu</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
@@ -71,42 +77,28 @@
             </div>
 
             <div class="table-container">
-                <table>
+                <table style="white-space: nowrap;">
                     <thead>
                         <tr>
+                            <th>Ảnh</th>
                             <th>ID</th>
                             <th>Tên đăng nhập</th>
+                            <th>Mật khẩu</th>
                             <th>Họ và tên</th>
+                            <th>Ngày sinh</th>
+                            <th>Giới tính</th>
+                            <th>SĐT</th>
                             <th>Email</th>
+                            <th>Địa chỉ</th>
+                            <th>Nhóm máu</th>
+                            <th>Tiền sử bệnh</th>
                             <th>Vai trò</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="accountTableBody">
-                        <tr>
-                            <td>1</td>
-                            <td style="font-weight: 600;">thieunguyen</td>
-                            <td>Thiệu Nguyễn</td>
-                            <td>thieu@gmail.com</td>
-                            <td><span class="badge" style="background-color: #f3e8ff; color: #7e22ce;">Admin</span></td>
-                            <td><span class="badge" style="background-color: #dcfce7; color: #166534;">Hoạt động</span></td>
-                            <td>
-                                <button class="action-btn edit"><i class="fa-solid fa-pen"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td style="font-weight: 600;">bn_nguyenvana</td>
-                            <td>Nguyễn Văn A</td>
-                            <td>nva@gmail.com</td>
-                            <td><span class="badge" style="background-color: #e0e7ff; color: #4338ca;">Bệnh nhân</span></td>
-                            <td><span class="badge" style="background-color: #fee2e2; color: #991b1b;">Đã khóa</span></td>
-                            <td>
-                                <button class="action-btn edit"><i class="fa-solid fa-lock-open" style="color: #10b981;"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </section>
@@ -114,14 +106,16 @@
         <section id="section-post" class="content" style="display: none;">
             <div class="page-header">
                 <h1 class="page-title">Quản lý Bài viết</h1>
-                <button class="btn-add"><i class="fa-solid fa-plus"></i> Đăng bài</button>
+                <button class="btn-add" onclick="openPostModal()"><i class="fa-solid fa-plus"></i> Đăng bài</button>
             </div>
 
             <div class="table-container">
-                <table>
+                <table style="white-space: nowrap;">
                     <thead>
                         <tr>
+                            <th>Ảnh minh họa</th>
                             <th>Tiêu đề bài viết</th>
+                            <th>Nội dung</th>
                             <th>Danh mục</th>
                             <th>Tác giả</th>
                             <th>Ngày xuất bản</th>
@@ -129,17 +123,7 @@
                         </tr>
                     </thead>
                     <tbody id="postTableBody">
-                        <tr>
-                            <td style="font-weight: 600;">Cách phòng ngừa cảm cúm giao mùa</td>
-                            <td>Y học thường thức</td>
-                            <td>Admin</td>
-                            <td>16/04/2026</td>
-                            <td>
-                                <button class="action-btn edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="action-btn delete"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </section>
@@ -150,7 +134,7 @@
             </div>
 
             <div class="table-container">
-                <table>
+                <table style="white-space: nowrap;">
                     <thead>
                         <tr>
                             <th>Mã LH</th>
@@ -158,27 +142,45 @@
                             <th>Bác sĩ phụ trách</th>
                             <th>Ngày khám</th>
                             <th>Khung giờ</th>
+                            <th>Triệu chứng</th>
+                            <th>Ghi chú của BS</th>
+                            <th>Ngày đặt lịch</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="appointmentTableBody">
-                        <tr>
-                            <td style="font-weight: bold; color: var(--primary-color);">#LK001</td>
-                            <td style="font-weight: 600;">Nguyễn Văn A</td>
-                            <td>BS. Trần Thị Thúy Hằng</td>
-                            <td>20/04/2026</td>
-                            <td>08:00 - 09:00</td>
-                            <td><span class="badge" style="background-color: #fef08a; color: #854d0e;"><i class="fa-solid fa-clock"></i> Chờ duyệt</span></td>
-                            <td>
-                                <button class="action-btn edit"><i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 20px;"></i></button>
-                                <button class="action-btn delete"><i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 20px;"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </section>
+
+        <section id="section-qa" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Hỏi đáp Y khoa</h1>
+            </div>
+            <div class="table-container">
+                <table style="white-space: nowrap;">
+                    <thead>
+                        <tr>
+                            <th>Mã CH</th>
+                            <th>Bệnh nhân hỏi</th>
+                            <th>Chuyên khoa</th>
+                            <th>Tiêu đề câu hỏi</th>
+                            <th>Nội dung câu hỏi</th>
+                            <th>Bác sĩ trả lời</th>
+                            <th>Nội dung trả lời</th>
+                            <th>Ngày gửi</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qaTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
     </main>
 
     <div id="doctorModal" class="modal">
@@ -223,7 +225,7 @@
                         </select>
                     </div>
                     <div class="form-group"><label>Năm kinh nghiệm</label><input type="number" id="d_nam_kinh_nghiem" required></div>
-                    <div class="form-group"><label>Phí khám (VNĐ)</label><input type="number" id="d_phi_kham" required></div>
+                    <div class="form-group"><label>Phí khám (VNĐ)</label><input type="text" id="d_phi_kham" required></div>
                     <div class="form-group"><label>Link Ảnh Đại Diện</label><input type="text" id="d_anh_dai_dien"></div>
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Tiểu sử / Giới thiệu</label>
@@ -239,7 +241,43 @@
         </div>
     </div>
 
+    <div id="postModal" class="modal">
+        <div class="modal-content" style="width: 700px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                <h2 id="postModalTitle" style="font-size: 20px;">Đăng bài viết mới</h2>
+                <button onclick="closePostModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+            </div>
+            <form id="postForm" style="margin-top: 15px;">
+                <input type="hidden" id="p_id">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                    <div class="form-group"><label>Tiêu đề bài viết</label><input type="text" id="p_tieu_de" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Danh mục</label>
+                            <select id="p_danh_muc" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                                <option value="1">Y học thường thức</option>
+                                <option value="2">Mẹ và bé</option>
+                                <option value="3">Dinh dưỡng</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Link Ảnh minh họa</label><input type="text" id="p_anh_thu_nho" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nội dung bài viết</label>
+                        <textarea id="p_noi_dung" rows="6" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closePostModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
+                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Đăng bài</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="../../assets/js/dashboard.js"></script>
     <script src="../../assets/js/doctor.js"></script>
-</body>
+    
+    </body>
 </html>
