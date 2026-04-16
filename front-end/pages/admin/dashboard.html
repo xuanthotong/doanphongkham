@@ -18,10 +18,10 @@
         </div>
         <ul class="menu">
             <div class="menu-title">Quản lý chung</div>
-            <li class="menu-item active"><i class="fa-solid fa-user-doctor"></i> Quản lý Bác sĩ</li>
-            <li class="menu-item"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
-            <li class="menu-item"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
-            <li class="menu-item"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
+            <li class="menu-item active" onclick="switchTab('doctor', this)"><i class="fa-solid fa-user-doctor"></i> Quản lý Bác sĩ</li>
+            <li class="menu-item" onclick="switchTab('account', this)"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
+            <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
+            <li class="menu-item" onclick="switchTab('appointment', this)"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
         </ul>
     </aside>
 
@@ -38,7 +38,7 @@
             </div>
         </header>
 
-        <section class="content">
+        <section id="section-doctor" class="content">
             <div class="page-header">
                 <h1 class="page-title">Quản lý Bác sĩ</h1>
                 <button class="btn-add" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
@@ -50,21 +50,132 @@
                         <tr>
                             <th>Ảnh</th>
                             <th>Họ và tên</th>
-                            <th>Ngày sinh</th>
                             <th>Giới tính</th>
-                            <th>Địa chỉ</th>
-                            <th>Chức vụ</th>
-                            <th>Khoa</th>
                             <th>SĐT</th>
-                            <th>Email</th>
-                            <th>Tên đăng nhập</th>
-                            <th>Mật khẩu</th>
+                            <th>Chuyên khoa</th>
+                            <th>Kinh nghiệm</th>
+                            <th>Phí khám (VNĐ)</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="doctorTableBody">
                         </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-account" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý Tài khoản</h1>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountTableBody">
+                        <tr>
+                            <td>1</td>
+                            <td style="font-weight: 600;">thieunguyen</td>
+                            <td>Thiệu Nguyễn</td>
+                            <td>thieu@gmail.com</td>
+                            <td><span class="badge" style="background-color: #f3e8ff; color: #7e22ce;">Admin</span></td>
+                            <td><span class="badge" style="background-color: #dcfce7; color: #166534;">Hoạt động</span></td>
+                            <td>
+                                <button class="action-btn edit"><i class="fa-solid fa-pen"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td style="font-weight: 600;">bn_nguyenvana</td>
+                            <td>Nguyễn Văn A</td>
+                            <td>nva@gmail.com</td>
+                            <td><span class="badge" style="background-color: #e0e7ff; color: #4338ca;">Bệnh nhân</span></td>
+                            <td><span class="badge" style="background-color: #fee2e2; color: #991b1b;">Đã khóa</span></td>
+                            <td>
+                                <button class="action-btn edit"><i class="fa-solid fa-lock-open" style="color: #10b981;"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-post" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý Bài viết</h1>
+                <button class="btn-add"><i class="fa-solid fa-plus"></i> Đăng bài</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tiêu đề bài viết</th>
+                            <th>Danh mục</th>
+                            <th>Tác giả</th>
+                            <th>Ngày xuất bản</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="postTableBody">
+                        <tr>
+                            <td style="font-weight: 600;">Cách phòng ngừa cảm cúm giao mùa</td>
+                            <td>Y học thường thức</td>
+                            <td>Admin</td>
+                            <td>16/04/2026</td>
+                            <td>
+                                <button class="action-btn edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="action-btn delete"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-appointment" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý Lịch hẹn</h1>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã LH</th>
+                            <th>Bệnh nhân</th>
+                            <th>Bác sĩ phụ trách</th>
+                            <th>Ngày khám</th>
+                            <th>Khung giờ</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointmentTableBody">
+                        <tr>
+                            <td style="font-weight: bold; color: var(--primary-color);">#LK001</td>
+                            <td style="font-weight: 600;">Nguyễn Văn A</td>
+                            <td>BS. Trần Thị Thúy Hằng</td>
+                            <td>20/04/2026</td>
+                            <td>08:00 - 09:00</td>
+                            <td><span class="badge" style="background-color: #fef08a; color: #854d0e;"><i class="fa-solid fa-clock"></i> Chờ duyệt</span></td>
+                            <td>
+                                <button class="action-btn edit"><i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 20px;"></i></button>
+                                <button class="action-btn delete"><i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 20px;"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </section>
@@ -80,23 +191,44 @@
             <form id="doctorForm">
                 <input type="hidden" id="d_id">
                 
+                <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin đăng nhập</h3>
                 <div class="form-grid">
-                    <div class="form-group"><label>Họ và tên</label><input type="text" id="d_name" required></div>
-                    <div class="form-group"><label>Ngày sinh</label><input type="date" id="d_dob" required></div>
+                    <div class="form-group"><label>Tên đăng nhập</label><input type="text" id="d_ten_dang_nhap" required></div>
+                    <div class="form-group"><label>Mật khẩu</label><input type="text" id="d_mat_khau" required></div>
+                    <div class="form-group" style="grid-column: span 2;"><label>Email</label><input type="email" id="d_email" required></div>
+                </div>
+
+                <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin cá nhân</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Họ và tên</label><input type="text" id="d_ho_ten" required></div>
+                    <div class="form-group"><label>Ngày sinh</label><input type="date" id="d_ngay_sinh" required></div>
                     <div class="form-group"><label>Giới tính</label>
-                        <select id="d_gender" required>
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
+                        <select id="d_gioi_tinh" required>
+                            <option value="1">Nam</option>
+                            <option value="0">Nữ</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Địa chỉ</label><input type="text" id="d_address" required></div>
-                    <div class="form-group"><label>Chức vụ</label><input type="text" id="d_role" required></div>
-                    <div class="form-group"><label>Khoa</label><input type="text" id="d_dept" required></div>
-                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="d_phone" required></div>
-                    <div class="form-group"><label>Email</label><input type="email" id="d_email" required></div>
-                    <div class="form-group"><label>Tên đăng nhập</label><input type="text" id="d_username" required></div>
-                    <div class="form-group"><label>Mật khẩu</label><input type="text" id="d_password" required></div>
-                    <div class="form-group" style="grid-column: span 2;"><label>Link Ảnh Đại Diện (Tuỳ chọn)</label><input type="text" id="d_img"></div>
+                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="d_so_dien_thoai" required></div>
+                    <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text" id="d_dia_chi" required></div>
+                </div>
+
+                <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Hồ sơ chuyên môn</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Chuyên khoa</label>
+                        <select id="d_chuyen_khoa" required>
+                            <option value="Tai Mũi Họng">Tai Mũi Họng</option>
+                            <option value="Nam học">Nam học</option>
+                            <option value="Sản phụ khoa">Sản phụ khoa</option>
+                            <option value="Ung bướu">Ung bướu</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Năm kinh nghiệm</label><input type="number" id="d_nam_kinh_nghiem" required></div>
+                    <div class="form-group"><label>Phí khám (VNĐ)</label><input type="number" id="d_phi_kham" required></div>
+                    <div class="form-group"><label>Link Ảnh Đại Diện</label><input type="text" id="d_anh_dai_dien"></div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Tiểu sử / Giới thiệu</label>
+                        <textarea id="d_tieu_su" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
+                    </div>
                 </div>
                 
                 <div style="text-align: right; margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -107,6 +239,7 @@
         </div>
     </div>
 
+    <script src="../../assets/js/dashboard.js"></script>
     <script src="../../assets/js/doctor.js"></script>
 </body>
 </html>
