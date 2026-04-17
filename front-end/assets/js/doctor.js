@@ -54,10 +54,19 @@ function renderTable() {
             `<span class="badge" style="background-color: #dcfce7; color: #166534;">Hoạt động</span>` : 
             `<span class="badge" style="background-color: #fee2e2; color: #991b1b;">Đã khóa</span>`;
 
+        // Xử lý ảnh mặc định (Lấy tên viết tắt làm Avatar) và Bắt lỗi rách ảnh
+        const defaultImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.ho_ten)}&background=random`;
+        const imgSrc = doc.anh_dai_dien && doc.anh_dai_dien.trim() !== "" ? doc.anh_dai_dien : defaultImg;
+
         const tr = document.createElement('tr');
         // Cập nhật đầy đủ 14 cột tương ứng với thead
         tr.innerHTML = `
-            <td><img src="${doc.anh_dai_dien || 'https://ui-avatars.com/api/?name=BS&background=random'}" class="doctor-avatar" width="40" height="40" style="border-radius:50%; object-fit: cover;"></td>
+            <td>
+                <img src="${imgSrc}" 
+                     onerror="this.onerror=null; this.src='${defaultImg}';" 
+                     width="40" height="40" 
+                     style="border-radius:50%; object-fit: cover; border: 1px solid #ddd;">
+            </td>
             <td class="doctor-name" style="font-weight: 600;">${doc.ho_ten}</td>
             <td>${formatDate(doc.ngay_sinh)}</td>
             <td>${genderText}</td>
@@ -82,6 +91,11 @@ function renderTable() {
 function openAddModal() {
     form.reset();
     document.getElementById('d_id').value = '';
+    
+    // Reset ô chọn file ảnh
+    const fileInput = document.getElementById('d_anh_file');
+    if (fileInput) fileInput.value = '';
+
     modalTitle.innerText = 'Thêm mới Bác sĩ';
     modal.style.display = 'flex';
 }
@@ -111,7 +125,15 @@ function editDoctor(id) {
     // Khi mở form sửa, cũng format lại tiền có dấu phẩy
     document.getElementById('d_phi_kham').value = doc.phi_kham ? Number(doc.phi_kham).toLocaleString('en-US') : '';
     
-    document.getElementById('d_anh_dai_dien').value = doc.anh_dai_dien;
+    // Xử lý ảnh: Nếu ảnh cũ là upload từ máy (Base64) thì để trống ô Link, đồng thời reset ô chọn File
+    const fileInput = document.getElementById('d_anh_file');
+    if (fileInput) fileInput.value = '';
+    
+    const linkInput = document.getElementById('d_anh_dai_dien');
+    if (linkInput) {
+        linkInput.value = (doc.anh_dai_dien && doc.anh_dai_dien.startsWith('data:image')) ? '' : doc.anh_dai_dien;
+    }
+    
     document.getElementById('d_tieu_su').value = doc.tieu_su;
 
     modalTitle.innerText = 'Sửa thông tin Bác sĩ';
@@ -125,48 +147,68 @@ function deleteDoctor(id) {
     }
 }
 
+// =========================================================
+// XỬ LÝ LƯU DỮ LIỆU KHI SUBMIT (Ưu tiên File Upload)
+// =========================================================
 form.addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const idValue = document.getElementById('d_id').value;
-    
-    // Lấy giá trị tiền và TÁCH DẤU PHẨY RA trước khi lưu vào mảng
-    let rawPhiKham = document.getElementById('d_phi_kham').value.replace(/,/g, '');
+    const fileInput = document.getElementById('d_anh_file');
+    const linkInput = document.getElementById('d_anh_dai_dien');
+    const linkValue = linkInput ? linkInput.value : '';
 
-    const newDoc = {
-        ten_dang_nhap: document.getElementById('d_ten_dang_nhap').value,
-        mat_khau: document.getElementById('d_mat_khau').value,
-        email: document.getElementById('d_email').value,
-        trang_thai: 1, 
-        
-        ho_ten: document.getElementById('d_ho_ten').value,
-        ngay_sinh: document.getElementById('d_ngay_sinh').value,
-        gioi_tinh: parseInt(document.getElementById('d_gioi_tinh').value), 
-        so_dien_thoai: document.getElementById('d_so_dien_thoai').value,
-        dia_chi: document.getElementById('d_dia_chi').value,
-        anh_dai_dien: document.getElementById('d_anh_dai_dien').value,
-        
-        chuyen_khoa: document.getElementById('d_chuyen_khoa').value,
-        nam_kinh_nghiem: parseInt(document.getElementById('d_nam_kinh_nghiem').value),
-        
-        // Lưu giá trị tiền đã sạch dấu phẩy (dạng số thực)
-        phi_kham: parseFloat(rawPhiKham),
-        
-        tieu_su: document.getElementById('d_tieu_su').value
+    // Hàm lưu dữ liệu gom chung lại
+    const saveDoctorData = (finalImageUrl) => {
+        const idValue = document.getElementById('d_id').value;
+        // Lấy giá trị tiền và TÁCH DẤU PHẨY RA trước khi lưu vào mảng
+        let rawPhiKham = document.getElementById('d_phi_kham').value.replace(/,/g, '');
+
+        const newDoc = {
+            ten_dang_nhap: document.getElementById('d_ten_dang_nhap').value,
+            mat_khau: document.getElementById('d_mat_khau').value,
+            email: document.getElementById('d_email').value,
+            trang_thai: 1, 
+            ho_ten: document.getElementById('d_ho_ten').value,
+            ngay_sinh: document.getElementById('d_ngay_sinh').value,
+            gioi_tinh: parseInt(document.getElementById('d_gioi_tinh').value), 
+            so_dien_thoai: document.getElementById('d_so_dien_thoai').value,
+            dia_chi: document.getElementById('d_dia_chi').value,
+            anh_dai_dien: finalImageUrl, // Lưu ảnh từ máy hoặc link
+            chuyen_khoa: document.getElementById('d_chuyen_khoa').value,
+            nam_kinh_nghiem: parseInt(document.getElementById('d_nam_kinh_nghiem').value),
+            phi_kham: parseFloat(rawPhiKham),
+            tieu_su: document.getElementById('d_tieu_su').value
+        };
+
+        if (idValue) {
+            const index = doctors.findIndex(d => d.id == idValue);
+            if (index !== -1) {
+                // Nếu sửa mà không chọn ảnh mới từ máy, và cũng không nhập link mới thì giữ lại ảnh cũ
+                if (!finalImageUrl || finalImageUrl.trim() === '') {
+                    newDoc.anh_dai_dien = doctors[index].anh_dai_dien;
+                }
+                doctors[index] = { ...doctors[index], ...newDoc };
+            }
+        } else {
+            newDoc.id = Date.now(); 
+            doctors.push(newDoc);
+        }
+
+        renderTable();
+        closeModal();
     };
 
-    if (idValue) {
-        const index = doctors.findIndex(d => d.id == idValue);
-        if (index !== -1) {
-            doctors[index] = { ...doctors[index], ...newDoc };
-        }
+    // KIỂM TRA: Ưu tiên lấy file từ máy tính trước
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            saveDoctorData(event.target.result); // Base64 của ảnh
+        };
+        reader.readAsDataURL(fileInput.files[0]); // Bắt đầu đọc file ảnh
     } else {
-        newDoc.id = Date.now(); 
-        doctors.push(newDoc);
+        // Không chọn file thì lấy link văn bản
+        saveDoctorData(linkValue);
     }
-
-    renderTable();
-    closeModal();
 });
 
 renderTable();

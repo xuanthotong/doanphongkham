@@ -90,8 +90,6 @@
                             <th>SĐT</th>
                             <th>Email</th>
                             <th>Địa chỉ</th>
-                            <th>Nhóm máu</th>
-                            <th>Tiền sử bệnh</th>
                             <th>Vai trò</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
@@ -183,7 +181,7 @@
 
     </main>
 
-    <div id="doctorModal" class="modal">
+  <div id="doctorModal" class="modal">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 <h2 id="modalTitle" style="font-size: 20px;">Thêm mới Bác sĩ</h2>
@@ -225,8 +223,17 @@
                         </select>
                     </div>
                     <div class="form-group"><label>Năm kinh nghiệm</label><input type="number" id="d_nam_kinh_nghiem" required></div>
+                    
                     <div class="form-group"><label>Phí khám (VNĐ)</label><input type="text" id="d_phi_kham" required></div>
-                    <div class="form-group"><label>Link Ảnh Đại Diện</label><input type="text" id="d_anh_dai_dien"></div>
+                    
+                    <div class="form-group">
+                        <label>Ảnh đại diện (Máy HOẶC Link)</label>
+                        <div style="display: flex; gap: 5px;">
+                            <input type="file" id="d_anh_file" accept="image/*" style="width: 50%; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 12px;">
+                            <input type="text" id="d_anh_dai_dien" placeholder="Dán link..." style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px;">
+                        </div>
+                    </div>
+
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Tiểu sử / Giới thiệu</label>
                         <textarea id="d_tieu_su" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
@@ -250,9 +257,10 @@
             <form id="postForm" style="margin-top: 15px;">
                 <input type="hidden" id="p_id">
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                    
                     <div class="form-group"><label>Tiêu đề bài viết</label><input type="text" id="p_tieu_de" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
                         <div class="form-group"><label>Danh mục</label>
                             <select id="p_danh_muc" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                                 <option value="1">Y học thường thức</option>
@@ -260,13 +268,26 @@
                                 <option value="3">Dinh dưỡng</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Link Ảnh minh họa</label><input type="text" id="p_anh_thu_nho" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                        
+                        <div class="form-group">
+                            <label>Ảnh minh họa (Chọn từ máy HOẶC Dán link)</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="file" id="p_anh_file" accept="image/*" style="width: 50%; padding: 7px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
+                                <input type="text" id="p_anh_thu_nho" placeholder="Dán link ảnh..." style="width: 50%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group"><label>Tác giả</label><input type="text" id="p_tac_gia" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" value="Admin"></div>
+                        <div class="form-group"><label>Ngày xuất bản</label><input type="date" id="p_ngay_xuat_ban" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                     </div>
 
                     <div class="form-group">
                         <label>Nội dung bài viết</label>
                         <textarea id="p_noi_dung" rows="6" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
                     </div>
+
                 </div>
                 <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" onclick="closePostModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
@@ -278,6 +299,10 @@
 
     <script src="../../assets/js/dashboard.js"></script>
     <script src="../../assets/js/doctor.js"></script>
+    <script src="../../assets/js/post.js"></script>
+    <script src="../../assets/js/appointment.js"></script>
+    <script src="../../assets/js/account.js"></script>
+    <script src="../../assets/js/qa.js"></script>
     
     </body>
 </html>

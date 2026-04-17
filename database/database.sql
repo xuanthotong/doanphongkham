@@ -41,7 +41,6 @@ CREATE TABLE HoSoBacSi (
 
 CREATE TABLE HoSoBenhNhan (
     tai_khoan_id INT PRIMARY KEY FOREIGN KEY REFERENCES TaiKhoan(id),
-    nhom_mau VARCHAR(10),
     tien_su_benh NVARCHAR(MAX)
 );
 
@@ -59,7 +58,7 @@ CREATE TABLE LichKham (
     benh_nhan_id INT NOT NULL FOREIGN KEY REFERENCES TaiKhoan(id),
     lich_lam_viec_id INT NOT NULL FOREIGN KEY REFERENCES LichLamViec(id),
     mo_ta_trieu_chung NVARCHAR(MAX),
-    trang_thai VARCHAR(50) DEFAULT 'Pending', -- Ch? xác nh?n, ?ã khám, ?ã h?y...
+    trang_thai VARCHAR(50) DEFAULT 'Pending', -- Ch? xï¿½c nh?n, ?ï¿½ khï¿½m, ?ï¿½ h?y...
     ghi_chu_cua_bac_si NVARCHAR(MAX),
     ngay_tao DATETIME DEFAULT GETDATE()
 );
