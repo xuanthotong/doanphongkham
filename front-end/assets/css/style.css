@@ -123,6 +123,16 @@ body {
   transition: color 0.2s;
 }
 
+/* Style riêng cho nút ẩn hiện mật khẩu */
+.input-field i.toggle-password {
+  cursor: pointer;
+  width: auto;
+  padding: 0 10px;
+}
+.input-field i.toggle-password:hover {
+  color: #0a66c2;
+}
+
 .input-field input {
   width: 100%;
   padding: 0.9rem 0.4rem 0.9rem 0.2rem;

@@ -5,6 +5,7 @@ const tbody = document.getElementById('doctorTableBody');
 const modal = document.getElementById('doctorModal');
 const form = document.getElementById('doctorForm');
 const modalTitle = document.getElementById('modalTitle');
+const chuyenKhoaSelect = document.getElementById('d_chuyen_khoa');
 
 // =======================================================
 // TỰ ĐỘNG THÊM DẤU PHẨY KHI GÕ TIỀN VÀO Ô PHÍ KHÁM
@@ -73,11 +74,11 @@ function renderTable() {
             <td>${doc.so_dien_thoai}</td>
             <td>${doc.email}</td>
             <td>${doc.dia_chi}</td>
-            <td>${doc.chuyen_khoa}</td>
+            <td><span class="badge" style="background: #e0f2fe; color: #0369a1;">${doc.ten_chuyen_khoa || 'Chưa cập nhật'}</span></td>
             <td>${doc.nam_kinh_nghiem} năm</td>
             <td style="color: #ef4444; font-weight: 600;">${formatCurrency(doc.phi_kham)}</td>
             <td>${doc.ten_dang_nhap}</td>
-            <td>${doc.mat_khau}</td>
+            <td>********</td>
             <td>${statusBadge}</td>
             <td>
                 <button class="action-btn edit" onclick="editDoctor(${doc.id})"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -91,6 +92,8 @@ function renderTable() {
 function openAddModal() {
     form.reset();
     document.getElementById('d_id').value = '';
+    // Đặt lại chữ mờ hướng dẫn cho ô Mật khẩu
+    document.getElementById('d_mat_khau').placeholder = 'Nhập mật khẩu mới';
     
     // Reset ô chọn file ảnh
     const fileInput = document.getElementById('d_anh_file');
@@ -110,7 +113,11 @@ function editDoctor(id) {
 
     document.getElementById('d_id').value = doc.id;
     document.getElementById('d_ten_dang_nhap').value = doc.ten_dang_nhap;
-    document.getElementById('d_mat_khau').value = doc.mat_khau;
+    
+    // Làm trống ô mật khẩu để Admin biết. Nếu nhập mới thì sẽ đổi mật khẩu.
+    document.getElementById('d_mat_khau').value = ''; 
+    document.getElementById('d_mat_khau').placeholder = 'Để trống nếu không đổi mật khẩu';
+    
     document.getElementById('d_email').value = doc.email;
     
     document.getElementById('d_ho_ten').value = doc.ho_ten;
@@ -119,7 +126,9 @@ function editDoctor(id) {
     document.getElementById('d_so_dien_thoai').value = doc.so_dien_thoai;
     document.getElementById('d_dia_chi').value = doc.dia_chi;
     
-    document.getElementById('d_chuyen_khoa').value = doc.chuyen_khoa;
+    if (document.getElementById('d_chuyen_khoa')) {
+        document.getElementById('d_chuyen_khoa').value = doc.chuyen_khoa_id || '';
+    }
     document.getElementById('d_nam_kinh_nghiem').value = doc.nam_kinh_nghiem;
     
     // Khi mở form sửa, cũng format lại tiền có dấu phẩy
@@ -140,11 +149,30 @@ function editDoctor(id) {
     modal.style.display = 'flex';
 }
 
-function deleteDoctor(id) {
+async function deleteDoctor(id) {
     if (confirm("Bạn có chắc chắn muốn xóa Bác sĩ này không?")) {
-        doctors = doctors.filter(d => d.id !== id);
-        renderTable();
+        try {
+            const res = await fetch('http://localhost:3000/api/doctors/' + id, { method: 'DELETE' });
+            const data = await res.json();
+            if(res.ok) {
+                alert("Xóa Bác sĩ thành công!");
+                fetchDoctors(); // Tải lại bảng từ SQL
+            } else {
+                alert(data.message || "Lỗi khi xóa!");
+            }
+        } catch(err) { console.error(err); alert("Không thể kết nối Backend"); }
     }
+}
+
+// =======================================================
+// GỌI API LẤY DANH SÁCH BÁC SĨ (TỪ SQL SERVER)
+// =======================================================
+async function fetchDoctors() {
+    try {
+        const response = await fetch('http://localhost:3000/api/doctors');
+        doctors = await response.json(); // Cập nhật mảng ảo bằng dữ liệu thật
+        renderTable();
+    } catch (error) { console.error('Lỗi khi lấy dữ liệu bác sĩ:', error); }
 }
 
 // =========================================================
@@ -157,11 +185,13 @@ form.addEventListener('submit', function(e) {
     const linkInput = document.getElementById('d_anh_dai_dien');
     const linkValue = linkInput ? linkInput.value : '';
 
-    // Hàm lưu dữ liệu gom chung lại
-    const saveDoctorData = (finalImageUrl) => {
+    // Hàm lưu dữ liệu gọi API Post/Put
+    const saveDoctorData = async (finalImageUrl) => {
         const idValue = document.getElementById('d_id').value;
         // Lấy giá trị tiền và TÁCH DẤU PHẨY RA trước khi lưu vào mảng
         let rawPhiKham = document.getElementById('d_phi_kham').value.replace(/,/g, '');
+
+        const ckVal = document.getElementById('d_chuyen_khoa') ? document.getElementById('d_chuyen_khoa').value : '';
 
         const newDoc = {
             ten_dang_nhap: document.getElementById('d_ten_dang_nhap').value,
@@ -174,28 +204,53 @@ form.addEventListener('submit', function(e) {
             so_dien_thoai: document.getElementById('d_so_dien_thoai').value,
             dia_chi: document.getElementById('d_dia_chi').value,
             anh_dai_dien: finalImageUrl, // Lưu ảnh từ máy hoặc link
-            chuyen_khoa: document.getElementById('d_chuyen_khoa').value,
+            chuyen_khoa_id: ckVal ? parseInt(ckVal) : null,
             nam_kinh_nghiem: parseInt(document.getElementById('d_nam_kinh_nghiem').value),
             phi_kham: parseFloat(rawPhiKham),
             tieu_su: document.getElementById('d_tieu_su').value
         };
 
         if (idValue) {
+            // Giữ lại ảnh cũ nếu Admin đang sửa nhưng không chọn ảnh mới
             const index = doctors.findIndex(d => d.id == idValue);
-            if (index !== -1) {
-                // Nếu sửa mà không chọn ảnh mới từ máy, và cũng không nhập link mới thì giữ lại ảnh cũ
-                if (!finalImageUrl || finalImageUrl.trim() === '') {
-                    newDoc.anh_dai_dien = doctors[index].anh_dai_dien;
-                }
-                doctors[index] = { ...doctors[index], ...newDoc };
+            if (index !== -1 && (!finalImageUrl || finalImageUrl.trim() === '')) {
+                newDoc.anh_dai_dien = doctors[index].anh_dai_dien;
             }
-        } else {
-            newDoc.id = Date.now(); 
-            doctors.push(newDoc);
-        }
 
-        renderTable();
-        closeModal();
+            try {
+                // GỌI API SỬA (PUT) VÀO CƠ SỞ DỮ LIỆU
+                const res = await fetch('http://localhost:3000/api/doctors/' + idValue, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newDoc)
+                });
+                if(res.ok) {
+                    alert("Cập nhật thông tin thành công!");
+                    fetchDoctors(); // Load lại bảng
+                    closeModal();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || "Lỗi khi sửa Bác sĩ!");
+                }
+            } catch(err) { console.error(err); alert("Không thể kết nối Backend"); }
+        } else {
+            try {
+                // GỌI API THÊM MỚI (POST) VÀO CƠ SỞ DỮ LIỆU
+                const res = await fetch('http://localhost:3000/api/doctors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newDoc)
+                });
+                if(res.ok) {
+                    alert("Thêm Bác sĩ thành công!");
+                    fetchDoctors(); // Load lại bảng sau khi thêm
+                    closeModal();
+                } else {
+                    const data = await res.json();
+                    alert(data.message || "Lỗi khi thêm Bác sĩ!");
+                }
+            } catch(err) { console.error(err); alert("Không thể kết nối Backend"); }
+        }
     };
 
     // KIỂM TRA: Ưu tiên lấy file từ máy tính trước
@@ -211,4 +266,5 @@ form.addEventListener('submit', function(e) {
     }
 });
 
-renderTable();
+// Gọi dữ liệu khi mở trang thay vì gọi bảng trống
+fetchDoctors();

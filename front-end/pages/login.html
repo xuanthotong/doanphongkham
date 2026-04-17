@@ -17,20 +17,21 @@
         <h1 class="title">Đăng nhập</h1>
         <a href="register.html" class="switch-link">Đăng ký mới <i class="fas fa-arrow-right"></i></a>
       </div>
-      <form class="form-main" action="#" method="post">
+      <form class="form-main" onsubmit="handleLogin(event)">
         <div class="input-group">
-          <label for="username" class="input-label">Số điện thoại / Tên đăng nhập</label>
+          <label for="login_username" class="input-label">Tên đăng nhập</label>
           <div class="input-field">
             <i class="fas fa-user"></i>
-            <input type="text" id="username" name="username" placeholder="Nhập số điện thoại hoặc tên đăng nhập" autocomplete="username" required>
+            <input type="text" id="login_username" placeholder="Nhập tên đăng nhập" autocomplete="username" required>
           </div>
         </div>
 
         <div class="input-group">
-          <label for="password" class="input-label">Mật khẩu</label>
+          <label for="login_password" class="input-label">Mật khẩu</label>
           <div class="input-field">
             <i class="fas fa-lock"></i>
-            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+            <input type="password" id="login_password" placeholder="••••••••" autocomplete="current-password" required>
+            <i class="fas fa-eye toggle-password" onclick="togglePassword(this, 'login_password')" title="Hiển thị mật khẩu"></i>
           </div>
         </div>
         <div class="forgot-row">
@@ -53,5 +54,6 @@
       </p>
     </div>
   </div>
+  <script src="../assets/js/auth.js"></script>
 </body>
 </html>

@@ -1,16 +1,4 @@
-
-// 1. Mảng lưu trữ dữ liệu (Giả lập Database)
-let posts = [
-    { 
-        id: 1, 
-        //anh: "https://placehold.co/80x50?text=Anh+Minh+Hoa", 
-        tieu_de: "Cách phòng ngừa cảm cúm giao mùa", 
-        noi_dung: "Giao mùa là thời điểm cơ thể rất dễ mắc các bệnh về đường hô hấp, đặc biệt là cảm cúm. Để phòng bệnh, chúng ta cần bổ sung đầy đủ vitamin C, giữ ấm cơ thể và hạn chế tiếp xúc với người bệnh...", 
-        danh_muc: "1", 
-        tac_gia: "Admin", 
-        ngay_xuat_ban: "2026-04-16" 
-    }
-];
+let posts = [];
 
 // 2. Khai báo các biến DOM
 const postTbody = document.getElementById('postTableBody');
@@ -28,9 +16,8 @@ function getCategoryName(id) {
 // Chuyển đổi Ngày từ YYYY-MM-DD sang DD/MM/YYYY
 function formatDatePost(dateString) {
     if (!dateString) return "";
-    const parts = dateString.split("-");
-    if (parts.length !== 3) return dateString;
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN');
 }
 
 // =========================================================
@@ -48,7 +35,7 @@ function renderPostTable() {
     posts.forEach((p) => {
         // Xử lý ảnh mặc định nếu không có ảnh hoặc ảnh bị lỗi
         const defaultImg = "https://placehold.co/80x50?text=No+Image";
-        const imgSrc = p.anh && p.anh.trim() !== "" ? p.anh : defaultImg;
+        const imgSrc = p.anh_thu_nho && p.anh_thu_nho.trim() !== "" ? p.anh_thu_nho : defaultImg;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -60,9 +47,9 @@ function renderPostTable() {
                      style="border-radius: 4px; object-fit: cover; border: 1px solid #ddd;">
             </td>
             <td style="font-weight: 600; white-space: normal; max-width: 250px;">${p.tieu_de}</td>
-            <td style="white-space: normal; max-width: 300px; color: #6b7280; font-size: 13px;">${p.noi_dung.substring(0, 50)}...</td>
-            <td>${getCategoryName(p.danh_muc)}</td>
-            <td>${p.tac_gia}</td>
+            <td style="white-space: normal; max-width: 300px; color: #6b7280; font-size: 13px;">${(p.noi_dung || '').substring(0, 50)}...</td>
+            <td>${getCategoryName(p.danh_muc_id)}</td>
+            <td><span class="badge" style="background: #fef08a; color: #92400e;">${p.tac_gia || 'Admin'}</span></td>
             <td>${formatDatePost(p.ngay_xuat_ban)}</td>
             <td>
                 <button class="action-btn edit" onclick="editPost(${p.id})" title="Sửa bài viết"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -84,7 +71,9 @@ function openPostModal() {
     postModalTitle.innerText = 'Đăng bài viết mới';
     
     // Gán mặc định Tác giả và Ngày hôm nay
-    document.getElementById('p_tac_gia').value = "Admin";
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    document.getElementById('p_tac_gia').value = userInfo.username || "Admin";
+    
     document.getElementById('p_ngay_xuat_ban').value = new Date().toISOString().split('T')[0]; 
 
     document.getElementById('postModal').style.display = 'flex';
@@ -101,30 +90,46 @@ function editPost(id) {
     // Đổ dữ liệu cũ vào Form
     document.getElementById('p_id').value = p.id;
     document.getElementById('p_tieu_de').value = p.tieu_de;
-    document.getElementById('p_danh_muc').value = p.danh_muc;
+    document.getElementById('p_danh_muc').value = p.danh_muc_id;
     
     // Đổ link ảnh cũ vào ô input text (nếu có)
-    document.getElementById('p_anh_thu_nho').value = p.anh.startsWith('data:image') ? '' : p.anh; 
+    document.getElementById('p_anh_thu_nho').value = (p.anh_thu_nho && p.anh_thu_nho.startsWith('data:image')) ? '' : p.anh_thu_nho; 
     document.getElementById('p_anh_file').value = ''; // Reset input file
     
-    document.getElementById('p_tac_gia').value = p.tac_gia;
-    document.getElementById('p_ngay_xuat_ban').value = p.ngay_xuat_ban;
+    document.getElementById('p_tac_gia').value = p.tac_gia || "Admin";
+    document.getElementById('p_ngay_xuat_ban').value = p.ngay_xuat_ban ? new Date(p.ngay_xuat_ban).toISOString().split('T')[0] : '';
     document.getElementById('p_noi_dung').value = p.noi_dung;
 
     postModalTitle.innerText = 'Sửa bài viết';
     document.getElementById('postModal').style.display = 'flex';
 }
 
-function deletePost(id) {
+async function deletePost(id) {
     if(confirm("Bạn có chắc chắn muốn xóa bài viết này không?")) {
-        posts = posts.filter(p => p.id !== id);
-        renderPostTable();
+        try {
+            const res = await fetch('http://localhost:3000/api/posts/' + id, { method: 'DELETE' });
+            if(res.ok) {
+                alert("Xóa bài viết thành công!");
+                fetchPosts();
+            } else {
+                alert("Lỗi khi xóa bài viết!");
+            }
+        } catch(err) { alert("Không thể kết nối Backend"); }
     }
 }
 
 // =========================================================
 // XỬ LÝ LƯU DỮ LIỆU KHI SUBMIT FORM (UPLOAD ẢNH BASE64 / LINK)
 // =========================================================
+
+async function fetchPosts() {
+    try {
+        const response = await fetch('http://localhost:3000/api/posts');
+        posts = await response.json();
+        renderPostTable();
+    } catch (error) { console.error('Lỗi khi lấy dữ liệu bài viết:', error); }
+}
+
 if (postForm) {
     postForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -133,34 +138,53 @@ if (postForm) {
         const linkInput = document.getElementById('p_anh_thu_nho').value;
 
         // Hàm nội bộ: Gom dữ liệu và lưu vào mảng
-        const savePostData = (finalImageUrl) => {
+        const savePostData = async (finalImageUrl) => {
             const idValue = document.getElementById('p_id').value;
             
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
             const newPost = {
                 tieu_de: document.getElementById('p_tieu_de').value,
-                danh_muc: document.getElementById('p_danh_muc').value,
-                anh: finalImageUrl, 
-                tac_gia: document.getElementById('p_tac_gia').value,
+                danh_muc_id: parseInt(document.getElementById('p_danh_muc').value),
+                anh_thu_nho: finalImageUrl, 
+                tac_gia_id: userInfo.id || 1, // Lấy chuẩn ID của người đang đăng nhập
                 ngay_xuat_ban: document.getElementById('p_ngay_xuat_ban').value,
                 noi_dung: document.getElementById('p_noi_dung').value
             };
 
             if (idValue) {
-                // TRƯỜNG HỢP SỬA (UPDATE)
                 const idx = posts.findIndex(p => p.id == idValue);
-                // Nếu sửa mà không nhập ảnh mới -> Giữ nguyên ảnh cũ
-                if (!finalImageUrl || finalImageUrl.trim() === "") {
-                    newPost.anh = posts[idx].anh; 
+                if (idx !== -1 && (!finalImageUrl || finalImageUrl.trim() === "")) {
+                    newPost.anh_thu_nho = posts[idx].anh_thu_nho; 
                 }
-                posts[idx] = { ...posts[idx], ...newPost };
+                
+                try {
+                    const res = await fetch('http://localhost:3000/api/posts/' + idValue, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newPost)
+                    });
+                    if(res.ok) { 
+                        alert("Cập nhật thành công!"); fetchPosts(); closePostModal(); 
+                    } else {
+                        const data = await res.json();
+                        alert(data.message || "Lỗi khi cập nhật bài viết!");
+                    }
+                } catch(err) { alert("Lỗi kết nối"); }
             } else {
-                // TRƯỜNG HỢP THÊM MỚI (CREATE)
-                newPost.id = Date.now();
-                posts.unshift(newPost); // Thêm lên đầu danh sách
+                try {
+                    const res = await fetch('http://localhost:3000/api/posts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newPost)
+                    });
+                    if(res.ok) { 
+                        alert("Đăng bài thành công!"); fetchPosts(); closePostModal(); 
+                    } else {
+                        const data = await res.json();
+                        alert(data.message || "Lỗi khi đăng bài viết!");
+                    }
+                } catch(err) { alert("Lỗi kết nối"); }
             }
-            
-            renderPostTable();
-            closePostModal();
         };
 
         // KIỂM TRA: Ưu tiên lấy file từ máy tính trước
@@ -179,4 +203,4 @@ if (postForm) {
 }
 
 // Khởi chạy lần đầu để hiển thị bảng
-renderPostTable();
+fetchPosts();

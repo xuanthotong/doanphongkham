@@ -49,6 +49,8 @@ window.onclick = function(event) {
 // Đăng xuất
 function confirmLogout() {
     if (confirm("Bạn có chắc chắn muốn đăng xuất không?")) { 
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
         window.location.href = "../login.html"; 
     }
 }

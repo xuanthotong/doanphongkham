@@ -20,7 +20,7 @@ CREATE TABLE HoSoNguoiDung (
     so_dien_thoai VARCHAR(20),
     gioi_tinh TINYINT, 
     ngay_sinh DATE,
-    anh_dai_dien VARCHAR(255),
+    anh_dai_dien VARCHAR(MAX),
     dia_chi NVARCHAR(255)
 );
 
@@ -74,7 +74,7 @@ CREATE TABLE TinTuc (
     tac_gia_id INT FOREIGN KEY REFERENCES TaiKhoan(id),
     tieu_de NVARCHAR(255) NOT NULL,
     noi_dung NVARCHAR(MAX) NOT NULL,
-    anh_thu_nho VARCHAR(255),
+    anh_thu_nho VARCHAR(MAX),
     ngay_xuat_ban DATETIME DEFAULT GETDATE()
 );
 
@@ -89,3 +89,11 @@ CREATE TABLE HoiDap (
     da_giai_quyet BIT DEFAULT 0, 
     ngay_tao DATETIME DEFAULT GETDATE()
 );
+
+-- ==========================================
+-- THÊM DỮ LIỆU MẶC ĐỊNH (SEED DATA) CHO AUTH
+-- ==========================================
+INSERT INTO VaiTro (ten_vai_tro) VALUES ('Admin'), ('BacSi'), ('BenhNhan');
+-- Thêm tài khoản Admin (Mật khẩu đã mã hóa Bcrypt tương ứng với admin123)
+INSERT INTO TaiKhoan (vai_tro_id, ten_dang_nhap, mat_khau, email, trang_thai) 
+VALUES (1, 'admin', '$2b$10$tZ2.iL.8r1H0aM/w9vJ9K.lX72s.YvX1OQ.vB7V/Hw2P2mJq8U9gC', 'admin@ttmedical.com', 1);
