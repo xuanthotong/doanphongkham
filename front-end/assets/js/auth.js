@@ -55,7 +55,8 @@ async function handleRegister(event) {
 
         if (response.ok) {
             alert('Đăng ký tài khoản thành công! Vui lòng tiến hành đăng nhập.');
-            window.location.href = 'login.html';
+          // Gọi hàm tắt bảng Đăng ký, bật bảng Đăng nhập (vẫn ở nguyên trang chủ)
+            switchModal('registerModal', 'loginModal');
         } else {
             alert(data.message || 'Lỗi đăng ký!');
         }

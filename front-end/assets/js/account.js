@@ -35,6 +35,22 @@ function renderAccountTable(accounts) {
         // Màu nhãn dán tùy theo vai trò
         const roleBadgeColor = acc.ten_vai_tro === 'Admin' ? 'background: #fef08a; color: #92400e;' : (acc.ten_vai_tro === 'BacSi' ? 'background: #bae6fd; color: #075985;' : 'background: #e0e7ff; color: #4338ca;');
 
+        // TẠO NÚT BẤM (CHẶN ADMIN)
+        let actionButtons = '';
+        if (acc.ten_vai_tro === 'Admin') {
+            // Nút mờ, không click được đối với Admin
+            actionButtons = `
+                <button class="action-btn edit" style="opacity: 0.3; cursor: not-allowed;" title="Không thể sửa Admin"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="action-btn delete" style="opacity: 0.3; cursor: not-allowed;" title="Không thể xóa Admin"><i class="fa-solid fa-trash"></i></button>
+            `;
+        } else {
+            // Nút bình thường đối với Bệnh nhân / Bác sĩ
+            actionButtons = `
+                <button class="action-btn edit" onclick="editAccount(${acc.id})" title="Sửa tài khoản"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="action-btn delete" onclick="deleteAccount(${acc.id})" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i></button>
+            `;
+        }
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><img src="${imgSrc}" onerror="this.onerror=null; this.src='${defaultImg}';" width="40" height="40" style="border-radius:50%; object-fit: cover; border: 1px solid #ddd;"></td>
@@ -50,12 +66,51 @@ function renderAccountTable(accounts) {
             <td><span class="badge" style="${roleBadgeColor}">${acc.ten_vai_tro}</span></td>
             <td>${statusBadge}</td>
             <td>
-                <button class="action-btn edit" onclick="alert('Chức năng sửa đang phát triển')"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="action-btn delete" onclick="alert('Chức năng xóa đang phát triển')"><i class="fa-solid fa-trash"></i></button>
+                ${actionButtons}
             </td>
         `;
         accountTbody.appendChild(tr);
     });
+}
+
+// ==========================================
+// HÀM XÓA TÀI KHOẢN (CALL API DELETE)
+// ==========================================
+async function deleteAccount(id) {
+    // Hỏi xác nhận trước khi xóa để tránh lỡ tay
+    const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa tài khoản có ID = ${id} không? Hành động này không thể hoàn tác!`);
+    if (!confirmDelete) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/accounts/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Xóa tài khoản thành công!');
+            fetchAccounts(); // Tự động load lại bảng sau khi xóa
+        } else {
+            alert(data.message || 'Có lỗi xảy ra khi xóa tài khoản!');
+        }
+    } catch (error) {
+        console.error('Lỗi API Xóa:', error);
+        alert('Không thể kết nối tới Server để xóa!');
+    }
+}
+
+// ==========================================
+// HÀM SỬA TÀI KHOẢN
+// ==========================================
+function editAccount(id) {
+    // Thường ở đây bạn sẽ code để nó bật 1 cái Modal lên, điền sẵn thông tin cũ vào ô nhập
+    // Ví dụ: openEditModal(id);
+    
+    // Tạm thời hiển thị alert để bạn biết nó đã bắt đúng ID
+    console.log(`Đang mở form sửa cho tài khoản ID: ${id}`);
+    alert(`Bạn vừa bấm nút SỬA cho tài khoản ID: ${id}\n(Hãy gắn code bật form Modal sửa vào đây nhé!)`);
 }
 
 // Gọi API ngay khi tải trang
