@@ -150,18 +150,29 @@ function editDoctor(id) {
 }
 
 async function deleteDoctor(id) {
-    if (confirm("Bạn có chắc chắn muốn xóa Bác sĩ này không?")) {
-        try {
-            const res = await fetch('http://localhost:3000/api/doctors/' + id, { method: 'DELETE' });
-            const data = await res.json();
-            if(res.ok) {
-                alert("Xóa Bác sĩ thành công!");
-                fetchDoctors(); // Tải lại bảng từ SQL
-            } else {
-                alert(data.message || "Lỗi khi xóa!");
-            }
-        } catch(err) { console.error(err); alert("Không thể kết nối Backend"); }
-    }
+    Swal.fire({
+        title: 'Bạn chắc chắn chứ?',
+        text: "Dữ liệu của Bác sĩ này sẽ bị xóa vĩnh viễn!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Vâng, xóa đi!',
+        cancelButtonText: 'Hủy bỏ'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch('http://localhost:3000/api/doctors/' + id, { method: 'DELETE' });
+                const data = await res.json();
+                if(res.ok) {
+                    Swal.fire('Đã xóa!', 'Xóa Bác sĩ thành công.', 'success');
+                    fetchDoctors();
+                } else {
+                    Swal.fire('Lỗi!', data.message || "Lỗi khi xóa!", 'error');
+                }
+            } catch(err) { console.error(err); Swal.fire('Lỗi!', "Không thể kết nối Backend", 'error'); }
+        }
+    });
 }
 
 // =======================================================
@@ -173,6 +184,25 @@ async function fetchDoctors() {
         doctors = await response.json(); // Cập nhật mảng ảo bằng dữ liệu thật
         renderTable();
     } catch (error) { console.error('Lỗi khi lấy dữ liệu bác sĩ:', error); }
+}
+
+// =======================================================
+// GỌI API LẤY DANH SÁCH CHUYÊN KHOA CHO DROPDOWN
+// =======================================================
+async function fetchSpecialtiesForDropdown() {
+    if (!chuyenKhoaSelect) return;
+    try {
+        const response = await fetch('http://localhost:3000/api/specialties');
+        const specialties = await response.json();
+        
+        chuyenKhoaSelect.innerHTML = '<option value="" disabled selected>-- Chọn chuyên khoa --</option>';
+        specialties.forEach(spec => {
+            const option = document.createElement('option');
+            option.value = spec.id;
+            option.textContent = spec.ten_chuyen_khoa;
+            chuyenKhoaSelect.appendChild(option);
+        });
+    } catch (error) { console.error('Lỗi khi lấy dữ liệu chuyên khoa:', error); }
 }
 
 // =========================================================
@@ -225,14 +255,14 @@ form.addEventListener('submit', function(e) {
                     body: JSON.stringify(newDoc)
                 });
                 if(res.ok) {
-                    alert("Cập nhật thông tin thành công!");
+                    Swal.fire('Thành công!', "Cập nhật thông tin thành công!", 'success');
                     fetchDoctors(); // Load lại bảng
                     closeModal();
                 } else {
                     const data = await res.json();
-                    alert(data.message || "Lỗi khi sửa Bác sĩ!");
+                    Swal.fire('Lỗi!', data.message || "Lỗi khi sửa Bác sĩ!", 'error');
                 }
-            } catch(err) { console.error(err); alert("Không thể kết nối Backend"); }
+            } catch(err) { console.error(err); Swal.fire('Lỗi!', "Không thể kết nối Backend", 'error'); }
         } else {
             try {
                 // GỌI API THÊM MỚI (POST) VÀO CƠ SỞ DỮ LIỆU
@@ -242,14 +272,14 @@ form.addEventListener('submit', function(e) {
                     body: JSON.stringify(newDoc)
                 });
                 if(res.ok) {
-                    alert("Thêm Bác sĩ thành công!");
+                    Swal.fire('Thành công!', "Thêm Bác sĩ thành công!", 'success');
                     fetchDoctors(); // Load lại bảng sau khi thêm
                     closeModal();
                 } else {
                     const data = await res.json();
-                    alert(data.message || "Lỗi khi thêm Bác sĩ!");
+                    Swal.fire('Lỗi!', data.message || "Lỗi khi thêm Bác sĩ!", 'error');
                 }
-            } catch(err) { console.error(err); alert("Không thể kết nối Backend"); }
+            } catch(err) { console.error(err); Swal.fire('Lỗi!', "Không thể kết nối Backend", 'error'); }
         }
     };
 
@@ -268,3 +298,4 @@ form.addEventListener('submit', function(e) {
 
 // Gọi dữ liệu khi mở trang thay vì gọi bảng trống
 fetchDoctors();
+fetchSpecialtiesForDropdown();

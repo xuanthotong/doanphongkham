@@ -48,11 +48,22 @@ window.onclick = function(event) {
 
 // Đăng xuất
 function confirmLogout() {
-    if (confirm("Bạn có chắc chắn muốn đăng xuất không?")) { 
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        window.location.href = '../index.html'; 
-    }
+    Swal.fire({
+        title: 'Đăng xuất?',
+        text: "Bạn có chắc chắn muốn thoát khỏi phiên làm việc?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0284C7',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Đăng xuất',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            window.location.href = '../index.html'; 
+        }
+    });
 }
 
 // Format Tiền tệ dùng chung

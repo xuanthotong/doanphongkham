@@ -56,7 +56,7 @@ body {
 }
 .navbar .container { display: flex; justify-content: space-between; align-items: center; }
 .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.logo img { height: 45px; width: auto; object-fit: contain; }
+.logo img { height: 80px; width: auto; object-fit: contain; }
 .logo span { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
 
 /* ==============================================================
@@ -176,17 +176,17 @@ body {
 .article-link { color: var(--primary); text-decoration: none; font-weight: 600; transition: 0.3s;}
 .article-link:hover { color: var(--primary-dark); }
 
-/* --- ĐÁNH GIÁ --- */
-.testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.testimonial-card { border: 1px solid var(--border); border-radius: 16px; padding: 32px; background: white; transition: 0.3s; }
-.testimonial-card:hover { box-shadow: 0 10px 20px rgba(2, 132, 199, 0.05); }
-.quote-icon { font-size: 40px; color: #E2E8F0; margin-bottom: 16px; line-height: 1; }
-.stars { color: #F59E0B; margin-bottom: 16px; font-size: 14px; }
-.testi-text { font-size: 15px; color: var(--text-dark); margin-bottom: 32px; line-height: 1.6; }
-.testi-author { display: flex; align-items: center; gap: 12px; }
-.author-avatar { width: 48px; height: 48px; background: var(--bg-card); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; }
-.author-info h4 { font-size: 15px; font-weight: 700; }
-.author-info p { font-size: 13px; color: var(--text-gray); }
+/* --- HỎI ĐÁP (FAQ) --- */
+.faq-container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.faq-item { border: 1px solid var(--border); border-radius: 12px; background: white; overflow: hidden; transition: 0.3s; }
+.faq-item.active { border-color: var(--primary); box-shadow: 0 4px 10px rgba(2, 132, 199, 0.05); }
+.faq-question { width: 100%; text-align: left; padding: 20px 24px; background: none; border: none; font-size: 16px; font-weight: 600; color: var(--text-dark); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+.faq-question:hover { color: var(--primary); }
+.faq-question i { color: var(--text-gray); transition: transform 0.3s ease; }
+.faq-item.active .faq-question i { transform: rotate(180deg); color: var(--primary); }
+.faq-item.active .faq-question { color: var(--primary); }
+.faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #F8FAFC; }
+.faq-answer p { padding: 0 24px 20px 24px; color: var(--text-gray); font-size: 15px; margin: 0; line-height: 1.6; }
 
 /* --- THỐNG KÊ --- */
 .stats { background-color: var(--primary); color: white; padding: 60px 0; }
@@ -220,6 +220,11 @@ footer { background-color: var(--footer-bg); color: white; padding: 60px 0 20px;
     background-color: rgba(0, 0, 0, 0.4); backdrop-filter: blur(5px);
     display: none; align-items: center; justify-content: center;
     z-index: 9999;
+}
+
+/* Đảm bảo thông báo SweetAlert2 luôn nổi lên trên cùng (trên cả Modal) */
+.swal2-container {
+    z-index: 99999 !important;
 }
 
 /* Khung trắng bo góc to */
@@ -281,3 +286,20 @@ footer { background-color: var(--footer-bg); color: white; padding: 60px 0 20px;
 /* Chữ bên dưới cùng */
 .auth-card .switch-prompt { text-align: center; font-size: 14px; color: #64748b; }
 .auth-card .prompt-link { color: #0b5edd; font-weight: 700; text-decoration: none; }
+ .dropdown-container { position: relative; }
+        .dropdown-menu { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: white; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            list-style: none; 
+            padding: 10px 0; 
+            min-width: 220px; 
+            border-radius: 8px;
+            z-index: 1000;
+        }
+        .dropdown-container:hover .dropdown-menu { display: block; }
+        .dropdown-menu li a { color: #374151 !important; padding: 10px 20px !important; display: block; font-weight: 500 !important; border-bottom: none !important; }
+        .dropdown-menu li a:hover { background-color: #f0f9ff; color: #0284c7 !important; }

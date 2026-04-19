@@ -54,3 +54,6 @@ tr:hover td { background-color: #f9fafb; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text-main); }
 .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; transition: 0.2s; }
 .form-group input:focus, .form-group select:focus { border-color: var(--primary-color); }
+.swal2-container {
+            z-index: 99999 !important;
+        }

@@ -1,4 +1,5 @@
 let posts = [];
+let categoriesList = []; // Mảng chứa danh mục để tra cứu
 
 // 2. Khai báo các biến DOM
 const postTbody = document.getElementById('postTableBody');
@@ -7,10 +8,8 @@ const postModalTitle = document.getElementById('postModalTitle');
 
 // Hàm lấy tên danh mục từ ID
 function getCategoryName(id) {
-    if(id == "1") return "Y học thường thức";
-    if(id == "2") return "Mẹ và bé";
-    if(id == "3") return "Dinh dưỡng";
-    return "Khác";
+    const cat = categoriesList.find(c => c.id == id);
+    return cat ? cat.ten_danh_muc : "Khác";
 }
 
 // Chuyển đổi Ngày từ YYYY-MM-DD sang DD/MM/YYYY
@@ -105,17 +104,28 @@ function editPost(id) {
 }
 
 async function deletePost(id) {
-    if(confirm("Bạn có chắc chắn muốn xóa bài viết này không?")) {
-        try {
-            const res = await fetch('http://localhost:3000/api/posts/' + id, { method: 'DELETE' });
-            if(res.ok) {
-                alert("Xóa bài viết thành công!");
-                fetchPosts();
-            } else {
-                alert("Lỗi khi xóa bài viết!");
-            }
-        } catch(err) { alert("Không thể kết nối Backend"); }
-    }
+    Swal.fire({
+        title: 'Xác nhận xóa',
+        text: "Bạn có chắc chắn muốn xóa bài viết này không?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Đồng ý xóa',
+        cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch('http://localhost:3000/api/posts/' + id, { method: 'DELETE' });
+                if(res.ok) {
+                    Swal.fire('Đã xóa!', 'Xóa bài viết thành công.', 'success');
+                    fetchPosts();
+                } else {
+                    Swal.fire('Lỗi!', 'Lỗi khi xóa bài viết!', 'error');
+                }
+            } catch(err) { Swal.fire('Lỗi!', 'Không thể kết nối Backend', 'error'); }
+        }
+    });
 }
 
 // =========================================================
@@ -164,12 +174,12 @@ if (postForm) {
                         body: JSON.stringify(newPost)
                     });
                     if(res.ok) { 
-                        alert("Cập nhật thành công!"); fetchPosts(); closePostModal(); 
+                        Swal.fire('Thành công!', "Cập nhật thành công!", 'success'); fetchPosts(); closePostModal(); 
                     } else {
                         const data = await res.json();
-                        alert(data.message || "Lỗi khi cập nhật bài viết!");
+                        Swal.fire('Lỗi!', data.message || "Lỗi khi cập nhật bài viết!", 'error');
                     }
-                } catch(err) { alert("Lỗi kết nối"); }
+                } catch(err) { Swal.fire('Lỗi!', "Lỗi kết nối", 'error'); }
             } else {
                 try {
                     const res = await fetch('http://localhost:3000/api/posts', {
@@ -178,12 +188,12 @@ if (postForm) {
                         body: JSON.stringify(newPost)
                     });
                     if(res.ok) { 
-                        alert("Đăng bài thành công!"); fetchPosts(); closePostModal(); 
+                        Swal.fire('Thành công!', "Đăng bài thành công!", 'success'); fetchPosts(); closePostModal(); 
                     } else {
                         const data = await res.json();
-                        alert(data.message || "Lỗi khi đăng bài viết!");
+                        Swal.fire('Lỗi!', data.message || "Lỗi khi đăng bài viết!", 'error');
                     }
-                } catch(err) { alert("Lỗi kết nối"); }
+                } catch(err) { Swal.fire('Lỗi!', "Lỗi kết nối", 'error'); }
             }
         };
 
@@ -201,6 +211,29 @@ if (postForm) {
         }
     });
 }
+// GỌI API LẤY DANH SÁCH DANH MỤC CHO DROPDOWN BÀI VIẾT
+async function fetchCategoriesForDropdown() {
+    const danhMucSelect = document.getElementById('p_danh_muc');
+    try {
+        const response = await fetch('http://localhost:3000/api/categories');
+        categoriesList = await response.json();
+        
+        if (danhMucSelect) {
+            danhMucSelect.innerHTML = '<option value="" disabled selected>-- Chọn danh mục --</option>';
+            categoriesList.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.ten_danh_muc;
+                danhMucSelect.appendChild(option);
+            });
+        }
+        
+        renderPostTable(); // Render lại bảng bài viết để cập nhật tên danh mục
+    } catch (error) { console.error('Lỗi khi lấy dữ liệu danh mục:', error); }
+}
+
+// Gọi hàm này ngay khi file post.js chạy
+fetchCategoriesForDropdown();
 
 // Khởi chạy lần đầu để hiển thị bảng
 fetchPosts();

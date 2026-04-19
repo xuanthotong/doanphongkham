@@ -20,16 +20,21 @@ async function handleLogin(event) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('userInfo', JSON.stringify(data.user));
 
-            alert('Đăng nhập thành công!');
-            
-            // Điều hướng đúng với Vai trò (Admin -> Admin Dashboard, Bệnh nhân -> Trang chủ,...)
-            window.location.href = data.redirectUrl; 
+            Swal.fire({
+                title: 'Thành công!',
+                text: 'Đăng nhập thành công!',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = data.redirectUrl; 
+            });
         } else {
-            alert(data.message || 'Đăng nhập thất bại!');
+            Swal.fire('Đăng nhập thất bại!', data.message || 'Vui lòng kiểm tra lại thông tin.', 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Không thể kết nối tới Server!');
+        Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error');
     }
 }
 
@@ -54,15 +59,24 @@ async function handleRegister(event) {
         const data = await response.json();
 
         if (response.ok) {
-            alert('Đăng ký tài khoản thành công! Vui lòng tiến hành đăng nhập.');
-          // Gọi hàm tắt bảng Đăng ký, bật bảng Đăng nhập (vẫn ở nguyên trang chủ)
-            switchModal('registerModal', 'loginModal');
+            Swal.fire({
+                title: 'Thành công!',
+                text: 'Đăng ký tài khoản thành công! Vui lòng tiến hành đăng nhập.',
+                icon: 'success',
+                confirmButtonColor: '#0284C7'
+            }).then(() => {
+                if (typeof switchModal === 'function') {
+                    switchModal('registerModal', 'loginModal');
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
         } else {
-            alert(data.message || 'Lỗi đăng ký!');
+            Swal.fire('Lỗi đăng ký!', data.message || 'Có lỗi xảy ra, vui lòng thử lại.', 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Không thể kết nối tới Server!');
+        Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error');
     }
 }
 

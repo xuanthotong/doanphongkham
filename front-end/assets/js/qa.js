@@ -57,24 +57,51 @@ async function replyQA(id) {
     const q = questions.find(item => item.id === id);
     if(!q) return;
     
-    let answer = prompt("Nhập câu trả lời của Bác sĩ:", q.tra_loi);
-    if(answer !== null && answer.trim() !== "") {
-        // VD API: await fetch(`/api/questions/${id}/reply`, { method: 'POST', body: JSON.stringify({ tra_loi: answer }) });
-        
-        q.tra_loi = answer;
-        q.bac_si = "Admin (Đã TL)";
-        q.trang_thai = 1; // 1 = Đã giải quyết
-        renderQATable();
-    }
+    Swal.fire({
+        title: 'Trả lời Bệnh nhân',
+        input: 'textarea',
+        inputLabel: 'Nhập câu trả lời của Bác sĩ:',
+        inputValue: q.tra_loi || '',
+        showCancelButton: true,
+        confirmButtonColor: '#0284C7',
+        confirmButtonText: 'Gửi trả lời',
+        cancelButtonText: 'Hủy',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Vui lòng nhập nội dung trả lời!'
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // VD API: await fetch(`/api/questions/${id}/reply`, { method: 'POST', body: JSON.stringify({ tra_loi: result.value }) });
+            q.tra_loi = result.value;
+            q.bac_si = "Admin (Đã TL)";
+            q.trang_thai = 1; 
+            renderQATable();
+            Swal.fire('Đã gửi!', 'Câu trả lời đã được lưu.', 'success');
+        }
+    });
 }
 
 // [TƯƠNG LAI]: Hàm gọi API xóa câu hỏi khỏi CSDL
 async function deleteQA(id) {
-    if(confirm("Bạn có chắc chắn muốn xóa câu hỏi này khỏi hệ thống?")) {
-        // VD API: await fetch(`/api/questions/${id}`, { method: 'DELETE' });
-        questions = questions.filter(q => q.id !== id);
-        renderQATable();
-    }
+    Swal.fire({
+        title: 'Xác nhận xóa',
+        text: "Câu hỏi này sẽ bị xóa khỏi hệ thống!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Đồng ý xóa',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // VD API: await fetch(`/api/questions/${id}`, { method: 'DELETE' });
+            questions = questions.filter(q => q.id !== id);
+            renderQATable();
+            Swal.fire('Đã xóa!', 'Xóa câu hỏi thành công.', 'success');
+        }
+    });
 }
 
 fetchQuestions();
