@@ -10,6 +10,7 @@ const getAllAccounts = async (req, res) => {
             FROM TaiKhoan tk
             LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
             JOIN VaiTro vt ON tk.vai_tro_id = vt.id
+            ORDER BY tk.id ASC
         `);
         res.json(result.recordset);
     } catch (error) {

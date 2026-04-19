@@ -22,6 +22,8 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/specialties', chuyenKhoaRoutes);
 app.use('/api/posts', postRoutes);
+// Thêm dòng này vào file server.js của bạn
+app.use('/api/categories', require('./src/routes/danhMucRoutes'));
 
 // Khởi động server và kết nối DB
 app.listen(PORT, async () => {
