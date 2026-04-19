@@ -77,40 +77,43 @@ function renderAccountTable(accounts) {
 // HÀM XÓA TÀI KHOẢN (CALL API DELETE)
 // ==========================================
 async function deleteAccount(id) {
-    // Hỏi xác nhận trước khi xóa để tránh lỡ tay
-    const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa tài khoản có ID = ${id} không? Hành động này không thể hoàn tác!`);
-    if (!confirmDelete) return;
+    Swal.fire({
+        title: 'Xác nhận xóa',
+        text: `Bạn có chắc chắn muốn xóa tài khoản có ID = ${id} không? Hành động này không thể hoàn tác!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Đồng ý xóa',
+        cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/accounts/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
 
-    try {
-        const response = await fetch(`http://localhost:3000/api/accounts/${id}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            alert('Xóa tài khoản thành công!');
-            fetchAccounts(); // Tự động load lại bảng sau khi xóa
-        } else {
-            alert(data.message || 'Có lỗi xảy ra khi xóa tài khoản!');
+                if (response.ok) {
+                    Swal.fire('Đã xóa!', 'Xóa tài khoản thành công!', 'success');
+                    fetchAccounts();
+                } else {
+                    Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra khi xóa tài khoản!', 'error');
+                }
+            } catch (error) {
+                console.error('Lỗi API Xóa:', error);
+                Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server để xóa!', 'error');
+            }
         }
-    } catch (error) {
-        console.error('Lỗi API Xóa:', error);
-        alert('Không thể kết nối tới Server để xóa!');
-    }
+    });
 }
 
 // ==========================================
 // HÀM SỬA TÀI KHOẢN
 // ==========================================
 function editAccount(id) {
-    // Thường ở đây bạn sẽ code để nó bật 1 cái Modal lên, điền sẵn thông tin cũ vào ô nhập
-    // Ví dụ: openEditModal(id);
-    
-    // Tạm thời hiển thị alert để bạn biết nó đã bắt đúng ID
-    console.log(`Đang mở form sửa cho tài khoản ID: ${id}`);
-    alert(`Bạn vừa bấm nút SỬA cho tài khoản ID: ${id}\n(Hãy gắn code bật form Modal sửa vào đây nhé!)`);
+    Swal.fire('Thông báo', `Bạn vừa bấm nút SỬA cho tài khoản ID: ${id}\n(Tính năng cập nhật tài khoản đang phát triển!)`, 'info');
 }
 
 // Gọi API ngay khi tải trang

@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Thư viện SweetAlert2 cho Pop-up hiện đại -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
 </head>
 <body>
@@ -19,8 +21,10 @@
         <ul class="menu">
             <div class="menu-title">Quản lý chung</div>
             <li class="menu-item active" onclick="switchTab('doctor', this)"><i class="fa-solid fa-user-doctor"></i> Quản lý Bác sĩ</li>
+            <li class="menu-item" onclick="switchTab('specialty', this)"><i class="fa-solid fa-layer-group"></i> Quản lý Chuyên khoa</li>
             <li class="menu-item" onclick="switchTab('account', this)"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
             <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
+            <li class="menu-item" onclick="switchTab('category', this)"><i class="fa-solid fa-list"></i> Quản lý Danh mục</li>
             <li class="menu-item" onclick="switchTab('appointment', this)"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
             <li class="menu-item" onclick="switchTab('qa', this)"><i class="fa-solid fa-circle-question"></i> Quản lý Câu hỏi</li>
         </ul>
@@ -67,6 +71,28 @@
                     </thead>
                     <tbody id="doctorTableBody">
                         </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-specialty" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý Chuyên khoa</h1>
+                <button class="btn-add" onclick="openSpecialtyModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
+            </div>
+
+            <div class="table-container">
+                <table style="white-space: nowrap;">
+                    <thead>
+                        <tr>
+                            <th>Mã CK</th>
+                            <th>Tên chuyên khoa</th>
+                            <th>Mô tả chi tiết</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="specialtyTableBody">
+                    </tbody>
                 </table>
             </div>
         </section>
@@ -122,6 +148,27 @@
                     </thead>
                     <tbody id="postTableBody">
                         </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-category" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý Danh mục Tin tức</h1>
+                <button class="btn-add" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
+            </div>
+
+            <div class="table-container">
+                <table style="white-space: nowrap; width: 60%;">
+                    <thead>
+                        <tr>
+                            <th>Mã Danh Mục</th>
+                            <th>Tên Danh Mục</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                    </tbody>
                 </table>
             </div>
         </section>
@@ -216,10 +263,7 @@
                 <div class="form-grid">
                     <div class="form-group"><label>Chuyên khoa</label>
                         <select id="d_chuyen_khoa" required>
-                            <option value="1">Tai Mũi Họng</option>
-                            <option value="2">Nam học</option>
-                            <option value="3">Sản phụ khoa</option>
-                            <option value="4">Ung bướu</option>
+                            <option value="" disabled selected>-- Đang tải chuyên khoa --</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Năm kinh nghiệm</label><input type="number" id="d_nam_kinh_nghiem" required></div>
@@ -263,9 +307,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
                         <div class="form-group"><label>Danh mục</label>
                             <select id="p_danh_muc" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                                <option value="1">Y học thường thức</option>
-                                <option value="2">Mẹ và bé</option>
-                                <option value="3">Dinh dưỡng</option>
+                                <option value="" disabled selected>-- Đang tải danh mục --</option>
                             </select>
                         </div>
                         
@@ -297,8 +339,60 @@
         </div>
     </div>
 
+    <!-- MODAL QUẢN LÝ CHUYÊN KHOA -->
+    <div id="specialtyModal" class="modal">
+        <div class="modal-content" style="width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                <h2 id="specialtyModalTitle" style="font-size: 20px;">Thêm mới Chuyên khoa</h2>
+                <button onclick="closeSpecialtyModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+            </div>
+            <form id="specialtyForm" style="margin-top: 15px;">
+                <input type="hidden" id="s_id">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Tên chuyên khoa</label>
+                        <input type="text" id="s_ten_chuyen_khoa" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả chi tiết</label>
+                        <textarea id="s_mo_ta" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeSpecialtyModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
+                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL QUẢN LÝ DANH MỤC TIN TỨC -->
+    <div id="categoryModal" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                <h2 id="categoryModalTitle" style="font-size: 20px;">Thêm mới Danh mục</h2>
+                <button onclick="closeCategoryModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+            </div>
+            <form id="categoryForm" style="margin-top: 15px;">
+                <input type="hidden" id="c_id">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Tên danh mục</label>
+                        <input type="text" id="c_ten_danh_muc" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeCategoryModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
+                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="../../assets/js/dashboard.js"></script>
     <script src="../../assets/js/doctor.js"></script>
+    <script src="../../assets/js/specialty.js"></script>
+    <script src="../../assets/js/category.js"></script>
     <script src="../../assets/js/post.js"></script>
     <script src="../../assets/js/appointment.js"></script>
     <script src="../../assets/js/account.js"></script>

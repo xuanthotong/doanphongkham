@@ -16,6 +16,7 @@ const getAllDoctors = async (req, res) => {
             JOIN VaiTro vt ON tk.vai_tro_id = vt.id
             LEFT JOIN ChuyenKhoa ck ON bs.chuyen_khoa_id = ck.id
             WHERE vt.ten_vai_tro = 'BacSi'
+            ORDER BY tk.id ASC
         `);
         res.json(result.recordset);
     } catch (error) {

@@ -3,6 +3,7 @@ const { sql, connectDB } = require('../config/db');
 const getAllAccounts = async (req, res) => {
     try {
         const pool = await connectDB();
+        // Thêm điều kiện WHERE vt.ten_vai_tro IN ('Admin', 'BenhNhan')
         const result = await pool.request().query(`
             SELECT tk.id, tk.ten_dang_nhap, tk.email, tk.trang_thai,
                    nd.ho_ten, nd.so_dien_thoai, nd.gioi_tinh, nd.ngay_sinh, nd.anh_dai_dien, nd.dia_chi,
@@ -10,6 +11,8 @@ const getAllAccounts = async (req, res) => {
             FROM TaiKhoan tk
             LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
             JOIN VaiTro vt ON tk.vai_tro_id = vt.id
+            WHERE vt.ten_vai_tro IN ('Admin', 'BenhNhan')
+            ORDER BY tk.id ASC
         `);
         res.json(result.recordset);
     } catch (error) {

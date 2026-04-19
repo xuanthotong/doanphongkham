@@ -313,3 +313,8 @@ body {
     align-self: flex-end;
   }
 }
+
+/* Đảm bảo thông báo SweetAlert2 luôn nổi lên trên cùng */
+.swal2-container {
+  z-index: 99999 !important;
+}

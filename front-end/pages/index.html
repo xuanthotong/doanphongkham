@@ -5,36 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TT Medical - Đặt Lịch Khám Bệnh Trực Tuyến</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Thư viện SweetAlert2 cho Pop-up hiện đại -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="../assets/css/home.css">
+
 </head>
 <body>
-
     <div class="top-bar">
         <div class="container">
             <div class="top-bar-left">
-                <span><i class="fa-solid fa-phone"></i> Hotline: 1900 xxxx</span>
+                <a href="tel:19006868" style="color: white; text-decoration: none;"><i class="fa-solid fa-phone"></i> Hotline: 1900 6868</a>
                 <span>Thứ 2 - Chủ nhật: 7:00 - 20:00</span>
             </div>
             <div class="top-bar-right">
-                <a href="#">Liên hệ</a>
-                <a href="#">Hỗ trợ</a>
+                <a href="https://www.facebook.com/tongtho308">Liên hệ</a>
+                <a href="https://www.facebook.com/nguyen.thieu.983134">Hỗ trợ</a>
             </div>
         </div>
     </div>
-
     <nav class="navbar">
         <div class="container">
-            <a href="index.html" class="logo">
+            <a href="#" onclick="returnToHome(event)" class="logo">
                 <img src="../assets/images/logo.png" alt="Logo"> 
-                <span>TT Medical</span>
             </a>
-            
             <ul class="nav-links">
-                <li><a href="#">Trang chủ</a></li>
-                <li><a href="#">Dịch vụ <i class="fa-solid fa-chevron-down" style="font-size: 12px;"></i></a></li>
-                <li><a href="#">Bác sĩ</a></li>
-                <li><a href="#">Bài viết</a></li>
-                <li><a href="#">Hỏi đáp</a></li>
+                <li><a href="#" onclick="returnToHome(event)">Trang chủ</a></li>
+                <li class="dropdown-container">
+                    <a href="#dich-vu" onclick="scrollToSection('dich-vu', event)">Dịch vụ <i class="fa-solid fa-chevron-down" style="font-size: 12px;"></i></a>
+                    <ul class="dropdown-menu" id="specialty-dropdown">
+                        <!-- Danh sách chuyên khoa sẽ được JS tự động đổ vào đây -->
+                    </ul>
+                </li>
+                <li><a href="#bac-si" onclick="scrollToSection('bac-si', event)">Bác sĩ</a></li>
+                <li><a href="#bai-viet" onclick="scrollToSection('bai-viet', event)">Bài viết</a></li>
+                <li><a href="#hoi-dap" onclick="scrollToSection('hoi-dap', event)">Hỏi đáp</a></li>
             </ul>
 
             <div class="auth-buttons">
@@ -44,6 +49,8 @@
         </div>
     </nav>
 
+    <!-- BỌC TOÀN BỘ NỘI DUNG TRANG CHỦ VÀO MỘT THẺ DIV -->
+    <div id="main-home-content">
     <section class="hero">
         <div class="container">
             <div class="hero-content">
@@ -52,7 +59,7 @@
                 <p>Hệ thống đặt lịch khám bệnh trực tuyến hiện đại dành riêng cho TT Medical. Tiết kiệm thời gian, không còn xếp hàng chờ đợi.</p>
                 <div class="auth-buttons">
                     <a href="#" class="btn btn-primary" onclick="openModal('registerModal', event)"><i class="fa-regular fa-calendar"></i> Đặt lịch ngay</a>
-                    <a href="#" class="btn btn-outline"><i class="fa-solid fa-user-doctor"></i> Xem bác sĩ</a>
+                    <a href="#bac-si" class="btn btn-outline" onclick="scrollToSection('bac-si', event)"><i class="fa-solid fa-user-doctor"></i> Xem bác sĩ</a>
                 </div>
             </div>
             <div class="hero-image">
@@ -63,49 +70,15 @@
         </div>
     </section>
 
-    <section class="section">
+    <section id="dich-vu" class="section">
         <div class="container">
             <div class="section-title">
                 <h2>Dịch vụ y tế chất lượng cao</h2>
                 <p>Chúng tôi cung cấp đầy đủ các dịch vụ khám chữa bệnh với đội ngũ bác sĩ giàu kinh nghiệm và trang thiết bị hiện đại.</p>
             </div>
-            <div class="services-grid">
-                <div class="service-card">
-                    <div class="service-icon icon-blue"><i class="fa-solid fa-stethoscope"></i></div>
-                    <h3>Khám tổng quát</h3>
-                    <p>Kiểm tra sức khỏe định kỳ toàn diện với các xét nghiệm cơ bản và chuyên sâu.</p>
-                    <a href="#" class="service-link">Tìm hiểu thêm &rarr;</a>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon icon-pink"><i class="fa-regular fa-heart"></i></div>
-                    <h3>Tim mạch</h3>
-                    <p>Chẩn đoán và điều trị các bệnh lý về tim mạch với công nghệ hiện đại.</p>
-                    <a href="#" class="service-link">Tìm hiểu thêm &rarr;</a>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon icon-yellow"><i class="fa-solid fa-brain"></i></div>
-                    <h3>Thần kinh</h3>
-                    <p>Điều trị các bệnh lý thần kinh như đau đầu, mất ngủ, stress.</p>
-                    <a href="#" class="service-link">Tìm hiểu thêm &rarr;</a>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon icon-pink"><i class="fa-solid fa-baby"></i></div>
-                    <h3>Nhi khoa</h3>
-                    <p>Chăm sóc sức khỏe toàn diện cho trẻ em từ sơ sinh đến 16 tuổi.</p>
-                    <a href="#" class="service-link">Tìm hiểu thêm &rarr;</a>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon icon-blue"><i class="fa-regular fa-eye"></i></div>
-                    <h3>Mắt</h3>
-                    <p>Khám và điều trị các bệnh về mắt, phẫu thuật laser, cận thị.</p>
-                    <a href="#" class="service-link">Tìm hiểu thêm &rarr;</a>
-                </div>
-                <div class="service-card">
-                    <div class="service-icon icon-yellow"><i class="fa-solid fa-bone"></i></div>
-                    <h3>Cơ xương khớp</h3>
-                    <p>Điều trị các bệnh về xương khớp, vật lý trị liệu phục hồi chức năng.</p>
-                    <a href="#" class="service-link">Tìm hiểu thêm &rarr;</a>
-                </div>
+            <!-- Container để file home_specialties.js tự động đổ dữ liệu chuyên khoa vào đây -->
+            <div id="specialty-list-container" class="services-grid">
+                <p style="text-align: center; color: #6b7280; width: 100%; grid-column: 1 / -1;">Đang tải danh sách chuyên khoa...</p>
             </div>
         </div>
     </section>
@@ -119,148 +92,48 @@
         </div>
     </section>
 
-    <section class="section">
+    <section id="bac-si" class="section">
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
                 <div style="max-width: 600px;">
                     <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px;">Đội ngũ bác sĩ hàng đầu</h2>
                     <p style="color: var(--text-gray);">Các bác sĩ giàu kinh nghiệm, được đào tạo chuyên sâu tại các trường y khoa uy tín trong và ngoài nước.</p>
                 </div>
-                <button class="btn btn-outline">Xem tất cả &rarr;</button>
+                <button class="btn btn-outline" onclick="showAllDoctors(event)">Xem tất cả &rarr;</button>
             </div>
             
-            <div class="doctors-grid">
-                <div class="doctor-card">
-                    <div class="doctor-img"><div class="doctor-img-circle"><i class="fa-regular fa-user"></i></div></div>
-                    <div class="doctor-info">
-                        <div class="doc-tags"><span class="status-badge">Đang làm việc</span><span class="doc-rating"><i class="fa-solid fa-star"></i> 4.9 (128)</span></div>
-                        <h3>BS. Nguyễn Văn Minh</h3>
-                        <div class="doctor-specialty">Tim mạch</div>
-                        <div class="doctor-exp">20 năm kinh nghiệm</div>
-                        <div class="doctor-actions">
-                            <a href="#" class="btn btn-detail">Xem chi tiết</a>
-                            <a href="#" class="btn btn-book-sm">Đặt lịch</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="doctor-card">
-                    <div class="doctor-img"><div class="doctor-img-circle"><i class="fa-regular fa-user"></i></div></div>
-                    <div class="doctor-info">
-                        <div class="doc-tags"><span class="status-badge">Đang làm việc</span><span class="doc-rating"><i class="fa-solid fa-star"></i> 4.8 (95)</span></div>
-                        <h3>BS. Trần Thị Hương</h3>
-                        <div class="doctor-specialty">Nhi khoa</div>
-                        <div class="doctor-exp">15 năm kinh nghiệm</div>
-                        <div class="doctor-actions">
-                            <a href="#" class="btn btn-detail">Xem chi tiết</a>
-                            <a href="#" class="btn btn-book-sm">Đặt lịch</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="doctor-card">
-                    <div class="doctor-img"><div class="doctor-img-circle"><i class="fa-regular fa-user"></i></div></div>
-                    <div class="doctor-info">
-                        <div class="doc-tags"><span class="status-badge" style="background:#6B7280;">Nghỉ phép</span><span class="doc-rating"><i class="fa-solid fa-star"></i> 4.9 (112)</span></div>
-                        <h3>BS. Lê Hoàng Nam</h3>
-                        <div class="doctor-specialty">Thần kinh</div>
-                        <div class="doctor-exp">18 năm kinh nghiệm</div>
-                        <div class="doctor-actions">
-                            <a href="#" class="btn btn-detail">Xem chi tiết</a>
-                            <a href="#" class="btn btn-book-sm">Đặt lịch</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="doctor-card">
-                    <div class="doctor-img"><div class="doctor-img-circle"><i class="fa-regular fa-user"></i></div></div>
-                    <div class="doctor-info">
-                        <div class="doc-tags"><span class="status-badge">Đang làm việc</span><span class="doc-rating"><i class="fa-solid fa-star"></i> 4.7 (87)</span></div>
-                        <h3>BS. Phạm Thị Lan</h3>
-                        <div class="doctor-specialty">Da liễu</div>
-                        <div class="doctor-exp">12 năm kinh nghiệm</div>
-                        <div class="doctor-actions">
-                            <a href="#" class="btn btn-detail">Xem chi tiết</a>
-                            <a href="#" class="btn btn-book-sm">Đặt lịch</a>
-                        </div>
-                    </div>
-                </div>
+            <!-- Container để file home_doctors.js tự động đổ dữ liệu bác sĩ vào đây -->
+            <div id="doctor-list-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;">
+                <p style="text-align: center; color: #6b7280; width: 100%;">Đang tải danh sách bác sĩ...</p>
             </div>
         </div>
     </section>
 
-    <section class="section" style="background-color: #F8FAFC;">
+    <section id="bai-viet" class="section" style="background-color: #F8FAFC;">
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
                 <div style="max-width: 600px;">
                     <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px;">Bài viết sức khỏe</h2>
                     <p style="color: var(--text-gray);">Cập nhật kiến thức y khoa từ đội ngũ bác sĩ TT Medical.</p>
                 </div>
-                <button class="btn btn-outline">Xem tất cả bài viết &rarr;</button>
+                <button class="btn btn-outline" onclick="showAllPosts(event)">Xem tất cả bài viết &rarr;</button>
             </div>
-            <div class="articles-grid">
-                <div class="article-card">
-                    <div class="article-img"><i class="fa-regular fa-file-lines"></i></div>
-                    <div class="article-content">
-                        <div class="article-meta"><span class="article-tag">Tim mạch</span><span><i class="fa-regular fa-clock"></i> 5 phút đọc</span></div>
-                        <h3>10 thói quen bảo vệ sức khỏe tim mạch</h3>
-                        <p>Tìm hiểu những thói quen đơn giản hàng ngày giúp trái tim luôn khỏe mạnh...</p>
-                        <div class="article-footer"><span>15/04/2026</span><a href="#" class="article-link">Đọc thêm &rarr;</a></div>
-                    </div>
-                </div>
-                <div class="article-card">
-                    <div class="article-img"><i class="fa-regular fa-file-lines"></i></div>
-                    <div class="article-content">
-                        <div class="article-meta"><span class="article-tag">Nhi khoa</span><span><i class="fa-regular fa-clock"></i> 7 phút đọc</span></div>
-                        <h3>Chăm sóc trẻ sơ sinh trong mùa hè</h3>
-                        <p>Những lưu ý quan trọng khi chăm sóc trẻ trong thời tiết nóng bức...</p>
-                        <div class="article-footer"><span>12/04/2026</span><a href="#" class="article-link">Đọc thêm &rarr;</a></div>
-                    </div>
-                </div>
-                <div class="article-card">
-                    <div class="article-img"><i class="fa-regular fa-file-lines"></i></div>
-                    <div class="article-content">
-                        <div class="article-meta"><span class="article-tag">Cơ xương khớp</span><span><i class="fa-regular fa-clock"></i> 6 phút đọc</span></div>
-                        <h3>Điều trị đau lưng hiệu quả</h3>
-                        <p>Đau lưng là vấn đề phổ biến, tìm hiểu các phương pháp điều trị mới nhất...</p>
-                        <div class="article-footer"><span>10/04/2026</span><a href="#" class="article-link">Đọc thêm &rarr;</a></div>
-                    </div>
-                </div>
+            <!-- Container để file home_posts.js tự động đổ dữ liệu bài viết vào đây -->
+            <div id="post-list-container" class="articles-grid">
+                <p style="text-align: center; color: #6b7280; width: 100%; grid-column: 1 / -1;">Đang tải danh sách bài viết...</p>
             </div>
         </div>
     </section>
 
-    <section class="section">
+    <section id="hoi-dap" class="section">
         <div class="container">
             <div class="section-title">
-                <h2>Bệnh nhân nói gì về TT Medical</h2>
-                <p>Sự hài lòng của bệnh nhân là động lực để chúng tôi không ngừng nâng cao chất lượng dịch vụ.</p>
+                <h2>Hỏi đáp thường gặp</h2>
+                <p>Giải đáp những thắc mắc phổ biến của bệnh nhân khi sử dụng dịch vụ tại TT Medical.</p>
             </div>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="quote-icon"><i class="fa-solid fa-quote-left"></i></div>
-                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                    <p class="testi-text">"Dịch vụ tại TT Medical rất tốt, đặt lịch nhanh chóng. Bác sĩ tư vấn rất nhiệt tình."</p>
-                    <div class="testi-author">
-                        <div class="author-avatar"><i class="fa-regular fa-user"></i></div>
-                        <div class="author-info"><h4>Chị Nguyễn Thị Mai</h4><p>Khám tổng quát</p></div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="quote-icon"><i class="fa-solid fa-quote-left"></i></div>
-                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                    <p class="testi-text">"Phòng khám sạch sẽ, trang thiết bị hiện đại. Tôi rất an tâm khi khám bệnh tại đây."</p>
-                    <div class="testi-author">
-                        <div class="author-avatar"><i class="fa-regular fa-user"></i></div>
-                        <div class="author-info"><h4>Anh Trần Văn Hùng</h4><p>Tim mạch</p></div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="quote-icon"><i class="fa-solid fa-quote-left"></i></div>
-                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                    <p class="testi-text">"Các bác sĩ nhi khoa rất yêu trẻ và chuyên môn giỏi. Con tôi đã khỏe mạnh trở lại nhanh chóng."</p>
-                    <div class="testi-author">
-                        <div class="author-avatar"><i class="fa-regular fa-user"></i></div>
-                        <div class="author-info"><h4>Chị Lê Thị Hoa</h4><p>Nhi khoa</p></div>
-                    </div>
-                </div>
+            <!-- Container để JS tự động đổ dữ liệu hỏi đáp từ CSDL vào -->
+            <div id="faq-list-container" class="faq-container">
+                <p style="text-align: center; color: #6b7280; width: 100%;">Đang tải dữ liệu hỏi đáp...</p>
             </div>
         </div>
     </section>
@@ -271,7 +144,60 @@
             <p>Đội ngũ bác sĩ của chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7 tại TT Medical.</p>
             <div style="display: flex; gap: 16px; justify-content: center;">
                 <button class="btn" style="background: white; color: var(--text-dark);">Đặt lịch trực tuyến</button>
-                <button class="btn" style="border: 1px solid white; color: white;">Gọi hotline hỗ trợ</button>
+                <a href="tel:19006868" class="btn" style="border: 1px solid white; color: white; text-decoration: none;">Gọi hotline hỗ trợ</a>
+            </div>
+        </div>
+    </section>
+    </div>
+
+    <!-- GIAO DIỆN ĐỌC BÀI VIẾT HIỂN THỊ FULL TRANG (Nằm dưới menu, trên footer) -->
+    <section id="post-detail-view" style="display: none; background-color: #f8fafc; padding: 40px 0 80px 0; min-height: 80vh;">
+        <div class="container" style="max-width: 900px; background: white; padding: 50px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="margin-bottom: 25px; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px;">
+                <h1 id="page_post_title" style="color: #111827; font-size: 32px; font-weight: 800; margin-bottom: 15px; line-height: 1.4;"></h1>
+                <div id="page_post_meta" style="display: flex; align-items: center; gap: 15px; color: #6b7280; font-size: 15px;"></div>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <img id="page_post_img" src="" alt="Post Image" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            </div>
+
+            <div id="page_post_content" style="color: #374151; line-height: 1.8; font-size: 18px; text-align: justify;"></div>
+
+            <div style="margin-top: 50px; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 30px;">
+                <button onclick="returnToHome(event)" class="btn btn-outline" style="padding: 12px 25px; border-radius: 25px; font-weight: 600;">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại Trang chủ
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- GIAO DIỆN TẤT CẢ BÁC SĨ (Ẩn mặc định) -->
+    <section id="all-doctors-view" style="display: none; background-color: #f8fafc; padding: 60px 0 80px 0; min-height: 80vh;">
+        <div class="container">
+            <div style="margin-bottom: 40px; text-align: center;">
+                <h1 style="font-size: 32px; font-weight: 800; color: #111827;">Đội ngũ Bác sĩ chuyên môn cao</h1>
+                <p style="color: #6b7280; margin-top: 10px;">Toàn bộ danh sách bác sĩ chuyên khoa đang công tác tại TT Medical</p>
+            </div>
+            <div id="all-doctors-list-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;">
+            </div>
+            <div style="margin-top: 50px; text-align: center;">
+                <button onclick="returnToHome(event)" class="btn btn-outline" style="padding: 12px 25px; border-radius: 25px; font-weight: 600;"><i class="fa-solid fa-arrow-left"></i> Quay lại Trang chủ</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- GIAO DIỆN TẤT CẢ BÀI VIẾT (Ẩn mặc định) -->
+    <section id="all-posts-view" style="display: none; background-color: #f8fafc; padding: 60px 0 80px 0; min-height: 80vh;">
+        <div class="container">
+            <div style="margin-bottom: 40px; text-align: center;">
+                <h1 style="font-size: 32px; font-weight: 800; color: #111827;">Tất cả Bài viết sức khỏe</h1>
+                <p style="color: #6b7280; margin-top: 10px;">Cập nhật kiến thức y khoa và tin tức sức khỏe mới nhất mỗi ngày</p>
+            </div>
+            <div id="all-posts-list-container" class="articles-grid">
+            </div>
+            <div style="margin-top: 50px; text-align: center;">
+                <button onclick="returnToHome(event)" class="btn btn-outline" style="padding: 12px 25px; border-radius: 25px; font-weight: 600;"><i class="fa-solid fa-arrow-left"></i> Quay lại Trang chủ</button>
             </div>
         </div>
     </section>
@@ -280,45 +206,44 @@
         <div class="container footer-grid">
             <div class="footer-col">
                 <a href="#" class="logo" style="color: white; margin-bottom: 20px;">
-                    <img src="../assets/images/logo.png" alt="Logo" style="filter: brightness(0) invert(1); height: 35px; width: auto; margin-right: 10px;">
-                    <span style="color: white;">TT Medical</span>
+                    <img src="../assets/images/logo.png" alt="Logo" style="filter: brightness(0) invert(1); height: 65px; width: auto;">
                 </a>
                 <p>Hệ thống đặt lịch khám trực tuyến hàng đầu. Đồng hành cùng sức khỏe của bạn và gia đình.</p>
             </div>
             <div class="footer-col">
                 <h3>Liên kết</h3>
                 <ul>
-                    <li><a href="#">Về TT Medical</a></li>
-                    <li><a href="#">Đội ngũ bác sĩ</a></li>
-                    <li><a href="#">Dịch vụ y tế</a></li>
+                    <li><a href="#trang-chu">Về TT Medical</a></li>
+                    <li><a href="#bac-si">Đội ngũ bác sĩ</a></li>
+                    <li><a href="#dich-vu">Dịch vụ y tế</a></li>
                 </ul>
             </div>
             <div class="footer-col">
                 <h3>Chuyên khoa</h3>
-                <ul>
-                    <li><a href="#">Tim mạch</a></li>
-                    <li><a href="#">Nhi khoa</a></li>
-                    <li><a href="#">Thần kinh</a></li>
+                <!-- Gắn ID để JS tự động đổ dữ liệu vào đây -->
+                <ul id="footer-specialty-list">
+                    <li><a href="#dich-vu">Đang tải...</a></li>
                 </ul>
             </div>
             <div class="footer-col">
                 <h3>Liên hệ</h3>
                 <ul>
                     <li style="color: #94A3B8;">Hà Nội, Việt Nam</li>
-                    <li style="color: #94A3B8;">1900 xxxx</li>
+                    <li style="color: #94A3B8;"><a href="tel:19006868" style="color: inherit; text-decoration: none;">1900 6868</a></li>
                     <li style="color: #94A3B8;">contact@ttmedical.vn</li>
                 </ul>
             </div>
         </div>
         <div class="container footer-bottom">
-            <span>&copy; 2026 TT Medical. Đồ án tốt nghiệp IT.</span>
+            <span>&copy; 2026 TT Medical 
+            <br>Desgine by: Tống Xuân Thọ, Nguyễn Văn Thiệu</span>
             <div style="display: flex; gap: 20px;">
                 <a href="#">Bảo mật</a>
                 <a href="#">Điều khoản</a>
             </div>
         </div>
     </footer>
-
+    #Các Form đăng ký đăng nhập trên trang chủ (Ẩn mặc định, chỉ hiện khi bấm nút đăng nhập hoặc đăng ký ở header hoặc hero)
     <div id="loginModal" class="modal-overlay">
         <div class="auth-card">
             <span class="close-btn" onclick="closeModal('loginModal')">&times;</span>
@@ -433,6 +358,37 @@
         </div>
     </div>
 
+    <!-- Modal Chi tiết Bác sĩ -->
+    <div id="doctorDetailModal" class="modal-overlay">
+        <div class="auth-card" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+            <span class="close-btn" onclick="closeDoctorDetailsModal()">&times;</span>
+            
+            <div class="card-header" style="text-align: center; margin-bottom: 20px;">
+                <h1 class="title">Thông tin Bác sĩ</h1>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                <img id="detail_doc_img" src="" alt="Avatar" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f3f4f6;">
+                <h2 id="detail_doc_name" style="color: #1f2937; margin: 0; font-size: 24px;"></h2>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                    <span style="background: #e0f2fe; color: #0369a1; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i class="fa-solid fa-stethoscope"></i> <span id="detail_doc_spec"></span></span>
+                    <span style="background: #f3f4f6; color: #4b5563; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i class="fa-solid fa-briefcase-medical"></i> <span id="detail_doc_exp"></span></span>
+                    <span style="background: #fee2e2; color: #991b1b; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i class="fa-solid fa-money-bill-wave"></i> <span id="detail_doc_price"></span></span>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px;">
+                <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">Tiểu sử & Kinh nghiệm</h3>
+                <p id="detail_doc_bio" style="color: #4b5563; line-height: 1.6; font-size: 15px; white-space: pre-wrap;"></p>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button onclick="closeDoctorDetailsModal()" class="btn btn-outline" style="flex: 1; text-align: center;">Đóng</button>
+                <button onclick="Swal.fire('Thông báo', 'Tính năng đặt lịch đang phát triển', 'info')" class="btn btn-primary" style="flex: 1; text-align: center;">Đặt lịch khám</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Mở popup
         function openModal(modalId, e) {
@@ -461,8 +417,28 @@
                 document.body.style.overflow = 'auto';
             }
         }
+
+        // Hàm cuộn mượt mà đến các phần trên trang
+        function scrollToSection(sectionId, event) {
+            if (event) event.preventDefault();
+            
+            const mainContent = document.getElementById('main-home-content');
+            // Nếu đang xem bài viết (trang chủ bị ẩn), thì hiện lại trang chủ trước
+            if (mainContent && mainContent.style.display === 'none') {
+                if(typeof returnToHome === 'function') returnToHome();
+                setTimeout(() => {
+                    document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+                }, 100); // Đợi hiển thị xong mới cuộn
+            } else {
+                document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+            }
+        }
     </script>
     
     <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/home_doctors.js"></script>
+    <script src="../assets/js/home_posts.js"></script>
+    <script src="../assets/js/home_specialties.js"></script>
+    <script src="../assets/js/home_qa.js"></script>
 </body>
 </html>
