@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bác sĩ Dashboard - TT Medical</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="../../assets/css/home.css">
+    <link rel="stylesheet" href="../../assets/css/doctor.css">
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-left">
+                <a href="tel:19006868"><i class="fa-solid fa-phone"></i> Hotline: 1900 6868</a>
+                <span style="margin-left: 20px;">Thứ 2 - CN: 7:00 - 20:00</span>
+            </div>
+            <div class="top-bar-right">
+                <a href="https://www.facebook.com/tongtho308">Liên hệ</a>
+                <a href="https://www.facebook.com/nguyen.thieu.983134">Hỗ trợ</a>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="#" class="logo">
+                <img src="../../assets/images/logo.png" alt="Logo" style="height: 75px; transform: scale(1.1); margin-left: 10px; object-fit: contain;">
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="#" class="tab-link active" onclick="switchTab(event, 'tab-lich-kham')"><i class="fa-solid fa-calendar-check"></i> Lịch hẹn</a></li>
+                <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-lich-lam-viec')"><i class="fa-solid fa-clock"></i> Ca làm việc</a></li>
+                <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-hoi-dap')"><i class="fa-solid fa-comments"></i> Hỏi đáp</a></li>
+                <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-ho-so')"><i class="fa-solid fa-user-doctor"></i> Hồ sơ</a></li>
+            </ul>
+            
+            <div class="user-menu" onclick="confirmLogout(event)">
+                <div class="user-dropdown-btn">
+                    <img id="nav_doctor_img" src="../../assets/images/doctors/default-avatar.png" alt="Avatar">
+                    <span class="doc-name">BS. <span id="doctorName">Đang tải...</span></span>
+                    <i class="fa-solid fa-caret-down" style="color: var(--primary); margin-left: 5px;"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-wrapper">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#e0f2fe; color:#0284C7;"><i class="fa-solid fa-calendar-day"></i></div>
+                <div class="stat-info"><p>Khám hôm nay</p><h3>08</h3></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-bell"></i></div>
+                <div class="stat-info"><p>Chờ duyệt</p><h3>05</h3></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#dcfce7; color:#166534;"><i class="fa-solid fa-check-double"></i></div>
+                <div class="stat-info"><p>Đã khám xong</p><h3>120</h3></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#f3e8ff; color:#9333ea;"><i class="fa-solid fa-messages"></i></div>
+                <div class="stat-info"><p>Hỏi đáp mới</p><h3>03</h3></div>
+            </div>
+        </div>
+
+        <div class="main-content-card">
+            
+            <div id="tab-lich-kham" class="tab-content active">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                    <h2 style="font-size:22px; margin:0;">Danh sách Lịch hẹn</h2>
+                    <input type="text" placeholder="Tìm theo tên, mã..." style="padding:10px 15px; border:1px solid #e2e8f0; border-radius:8px; width: 250px;">
+                </div>
+                
+                <div class="filter-tabs">
+                    <button class="filter-btn active" onclick="filterAppointments(event, 'all')">Tất cả</button>
+                    <button class="filter-btn" onclick="filterAppointments(event, 'pending')">Chờ duyệt (5)</button>
+                    <button class="filter-btn" onclick="filterAppointments(event, 'approved')">Đã duyệt (8)</button>
+                    <button class="filter-btn" onclick="filterAppointments(event, 'done')">Đã khám</button>
+                </div>
+
+                <table class="custom-table">
+                    <thead><tr><th>Mã LK</th><th>Bệnh nhân</th><th>Thời gian</th><th>Lý do khám</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>#LK001</strong></td>
+                            <td><b>Nguyễn Văn A</b><br><span style="color:var(--text-sub); font-size:12px;">0912-345-678</span></td>
+                            <td>22/04/2026<br><span style="color:var(--primary); font-size:12px;">08:00 - 11:30</span></td>
+                            <td>Đau tức ngực</td>
+                            <td><span class="badge badge-pending"><span class="dot" style="background:#f59e0b"></span>Chờ duyệt</span></td>
+                            <td style="display:flex; gap:5px;">
+                                <button class="action-btn btn-success" onclick="approveAppointment('LK001')" title="Duyệt"><i class="fa-solid fa-check"></i></button>
+                                <button class="action-btn btn-danger" onclick="cancelAppointment('LK001')" title="Hủy"><i class="fa-solid fa-xmark"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>#LK002</strong></td>
+                            <td><b>Trần Thị B</b><br><span style="color:var(--text-sub); font-size:12px;">0988-777-666</span></td>
+                            <td>22/04/2026<br><span style="color:var(--primary); font-size:12px;">13:30 - 17:00</span></td>
+                            <td>Khám định kỳ</td>
+                            <td><span class="badge badge-approved"><span class="dot" style="background:#22c55e"></span>Đã duyệt</span></td>
+                            <td>
+                                <button class="action-btn btn-primary" onclick="openMedicalRecord('LK002', 'Trần Thị B')" style="width: auto; padding: 8px 15px;"><i class="fa-solid fa-stethoscope"></i> Khám bệnh</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="tab-lich-lam-viec" class="tab-content">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
+                    <h2 style="font-size:22px; margin:0;">Ca làm việc của tôi</h2>
+                    <button class="btn btn-primary" onclick="openShiftModal()"><i class="fa-solid fa-plus"></i> Đăng ký ca</button>
+                </div>
+                <table class="custom-table">
+                    <thead><tr><th>Ngày làm việc</th><th>Khung giờ</th><th>Số lượng tối đa</th><th>Tình trạng đặt</th></tr></thead>
+                    <tbody>
+                        <tr><td><b>22/04/2026</b></td><td><span style="color: var(--primary); font-weight: 600;">08:00 - 11:30</span></td><td>20 Bệnh nhân / Ca</td><td><span style="color:#166534; font-weight:bold;">15/20</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="tab-hoi-dap" class="tab-content">
+                <h2 style="font-size:22px; margin:0;">Hỏi đáp từ Bệnh nhân</h2>
+                <div class="qa-list">
+                    <div class="qa-item">
+                        <div class="qa-header">
+                            <h4>Tác dụng phụ của thuốc huyết áp? (Mã CH: #102)</h4>
+                            <span class="qa-date">Hôm qua, 14:30 | Người hỏi: Nguyễn D</span>
+                        </div>
+                        <div class="qa-content">Chào bác sĩ, tôi uống đơn thuốc huyết áp bác sĩ kê được 3 ngày thì thấy hay bị chóng mặt vào buổi sáng. Tôi có nên dừng thuốc không ạ?</div>
+                        <button class="btn btn-primary" onclick="replyQA('102')"><i class="fa-solid fa-reply"></i> Trả lời bệnh nhân</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-ho-so" class="tab-content">
+                <h2 style="font-size:22px; margin-bottom:10px;">Hồ sơ cá nhân & Chuyên môn</h2>
+                <p style="color: var(--text-sub); margin-bottom: 20px; font-size: 14px;"><i class="fa-solid fa-lock" style="color: #94a3b8;"></i> Dữ liệu hồ sơ chỉ được xem, không thể chỉnh sửa.</p>
+                <div class="profile-grid">
+                    <div class="input-group"><label>Họ và tên</label><input type="text" id="hs_ten" readonly></div>
+                    <div class="input-group"><label>Số điện thoại</label><input type="text" id="hs_sdt" readonly></div>
+                    <div class="input-group"><label>Email</label><input type="text" id="hs_email" readonly></div>
+                    <div class="input-group"><label>Chuyên khoa</label><input type="text" id="hs_chuyen_khoa" readonly></div>
+                    <div class="input-group"><label>Năm kinh nghiệm</label><input type="text" id="hs_kinh_nghiem" readonly></div>
+                    <div class="input-group"><label>Phí khám bệnh (VNĐ)</label><input type="text" id="hs_phi_kham" readonly></div>
+                    <div class="input-group" style="grid-column: 1 / -1;">
+                        <label>Tiểu sử / Quá trình công tác</label>
+                        <textarea id="hs_tieu_su" rows="4" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../../assets/js/doctor_panel.js"></script>
+</body>
+</html>

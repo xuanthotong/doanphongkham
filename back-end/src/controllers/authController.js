@@ -73,19 +73,27 @@ const registerPatient = async (req, res) => {
     }
 };
 
-// 2. API ĐĂNG NHẬP (Dành cho Admin, Bác sĩ & Bệnh nhân)
+// 2. API ĐĂNG NHẬP (LẤY DỮ LIỆU THẬT ĐỒNG BỘ)
 const login = async (req, res) => {
     try {
         const { ten_dang_nhap, mat_khau } = req.body;
         const pool = await connectDB();
         
-        // JOIN 2 bảng để lấy Tên Vai Trò (dùng để điều hướng)
+        // Dùng LEFT JOIN để lấy tất cả dữ liệu từ các bảng Hồ Sơ
         const result = await pool.request()
             .input('ten_dang_nhap', sql.VarChar, ten_dang_nhap)
             .query(`
-                SELECT tk.*, vt.ten_vai_tro 
+                SELECT 
+                    tk.id, tk.ten_dang_nhap, tk.email, tk.mat_khau, tk.trang_thai, tk.vai_tro_id,
+                    vt.ten_vai_tro,
+                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien,
+                    hsbs.nam_kinh_nghiem, hsbs.phi_kham, hsbs.tieu_su,
+                    ck.ten_chuyen_khoa
                 FROM TaiKhoan tk
                 JOIN VaiTro vt ON tk.vai_tro_id = vt.id
+                LEFT JOIN HoSoNguoiDung hsnd ON tk.id = hsnd.tai_khoan_id
+                LEFT JOIN HoSoBacSi hsbs ON tk.id = hsbs.tai_khoan_id
+                LEFT JOIN ChuyenKhoa ck ON hsbs.chuyen_khoa_id = ck.id
                 WHERE tk.ten_dang_nhap = @ten_dang_nhap
             `);
 
@@ -93,23 +101,38 @@ const login = async (req, res) => {
         if (!user) return res.status(400).json({ message: 'Tên đăng nhập không tồn tại!' });
         if (!user.trang_thai) return res.status(403).json({ message: 'Tài khoản của bạn đã bị khóa!' });
 
-        // So sánh Password
         const isMatch = await bcrypt.compare(mat_khau, user.mat_khau);
         if (!isMatch) return res.status(400).json({ message: 'Mật khẩu không chính xác!' });
 
-        // Tạo JWT Token
         const token = jwt.sign(
             { id: user.id, vai_tro_id: user.vai_tro_id, ten_vai_tro: user.ten_vai_tro },
             process.env.JWT_SECRET || 'ttmedical_secret_key',
             { expiresIn: '1d' }
         );
 
-        // Logic trả về đường dẫn dựa theo Role
-        let redirectUrl = '../pages/patient/index.html'; // Mặc định cho Bệnh Nhân (Giao diện Trang chủ)
+        let redirectUrl = '../pages/patient/index.html'; 
         if (user.ten_vai_tro === 'Admin') redirectUrl = '../pages/admin/dashboard.html';
         else if (user.ten_vai_tro === 'BacSi') redirectUrl = '../pages/doctor/doctor.html';
 
-        res.json({ message: 'Đăng nhập thành công', token, user: { id: user.id, username: user.ten_dang_nhap, role: user.ten_vai_tro }, redirectUrl });
+        // ĐỒNG BỘ: Trả về cục dữ liệu chứa đầy đủ thông tin để lưu vào localStorage
+        res.json({ 
+            message: 'Đăng nhập thành công', 
+            token, 
+            user: { 
+                id: user.id, 
+                ten_dang_nhap: user.ten_dang_nhap, 
+                role: user.ten_vai_tro,
+                email: user.email,
+                ho_ten: user.ho_ten,
+                so_dien_thoai: user.so_dien_thoai,
+                anh_dai_dien: user.anh_dai_dien,
+                nam_kinh_nghiem: user.nam_kinh_nghiem,
+                phi_kham: user.phi_kham,
+                tieu_su: user.tieu_su,
+                ten_chuyen_khoa: user.ten_chuyen_khoa
+            }, 
+            redirectUrl 
+        });
     } catch (error) {
         console.error('Lỗi đăng nhập:', error);
         res.status(500).json({ message: 'Lỗi server khi đăng nhập' });
