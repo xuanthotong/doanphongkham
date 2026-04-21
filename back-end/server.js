@@ -7,6 +7,9 @@ const doctorRoutes = require('./src/routes/doctorRoutes');
 const accountRoutes = require('./src/routes/accountRoutes');
 const chuyenKhoaRoutes = require('./src/routes/chuyenKhoaRoutes');
 const postRoutes = require('./src/routes/postRoutes');
+const doctorpageRoutes = require('./src/routes/doctorpageRoutes');
+const qaRoutes = require('./src/routes/qaRoutes');
+const passwordRoutes = require('./src/routes/passwordRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +27,9 @@ app.use('/api/specialties', chuyenKhoaRoutes);
 app.use('/api/posts', postRoutes);
 // Thêm dòng này vào file server.js của bạn
 app.use('/api/categories', require('./src/routes/danhMucRoutes'));
+app.use('/api', doctorpageRoutes);
+app.use('/api/questions', qaRoutes);
+app.use('/api/password', passwordRoutes);
 
 // Khởi động server và kết nối DB
 app.listen(PORT, async () => {

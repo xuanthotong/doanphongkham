@@ -4,14 +4,8 @@ const qaTbody = document.getElementById('qaTableBody');
 // HÀM LẤY CÂU HỎI TỪ CƠ SỞ DỮ LIỆU
 async function fetchQuestions() {
     try {
-        // [TƯƠNG LAI]: Mở comment để fetch API
-        // const response = await fetch('http://localhost:3000/api/questions');
-        // questions = await response.json();
-
-        // [HIỆN TẠI]: Dữ liệu giả lập (Sau này XÓA đoạn này đi)
-        questions = [
-            { id: 1, ma_ch: "#QA102", benh_nhan: "Nguyễn Văn A", chuyen_khoa: "Tai Mũi Họng", tieu_de: "Viêm họng hạt", noi_dung: "Bác sĩ cho em hỏi dạo này nuốt nước bọt đau rát thì uống thuốc gì ạ?", bac_si: "Chưa phân công", tra_loi: "", ngay_gui: "16/04/2026", trang_thai: 0 }
-        ];
+        const response = await fetch('http://localhost:3000/api/questions');
+        questions = await response.json();
         renderQATable();
     } catch (error) {
         console.error("Lỗi lấy câu hỏi:", error);
@@ -32,16 +26,19 @@ function renderQATable() {
             ? `<span class="badge" style="background-color: #dcfce7; color: #166534;">Đã trả lời</span>` 
             : `<span class="badge" style="background-color: #fef08a; color: #854d0e;">Chưa trả lời</span>`;
 
+        const date = new Date(q.ngay_tao || Date.now());
+        const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td style="font-weight: bold; color: var(--primary-color);">${q.ma_ch}</td>
-            <td style="font-weight: 600;">${q.benh_nhan}</td>
-            <td>${q.chuyen_khoa}</td>
+            <td style="font-weight: bold; color: var(--primary-color);">#${q.id}</td>
+            <td style="font-weight: 600;">${q.nguoi_hoi || 'Ẩn danh'}</td>
+            <td>Chung</td>
             <td style="white-space: normal; max-width: 150px; font-weight: 500;">${q.tieu_de}</td>
             <td style="white-space: normal; max-width: 250px; color: #4b5563;">${q.noi_dung}</td>
-            <td>${q.bac_si}</td>
+            <td>Admin/Bác sĩ</td>
             <td style="white-space: normal; max-width: 250px; color: #10b981; font-weight: 500;">${q.tra_loi}</td>
-            <td>${q.ngay_gui}</td>
+            <td>${dateStr}</td>
             <td>${statusBadge}</td>
             <td>
                 <button class="action-btn edit" onclick="replyQA(${q.id})" title="Trả lời Bệnh nhân"><i class="fa-solid fa-reply"></i></button>
@@ -52,7 +49,6 @@ function renderQATable() {
     });
 }
 
-// [TƯƠNG LAI]: Hàm gọi API lưu câu trả lời của Bác sĩ vào CSDL
 async function replyQA(id) {
     const q = questions.find(item => item.id === id);
     if(!q) return;
@@ -71,19 +67,23 @@ async function replyQA(id) {
                 return 'Vui lòng nhập nội dung trả lời!'
             }
         }
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
-            // VD API: await fetch(`/api/questions/${id}/reply`, { method: 'POST', body: JSON.stringify({ tra_loi: result.value }) });
-            q.tra_loi = result.value;
-            q.bac_si = "Admin (Đã TL)";
-            q.trang_thai = 1; 
-            renderQATable();
-            Swal.fire('Đã gửi!', 'Câu trả lời đã được lưu.', 'success');
+            try {
+                const res = await fetch(`http://localhost:3000/api/questions/${id}/reply`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tra_loi: result.value })
+                });
+                if (res.ok) {
+                    Swal.fire('Đã gửi!', 'Câu trả lời đã được lưu.', 'success');
+                    fetchQuestions(); // Cập nhật lại giao diện
+                } else Swal.fire('Lỗi', 'Không thể trả lời!', 'error');
+            } catch(e) { console.error(e); }
         }
     });
 }
 
-// [TƯƠNG LAI]: Hàm gọi API xóa câu hỏi khỏi CSDL
 async function deleteQA(id) {
     Swal.fire({
         title: 'Xác nhận xóa',
@@ -94,12 +94,15 @@ async function deleteQA(id) {
         cancelButtonColor: '#9ca3af',
         confirmButtonText: 'Đồng ý xóa',
         cancelButtonText: 'Hủy'
-    }).then((result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
-            // VD API: await fetch(`/api/questions/${id}`, { method: 'DELETE' });
-            questions = questions.filter(q => q.id !== id);
-            renderQATable();
-            Swal.fire('Đã xóa!', 'Xóa câu hỏi thành công.', 'success');
+            try {
+                const res = await fetch(`http://localhost:3000/api/questions/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    Swal.fire('Đã xóa!', 'Xóa câu hỏi thành công.', 'success');
+                    fetchQuestions();
+                } else Swal.fire('Lỗi', 'Không thể xóa!', 'error');
+            } catch(e) { console.error(e); }
         }
     });
 }

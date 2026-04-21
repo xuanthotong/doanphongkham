@@ -85,7 +85,7 @@
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã CK</th>
+                            <th>Mã chuyên khoa</th>
                             <th>Tên chuyên khoa</th>
                             <th>Mô tả chi tiết</th>
                             <th>Thao tác</th>
@@ -179,10 +179,18 @@
             </div>
 
             <div class="table-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                         <h2 style="font-size: 22px; margin: 0;">Danh sách Lịch hẹn</h2>
+                     <div class="search-box" style="position: relative;">
+                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                         <input type="text" id="searchAdminAppointment" oninput="renderAppointmentTable()" placeholder="Tìm tên BN, BS, mã LK, SĐT..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 300px; outline: none; transition: border-color 0.3s;">
+            </div>
+        </div>
+
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã LH</th>
+                            <th>Mã lịch hẹn</th>
                             <th>Bệnh nhân</th>
                             <th>Bác sĩ phụ trách</th>
                             <th>Ngày khám</th>
@@ -202,13 +210,13 @@
 
         <section id="section-qa" class="content" style="display: none;">
             <div class="page-header">
-                <h1 class="page-title">Hỏi đáp Y khoa</h1>
+                <h1 class="page-title">Quản lý câu hỏi</h1>
             </div>
             <div class="table-container">
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã CH</th>
+                            <th>Mã câu hỏi</th>
                             <th>Bệnh nhân hỏi</th>
                             <th>Chuyên khoa</th>
                             <th>Tiêu đề câu hỏi</th>

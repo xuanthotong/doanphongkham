@@ -90,10 +90,3 @@ CREATE TABLE HoiDap (
     ngay_tao DATETIME DEFAULT GETDATE()
 );
 
--- ==========================================
--- THÊM DỮ LIỆU MẶC ĐỊNH (SEED DATA) CHO AUTH
--- ==========================================
-INSERT INTO VaiTro (ten_vai_tro) VALUES ('Admin'), ('BacSi'), ('BenhNhan');
--- Thêm tài khoản Admin (Mật khẩu đã mã hóa Bcrypt tương ứng với admin123)
-INSERT INTO TaiKhoan (vai_tro_id, ten_dang_nhap, mat_khau, email, trang_thai) 
-VALUES (1, 'admin', '$2b$10$tZ2.iL.8r1H0aM/w9vJ9K.lX72s.YvX1OQ.vB7V/Hw2P2mJq8U9gC', 'admin@ttmedical.com', 1);

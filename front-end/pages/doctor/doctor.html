@@ -51,19 +51,19 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon" style="background:#e0f2fe; color:#0284C7;"><i class="fa-solid fa-calendar-day"></i></div>
-                <div class="stat-info"><p>Khám hôm nay</p><h3>08</h3></div>
+                <div class="stat-info"><p>Khám hôm nay</p><h3 id="stat_today">00</h3></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-bell"></i></div>
-                <div class="stat-info"><p>Chờ duyệt</p><h3>05</h3></div>
+                <div class="stat-info"><p>Chờ duyệt</p><h3 id="stat_pending">00</h3></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background:#dcfce7; color:#166534;"><i class="fa-solid fa-check-double"></i></div>
-                <div class="stat-info"><p>Đã khám xong</p><h3>120</h3></div>
+                <div class="stat-info"><p>Đã khám xong</p><h3 id="stat_done">00</h3></div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon" style="background:#f3e8ff; color:#9333ea;"><i class="fa-solid fa-messages"></i></div>
-                <div class="stat-info"><p>Hỏi đáp mới</p><h3>03</h3></div>
+                <div class="stat-icon" style="background:#f3e8ff; color:#9333ea;"><i class="fa-solid fa-question"></i></div>
+                <div class="stat-info"><p>Hỏi đáp mới</p><h3 id="stat_qa">00</h3></div>
             </div>
         </div>
 
@@ -72,7 +72,7 @@
             <div id="tab-lich-kham" class="tab-content active">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
                     <h2 style="font-size:22px; margin:0;">Danh sách Lịch hẹn</h2>
-                    <input type="text" placeholder="Tìm theo tên, mã..." style="padding:10px 15px; border:1px solid #e2e8f0; border-radius:8px; width: 250px;">
+                    <input type="text" id="searchAppointment" oninput="renderAppointments()" placeholder="Tìm theo tên, mã, SĐT..." style="padding:10px 15px; border:1px solid #e2e8f0; border-radius:8px; width: 250px;">
                 </div>
                 
                 <div class="filter-tabs">
@@ -84,28 +84,8 @@
 
                 <table class="custom-table">
                     <thead><tr><th>Mã LK</th><th>Bệnh nhân</th><th>Thời gian</th><th>Lý do khám</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>#LK001</strong></td>
-                            <td><b>Nguyễn Văn A</b><br><span style="color:var(--text-sub); font-size:12px;">0912-345-678</span></td>
-                            <td>22/04/2026<br><span style="color:var(--primary); font-size:12px;">08:00 - 11:30</span></td>
-                            <td>Đau tức ngực</td>
-                            <td><span class="badge badge-pending"><span class="dot" style="background:#f59e0b"></span>Chờ duyệt</span></td>
-                            <td style="display:flex; gap:5px;">
-                                <button class="action-btn btn-success" onclick="approveAppointment('LK001')" title="Duyệt"><i class="fa-solid fa-check"></i></button>
-                                <button class="action-btn btn-danger" onclick="cancelAppointment('LK001')" title="Hủy"><i class="fa-solid fa-xmark"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>#LK002</strong></td>
-                            <td><b>Trần Thị B</b><br><span style="color:var(--text-sub); font-size:12px;">0988-777-666</span></td>
-                            <td>22/04/2026<br><span style="color:var(--primary); font-size:12px;">13:30 - 17:00</span></td>
-                            <td>Khám định kỳ</td>
-                            <td><span class="badge badge-approved"><span class="dot" style="background:#22c55e"></span>Đã duyệt</span></td>
-                            <td>
-                                <button class="action-btn btn-primary" onclick="openMedicalRecord('LK002', 'Trần Thị B')" style="width: auto; padding: 8px 15px;"><i class="fa-solid fa-stethoscope"></i> Khám bệnh</button>
-                            </td>
-                        </tr>
+                    <tbody id="appointmentTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: #64748B;">Đang tải danh sách lịch hẹn...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -116,24 +96,17 @@
                     <button class="btn btn-primary" onclick="openShiftModal()"><i class="fa-solid fa-plus"></i> Đăng ký ca</button>
                 </div>
                 <table class="custom-table">
-                    <thead><tr><th>Ngày làm việc</th><th>Khung giờ</th><th>Số lượng tối đa</th><th>Tình trạng đặt</th></tr></thead>
-                    <tbody>
-                        <tr><td><b>22/04/2026</b></td><td><span style="color: var(--primary); font-weight: 600;">08:00 - 11:30</span></td><td>20 Bệnh nhân / Ca</td><td><span style="color:#166534; font-weight:bold;">15/20</span></td></tr>
+                    <thead><tr><th>Ngày làm việc</th><th>Khung giờ</th><th>Số lượng tối đa</th><th>Tình trạng đặt</th><th>Thao tác</th></tr></thead>
+                    <tbody id="shiftTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: #64748B;">Đang tải danh sách ca làm việc...</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <div id="tab-hoi-dap" class="tab-content">
                 <h2 style="font-size:22px; margin:0;">Hỏi đáp từ Bệnh nhân</h2>
-                <div class="qa-list">
-                    <div class="qa-item">
-                        <div class="qa-header">
-                            <h4>Tác dụng phụ của thuốc huyết áp? (Mã CH: #102)</h4>
-                            <span class="qa-date">Hôm qua, 14:30 | Người hỏi: Nguyễn D</span>
-                        </div>
-                        <div class="qa-content">Chào bác sĩ, tôi uống đơn thuốc huyết áp bác sĩ kê được 3 ngày thì thấy hay bị chóng mặt vào buổi sáng. Tôi có nên dừng thuốc không ạ?</div>
-                        <button class="btn btn-primary" onclick="replyQA('102')"><i class="fa-solid fa-reply"></i> Trả lời bệnh nhân</button>
-                    </div>
+                <div class="qa-list" id="doctorQaListContainer">
+                    <p style="text-align: center; color: #64748B;">Đang tải danh sách câu hỏi...</p>
                 </div>
             </div>
 
@@ -156,6 +129,45 @@
 
         </div>
     </div>
+
+    <footer>
+        <div class="container footer-grid">
+            <div class="footer-col">
+                <a href="#" class="logo" style="color: white; margin-bottom: 20px;">
+                    <img src="../../assets/images/logo.png" alt="Logo" style="filter: brightness(0) invert(1); height: 65px; width: auto;">
+                </a>
+                <p>Hệ thống đặt lịch khám trực tuyến hàng đầu. Đồng hành cùng sức khỏe của bạn và gia đình.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Liên kết</h3>
+                <ul>
+                    <li><a href="#">Về TT Medical</a></li>
+                    <li><a href="#">Đội ngũ bác sĩ</a></li>
+                    <li><a href="#">Dịch vụ y tế</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Chuyên khoa</h3>
+                <ul id="footer-specialty-list">
+                    <li><a href="#">Tai Mũi Họng</a></li>
+                    <li><a href="#">Nội tổng quát</a></li>
+                    <li><a href="#">Da liễu</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Liên hệ</h3>
+                <ul>
+                    <li style="color: #94A3B8;">Hà Nội, Việt Nam</li>
+                    <li style="color: #94A3B8;"><a href="tel:19006868" style="color: inherit; text-decoration: none;">1900 6868</a></li>
+                    <li style="color: #94A3B8;">contact@ttmedical.vn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <span>&copy; 2026 TT Medical <br>Desgine by: Tống Xuân Thọ, Nguyễn Văn Thiệu</span>
+            <div style="display: flex; gap: 20px;"><a href="#">Bảo mật</a><a href="#">Điều khoản</a></div>
+        </div>
+    </footer>
 
     <script src="../../assets/js/doctor_panel.js"></script>
 </body>

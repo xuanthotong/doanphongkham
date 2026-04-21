@@ -23,7 +23,7 @@ function renderHomeQA(questions) {
         const div = document.createElement('div');
         div.className = 'faq-item';
         
-        const traLoiHTML = q.trang_thai == 1 
+        const traLoiHTML = q.trang_thai // `da_giai_quyet` là kiểu BIT (true/false)
             ? `<p style="color: var(--text-dark);"><strong>Bác sĩ trả lời:</strong> ${q.tra_loi}</p>` 
             : `<p style="color: #d97706;"><em>Câu hỏi đang chờ bác sĩ chuyên khoa trả lời...</em></p>`;
 

@@ -1,68 +1,102 @@
-let appointments = []; 
-const apptTbody = document.getElementById('appointmentTableBody');
+let allAppointments = [];
 
-// HÀM LẤY DỮ LIỆU TỪ CƠ SỞ DỮ LIỆU
-async function fetchAppointments() {
+async function fetchAllAppointments() {
     try {
-        // [TƯƠNG LAI]: Mở comment để fetch API lấy danh sách lịch hẹn từ SQL
-        // const response = await fetch('http://localhost:3000/api/appointments');
-        // appointments = await response.json();
-
-        // [HIỆN TẠI]: Dữ liệu giả lập (Sau này XÓA đoạn này đi)
-        appointments = [
-            { id: 1, ma_lh: "#LK001", benh_nhan: "Nguyễn Văn A", bac_si: "BS. Trần Thị Thúy Hằng", ngay_kham: "20/04/2026", khung_gio: "08:00 - 09:00", trieu_chung: "Đau rát họng", ghi_chu: "", ngay_dat: "16/04/2026", trang_thai: "Pending" }
-        ];
-        renderApptTable();
+        const response = await fetch('http://localhost:3000/api/appointments');
+        allAppointments = await response.json();
+        renderAppointmentTable();
     } catch (error) {
-        console.error("Lỗi lấy lịch hẹn:", error);
+        console.error('Lỗi lấy danh sách lịch hẹn:', error);
     }
 }
 
-function renderApptTable() {
-    if (!apptTbody) return;
-    apptTbody.innerHTML = '';
-    
-    if (appointments.length === 0) {
-        apptTbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có bệnh nhân nào đặt lịch.</td></tr>`;
+// Bạn có thể thêm <input id="searchAdminAppointment" oninput="renderAppointmentTable()"> vào HTML của Admin để dùng tính năng này
+function renderAppointmentTable() {
+    const tbody = document.getElementById('appointmentTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Lấy từ khóa tìm kiếm (nếu Admin có ô tìm kiếm)
+    const searchInput = document.getElementById('searchAdminAppointment');
+    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let filteredList = [...allAppointments];
+
+    // Thuật toán lọc theo Từ khóa (Tên bệnh nhân, Mã lịch khám, SĐT, Tên bác sĩ)
+    if (keyword) {
+        filteredList = filteredList.filter(app => 
+            (app.ten_benh_nhan && app.ten_benh_nhan.toLowerCase().includes(keyword)) || 
+            `lk${app.id}`.includes(keyword) || 
+            (app.so_dien_thoai && app.so_dien_thoai.includes(keyword)) ||
+            (app.ten_bac_si && app.ten_bac_si.toLowerCase().includes(keyword))
+        );
+    }
+
+    if (!filteredList || filteredList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy lịch hẹn phù hợp.</td></tr>`;
         return;
     }
 
-    appointments.forEach((apt) => {
-        let statusBadge = "";
-        if(apt.trang_thai === "Pending") statusBadge = `<span class="badge" style="background-color: #fef08a; color: #854d0e;"><i class="fa-solid fa-clock"></i> Chờ duyệt</span>`;
-        else if(apt.trang_thai === "Approved") statusBadge = `<span class="badge" style="background-color: #dcfce7; color: #166534;"><i class="fa-solid fa-check"></i> Đã duyệt</span>`;
-        else statusBadge = `<span class="badge" style="background-color: #fee2e2; color: #991b1b;"><i class="fa-solid fa-xmark"></i> Đã hủy</span>`;
+    filteredList.forEach(app => {
+        let statusHtml = '';
+        const status = app.trang_thai.toLowerCase();
+        if (status === 'pending') {
+            statusHtml = `<span class="badge" style="background:#fef3c7; color:#d97706;">Chờ duyệt</span>`;
+        } else if (status === 'approved') {
+            statusHtml = `<span class="badge" style="background:#dcfce7; color:#166534;">Đã duyệt</span>`;
+        } else if (status === 'done') {
+            statusHtml = `<span class="badge" style="background:#f3f4f6; color:#4b5563;">Đã khám xong</span>`;
+        } else if (status === 'cancelled') {
+            statusHtml = `<span class="badge" style="background:#fee2e2; color:#991b1b;">Đã hủy</span>`;
+        }
+
+        const d = new Date(app.ngay_lam_viec);
+        const ngayKham = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        
+        const createdDate = new Date(app.ngay_tao);
+        const ngayTao = `${String(createdDate.getDate()).padStart(2, '0')}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${createdDate.getFullYear()} ${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}`;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td style="font-weight: bold; color: var(--primary-color);">${apt.ma_lh}</td>
-            <td style="font-weight: 600;">${apt.benh_nhan}</td>
-            <td>${apt.bac_si}</td>
-            <td>${apt.ngay_kham}</td>
-            <td>${apt.khung_gio}</td>
-            <td style="white-space: normal; max-width: 200px;">${apt.trieu_chung}</td>
-            <td style="white-space: normal; max-width: 200px;">${apt.ghi_chu}</td>
-            <td>${apt.ngay_dat}</td>
-            <td>${statusBadge}</td>
+            <td style="font-weight: bold; color: var(--primary-color);">#LK${app.id}</td>
+            <td><b>${app.ten_benh_nhan}</b><br><span style="font-size: 12px; color: #6b7280;">${app.so_dien_thoai}</span></td>
+            <td>BS. ${app.ten_bac_si || 'Chưa rõ'}</td>
+            <td>${ngayKham}</td>
+            <td><span style="font-weight: 600; color: #0284c7;">${app.khung_gio}</span></td>
+            <td style="white-space: normal; max-width: 150px;">${app.mo_ta_trieu_chung || 'Không có'}</td>
+            <td style="white-space: normal; max-width: 150px; color: #10b981;">${app.ghi_chu_cua_bac_si || ''}</td>
+            <td>${ngayTao}</td>
+            <td>${statusHtml}</td>
             <td>
-                <button class="action-btn edit" onclick="updateApptStatus(${apt.id}, 'Approved')" title="Duyệt lịch"><i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 20px;"></i></button>
-                <button class="action-btn delete" onclick="updateApptStatus(${apt.id}, 'Cancelled')" title="Hủy lịch"><i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 20px;"></i></button>
+                <button class="action-btn delete" onclick="deleteAppointment(${app.id})" title="Xóa"><i class="fa-solid fa-trash"></i></button>
             </td>
         `;
-        apptTbody.appendChild(tr);
+        tbody.appendChild(tr);
     });
 }
 
-// [TƯƠNG LAI]: Hàm gọi API update trạng thái lịch hẹn xuống DB
-async function updateApptStatus(id, newStatus) {
-    const apt = appointments.find(a => a.id === id);
-    if(apt) {
-        if(confirm(`Bạn có chắc chắn muốn ${newStatus === 'Approved' ? 'duyệt' : 'hủy'} lịch hẹn này?`)){
-            // VD API: await fetch(`/api/appointments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
-            apt.trang_thai = newStatus;
-            renderApptTable();
+async function deleteAppointment(id) {
+    Swal.fire({
+        title: 'Xác nhận xóa',
+        text: "Lịch hẹn này sẽ bị xóa khỏi hệ thống!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Đồng ý xóa',
+        cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/appointments/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    Swal.fire('Đã xóa!', 'Xóa lịch hẹn thành công.', 'success');
+                    fetchAllAppointments();
+                } else Swal.fire('Lỗi', 'Không thể xóa!', 'error');
+            } catch(e) { console.error(e); }
         }
-    }
+    });
 }
 
-fetchAppointments();
+// Tự động tải dữ liệu khi vào trang
+document.addEventListener('DOMContentLoaded', fetchAllAppointments);
