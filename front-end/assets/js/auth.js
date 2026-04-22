@@ -147,3 +147,28 @@ function handleForgotPassword(event) {
         }
     });
 }
+
+// ==================================================
+// HÀM KIỂM TRA: CHẶN ĐẶT LỊCH KHI CHƯA ĐĂNG NHẬP
+// ==================================================
+function requireLoginToBook(e) {
+    if(e) e.preventDefault();
+    Swal.fire({
+        title: 'Yêu cầu tài khoản',
+        text: 'Bạn cần đăng nhập hoặc tạo tài khoản mới để có thể đặt lịch khám bệnh!',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#10B981', // Nút Đăng ký màu Xanh lá
+        cancelButtonColor: '#0284C7',  // Nút Đăng nhập màu Xanh dương
+        confirmButtonText: '<i class="fa-solid fa-user-plus"></i> Đăng ký ngay',
+        cancelButtonText: '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Người dùng bấm "Đăng ký ngay" -> Mở form Đăng ký
+            openModal('registerModal');
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Người dùng bấm "Đăng nhập" -> Mở form Đăng nhập
+            openModal('loginModal');
+        }
+    });
+}

@@ -110,7 +110,7 @@ const login = async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        let redirectUrl = '../pages/patient/index.html'; 
+        let redirectUrl = '../pages/patient/patient.html'; 
         if (user.ten_vai_tro === 'Admin') redirectUrl = '../pages/admin/dashboard.html';
         else if (user.ten_vai_tro === 'BacSi') redirectUrl = '../pages/doctor/doctor.html';
 

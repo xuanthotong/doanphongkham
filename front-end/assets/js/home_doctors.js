@@ -23,7 +23,8 @@ function generateDoctorCardHTML(doc) {
             <p style="color: #ef4444; font-weight: bold; font-size: 16px; margin: 0 0 15px 0;">${formatCurrency(doc.phi_kham)}</p>
             <div style="display: flex; gap: 10px;">
                 <button onclick="showDoctorDetails(${doc.id})" style="background-color: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; padding: 10px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: 600; transition: background 0.3s;">Chi tiết</button>
-                <button onclick="Swal.fire('Thông báo', 'Tính năng đặt lịch đang phát triển cho ID Bác sĩ: ${doc.id}', 'info')" style="background-color: #0284c7; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: 600; transition: background 0.3s;">Đặt Lịch</button>
+                
+                <button onclick="bookDoctor(${doc.id}, event)" style="background-color: #0284c7; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: 600; transition: background 0.3s;">Đặt Lịch</button>
             </div>
         </div>
     `;
@@ -106,3 +107,25 @@ function formatCurrency(amount) {
 
 // Chạy hàm tải dữ liệu ngay khi trang HTML đã render xong
 document.addEventListener('DOMContentLoaded', fetchHomeDoctors);
+
+
+
+// HÀM XỬ LÝ KHI BẤM NÚT "ĐẶT LỊCH" TRÊN THẺ BÁC SĨ MẶT TIỀN
+function bookDoctor(id, event) {
+    if (event) event.preventDefault();
+
+    // Kiểm tra xem đã có dữ liệu đăng nhập trong máy chưa
+    const userInfoString = localStorage.getItem('userInfo');
+
+    if (!userInfoString) {
+        // CHƯA ĐĂNG NHẬP: Bật bảng thông báo yêu cầu Đăng nhập / Đăng ký
+        if (typeof requireLoginToBook === 'function') {
+            requireLoginToBook(event);
+        } else {
+            alert("Vui lòng đăng nhập để đặt lịch khám!"); 
+        }
+    } else {
+        // ĐÃ ĐĂNG NHẬP: Bay thẳng sang trang form điền Đặt lịch
+        window.location.href = 'appointment.html';
+    }
+}

@@ -1,0 +1,100 @@
+/* =========================================
+   CSS DÀNH RIÊNG CHO GIAO DIỆN BỆNH NHÂN
+   ========================================= */
+
+.patient-body { background-color: #f8fafc; }
+.hotline-link { color: white; text-decoration: none; }
+.working-hours { margin-left: 20px; }
+.bg-light { background-color: #F8FAFC; }
+
+/* Navbar */
+.patient-nav { background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.nav-logo-img { height: 75px; transform: scale(1.1); margin-left: 10px; object-fit: contain; }
+.nav-icon-small { font-size: 12px; }
+.nav-icon-caret { color: var(--primary); margin-left: 5px; }
+.nav-highlight { color: var(--primary) !important; font-weight: 700 !important; }
+
+/* Tabs */
+.tab-content { display: none !important; }
+.tab-content.active { display: block !important; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.tab-padding { padding: 50px 0; }
+
+/* Sections */
+.section-header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; }
+.section-header-text { max-width: 600px; }
+.section-header-text h2 { font-size: 36px; font-weight: 800; margin-bottom: 12px; }
+.item-list-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%; }
+.loading-text { text-align: center; color: #6b7280; width: 100%; }
+.full-width { grid-column: 1 / -1; }
+
+/* CTA */
+.cta-buttons { display: flex; gap: 16px; justify-content: center; }
+.btn-white { background: white; color: var(--text-dark); }
+.btn-transparent { border: 1px solid white; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+
+/* Form Hồ Sơ */
+.patient-card { max-width: 900px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-radius: 16px; background: white; padding: 40px; }
+.card-title { font-size: 24px; margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
+.card-title.no-border { border-bottom: none; margin-bottom: 20px; padding-bottom: 0; }
+.card-desc { color: #64748b; margin-bottom: 20px; font-size: 14px; }
+.title-icon { color: var(--primary); margin-right: 8px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-col { display: flex; flex-direction: column; gap: 8px; }
+.form-label { font-weight: 700; font-size: 13px; color: #334155; }
+.form-control { padding: 12px; border: 1px solid var(--border); border-radius: 8px; width: 100%; outline: none; font-family: inherit; }
+.form-control:focus { border-color: var(--primary); }
+.readonly-input { background: #f1f5f9; color: #64748b; }
+.textarea-resize { resize: vertical; }
+.form-actions { margin-top: 30px; text-align: right; }
+.btn-save { padding: 10px 25px; }
+.btn-full { width: 100%; padding: 12px; font-size: 16px; }
+.mb-15 { margin-bottom: 15px; }
+
+/* Giao diện Hỏi Đáp (Q&A Clone Vercel) */
+.qa-page-header { margin-bottom: 30px; }
+.qa-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; align-items: start; }
+.qa-filters { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+.qa-filter-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+.qa-pill { background: white; border: 1px solid #e2e8f0; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; color: #475569; cursor: pointer; transition: 0.2s; }
+.qa-pill:hover { background: #f1f5f9; }
+.qa-pill.active { background: #111827; color: white; border-color: #111827; }
+
+.qa-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.qa-card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.06); border-color: #cbd5e1; }
+.qa-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+.qa-user-info { display: flex; align-items: center; gap: 12px; }
+.qa-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+.qa-meta { font-size: 13px; color: #64748b; }
+.qa-name { font-weight: 700; color: #0f172a; }
+.qa-dot { margin: 0 4px; }
+.qa-category { font-weight: 600; color: #0284c7; }
+
+.qa-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.qa-answered { background: #dcfce7; color: #166534; }
+.qa-pending { background: #fef3c7; color: #92400e; }
+
+.qa-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 10px; line-height: 1.4; }
+.qa-desc { font-size: 15px; color: #475569; margin-bottom: 20px; line-height: 1.6; }
+
+.qa-doctor-reply { background: #f8fafc; border-left: 3px solid #0284c7; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-bottom: 15px; }
+.doc-reply-header { margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.doc-reply-header .doc-name { font-weight: 700; color: #0f172a; font-size: 14px; }
+.doc-reply-header .doc-spec { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+.qa-doctor-reply p { font-size: 14px; color: #334155; margin-bottom: 10px; }
+.qa-read-more { color: #0284c7; font-size: 13px; font-weight: 600; text-decoration: none; }
+.qa-read-more:hover { text-decoration: underline; }
+
+.qa-card-footer { border-top: 1px solid #f1f5f9; padding-top: 15px; font-size: 13px; color: #64748b; font-weight: 500; }
+
+.qa-form-box { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+.qa-commitment-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; }
+.checkbox-group { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.custom-checkbox { width: 18px; height: 18px; cursor: pointer; }
+.checkbox-label { font-weight: 500; color: #0f172a; cursor: pointer; font-size: 14px; }
+
+/* Responsive */
+@media (max-width: 992px) {
+    .qa-layout { grid-template-columns: 1fr; }
+    .qa-sidebar { order: -1; }
+}

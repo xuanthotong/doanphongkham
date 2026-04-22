@@ -41,11 +41,10 @@
                 <li><a href="#bai-viet" onclick="scrollToSection('bai-viet', event)">Bài viết</a></li>
                 <li><a href="#hoi-dap" onclick="scrollToSection('hoi-dap', event)">Hỏi đáp</a></li>
             </ul>
-
             <div class="auth-buttons">
-                <a href="#" class="btn btn-primary" onclick="openModal('//appointment.html', event)"><i class="fa-regular fa-calendar"></i> Đặt lịch khám</a>
+                 <a href="#" class="btn btn-primary" onclick="requireLoginToBook(event)"><i class="fa-regular fa-calendar"></i> Đặt lịch khám</a>
                 <a href="#" class="btn btn-outline" onclick="openModal('loginModal', event)"><i class="fa-regular fa-user"></i> Đăng nhập</a>
-            </div>
+            </div> 
         </div>
     </nav>
 
@@ -58,8 +57,8 @@
                 <h1>Đặt lịch khám bệnh <br> <span>trực tuyến</span> dễ dàng</h1>
                 <p>Hệ thống đặt lịch khám bệnh trực tuyến hiện đại dành riêng cho TT Medical. Tiết kiệm thời gian, không còn xếp hàng chờ đợi.</p>
                 <div class="auth-buttons">
-                    <a href="#" class="btn btn-primary" onclick="openModal('registerModal', event)"><i class="fa-regular fa-calendar"></i> Đặt lịch ngay</a>
-                    <a href="#bac-si" class="btn btn-outline" onclick="scrollToSection('bac-si', event)"><i class="fa-solid fa-user-doctor"></i> Xem bác sĩ</a>
+                   <a href="#" class="btn btn-primary" onclick="requireLoginToBook(event)"><i class="fa-regular fa-calendar"></i> Đặt lịch ngay</a>
+                   <a href="#bac-si" class="btn btn-outline" onclick="scrollToSection('bac-si', event)"><i class="fa-solid fa-user-doctor"></i> Xem bác sĩ</a>
                 </div>
             </div>
             <div class="hero-image">
@@ -384,7 +383,7 @@
 
             <div style="margin-top: 30px; display: flex; gap: 15px;">
                 <button onclick="closeDoctorDetailsModal()" class="btn btn-outline" style="flex: 1; text-align: center;">Đóng</button>
-                <button onclick="Swal.fire('Thông báo', 'Tính năng đặt lịch đang phát triển', 'info')" class="btn btn-primary" style="flex: 1; text-align: center;">Đặt lịch khám</button>
+              <button onclick="closeDoctorDetailsModal(); requireLoginToBook(event);" class="btn btn-primary" style="flex: 1; text-align: center;">Đặt lịch khám</button>
             </div>
         </div>
     </div>
