@@ -10,10 +10,13 @@ const getAllQuestions = async (req, res) => {
                 hd.noi_dung_cau_hoi as noi_dung, 
                 hd.noi_dung_tra_loi as tra_loi,
                 hd.da_giai_quyet as trang_thai,
-                hd.ngay_tao,
+                hd.ngay_tao, 
+                hd.chuyen_khoa_id,
+                ck.ten_chuyen_khoa,
                 nd.ho_ten as nguoi_hoi
             FROM HoiDap hd
             LEFT JOIN HoSoNguoiDung nd ON hd.benh_nhan_id = nd.tai_khoan_id
+            LEFT JOIN ChuyenKhoa ck ON hd.chuyen_khoa_id = ck.id
             ORDER BY hd.ngay_tao DESC
         `);
         res.json(result.recordset);
@@ -25,13 +28,15 @@ const getAllQuestions = async (req, res) => {
 
 const createQuestion = async (req, res) => {
     try {
-        const { tieu_de, noi_dung, benh_nhan_id } = req.body;
+        // Nhận thêm chuyen_khoa_id từ Frontend
+        const { tieu_de, noi_dung, benh_nhan_id, chuyen_khoa_id } = req.body;
         const pool = await connectDB();
         await pool.request()
             .input('tieu_de', sql.NVarChar, tieu_de)
             .input('noi_dung', sql.NVarChar, noi_dung)
             .input('benh_nhan_id', sql.Int, benh_nhan_id || null)
-            .query(`INSERT INTO HoiDap (tieu_de_cau_hoi, noi_dung_cau_hoi, benh_nhan_id, da_giai_quyet, ngay_tao) VALUES (@tieu_de, @noi_dung, @benh_nhan_id, 0, GETDATE())`);
+            .input('chuyen_khoa_id', sql.Int, chuyen_khoa_id || null)
+            .query(`INSERT INTO HoiDap (tieu_de_cau_hoi, noi_dung_cau_hoi, benh_nhan_id, chuyen_khoa_id, da_giai_quyet, ngay_tao) VALUES (@tieu_de, @noi_dung, @benh_nhan_id, @chuyen_khoa_id, 0, GETDATE())`);
         res.status(201).json({ message: 'Gửi câu hỏi thành công!' });
     } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
 };

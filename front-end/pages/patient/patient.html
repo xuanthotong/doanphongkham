@@ -192,24 +192,30 @@
                     <div class="profile-grid form-grid">
                         <div class="input-group form-col">
                             <label class="form-label">Họ và tên</label>
-                            <input type="text" id="pt_ten" readonly class="form-control readonly-input">
+                            <input type="text" id="pt_ten" class="form-control" style="pointer-events: auto; background: white;">
                         </div>
                         <div class="input-group form-col">
                             <label class="form-label">Số điện thoại</label>
-                            <input type="text" id="pt_sdt" readonly class="form-control readonly-input">
+                            <input type="text" id="pt_sdt" class="form-control" style="pointer-events: auto; background: white;">
                         </div>
                         <div class="input-group form-col">
                             <label class="form-label">Tài khoản Email</label>
-                            <input type="text" id="pt_email" readonly class="form-control readonly-input">
+                            <input type="text" id="pt_email" disabled class="form-control readonly-input" style="background:#f1f5f9; cursor:not-allowed;" title="Email không thể thay đổi">
                         </div>
                         <div class="input-group form-col">
                             <label class="form-label">Giới tính</label>
-                            <input type="text" id="pt_gioi_tinh" readonly class="form-control readonly-input">
+                            <select id="pt_gioi_tinh" class="form-control" style="pointer-events: auto; background: white;">
+                                <option value="1">Nam</option>
+                                <option value="0">Nữ</option>
+                            </select>
                         </div>
                         <div class="input-group form-col full-width">
                             <label class="form-label">Địa chỉ liên hệ</label>
-                            <input type="text" id="pt_dia_chi" readonly class="form-control readonly-input">
+                            <input type="text" id="pt_dia_chi" class="form-control" style="pointer-events: auto; background: white;">
                         </div>
+                    </div>
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button class="btn btn-primary" onclick="updatePatientProfile(event)"><i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi</button>
                     </div>
                 </div>
             </div>
@@ -225,68 +231,22 @@
                 <div class="qa-layout">
                     <div class="qa-main-feed" style="position: relative; z-index: 1;">
                         <div class="qa-filters">
-                            <div class="qa-filter-pills">
+                            <div class="qa-filter-pills" id="qa_filter_pills">
                                 <button class="qa-pill active">Tất cả</button>
-                                <button class="qa-pill">Nhi khoa</button>
-                                <button class="qa-pill">Tim mạch</button>
-                                <button class="qa-pill">Thần kinh</button>
-                                <button class="qa-pill">Da liễu</button>
-                                <button class="qa-pill">Cơ xương khớp</button>
                             </div>
                             <div class="qa-filter-status">
-                                <select class="form-control" style="padding: 8px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;">
-                                    <option>Tất cả</option>
-                                    <option>Đã trả lời</option>
-                                    <option>Chờ trả lời</option>
+                                <select id="qa_status_filter" onchange="filterQAByStatus(this.value)" class="form-control" style="padding: 8px 15px; border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                                    <option value="all">Tất cả trạng thái</option>
+                                    <option value="answered">Đã trả lời</option>
+                                    <option value="pending">Chờ phản hồi</option>
                                 </select>
                             </div>
                         </div>
-                        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; font-weight: 500;">Tìm thấy <span id="qa_count">2</span> câu hỏi</p>
+                        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; font-weight: 500;">Cộng đồng có <span id="qa_count">0</span> câu hỏi</p>
 
                         <div id="community_qa_list">
-                            <div class="qa-card">
-                                <div class="qa-card-header">
-                                    <div class="qa-user-info">
-                                        <div class="qa-avatar" style="background: #fce7f3; color: #db2777;">C</div>
-                                        <div class="qa-meta">
-                                            <span class="qa-name">Chị Mai</span> <span class="qa-dot">•</span>
-                                            <span class="qa-category">Nhi khoa</span> <span class="qa-dot">•</span>
-                                            <span class="qa-date">14/04/2026</span>
-                                        </div>
-                                    </div>
-                                    <span class="qa-badge qa-answered">Đã trả lời</span>
-                                </div>
-                                <h3 class="qa-title">Trẻ em 3 tuổi bị sốt cao liên tục trong 3 ngày, có nên đưa đi bệnh viện không?</h3>
-                                <p class="qa-desc">Con tôi 3 tuổi, bị sốt cao 39-40 độ liên tục 3 ngày, đã cho uống thuốc hạ sốt nhưng vẫn sốt lại. Tôi rất lo lắng, xin bác sĩ tư vấn.</p>
-                                <div class="qa-doctor-reply">
-                                    <div class="doc-reply-header">
-                                        <span class="doc-name">BS. Trần Thị Hương</span>
-                                        <span class="doc-spec">Nhi khoa</span>
-                                    </div>
-                                    <p>Chào chị, trường hợp trẻ sốt cao liên tục trên 3 ngày, đặc biệt là sốt trên 39 độ cần được đưa đến bệnh viện để khám và xét nghiệm...</p>
-                                    <a href="#" class="qa-read-more">Xem đầy đủ câu trả lời</a>
-                                </div>
-                                <div class="qa-card-footer"><span><i class="fa-regular fa-comment"></i> 15 câu trả lời</span></div>
-                            </div>
-
-                            <div class="qa-card">
-                                <div class="qa-card-header">
-                                    <div class="qa-user-info">
-                                        <div class="qa-avatar" style="background: #e0f2fe; color: #0284c7;">A</div>
-                                        <div class="qa-meta">
-                                            <span class="qa-name">Anh Hùng</span> <span class="qa-dot">•</span>
-                                            <span class="qa-category">Thần kinh</span> <span class="qa-dot">•</span>
-                                            <span class="qa-date">13/04/2026</span>
-                                        </div>
-                                    </div>
-                                    <span class="qa-badge qa-pending">Chờ trả lời</span>
-                                </div>
-                                <h3 class="qa-title">Đau đầu thường xuyên có phải là dấu hiệu của bệnh gì nghiêm trọng không?</h3>
-                                <p class="qa-desc">Tôi bị đau đầu gần như mỗi ngày, thường là vào buổi chiều. Đã uống thuốc giảm đau nhưng chỉ giảm tạm thời.</p>
-                                <div class="qa-card-footer"><span><i class="fa-regular fa-comment"></i> 0 câu trả lời</span></div>
-                            </div>
+                            <!-- Dữ liệu từ Database sẽ được đổ vào đây bởi Javascript -->
                         </div>
-                        <button class="btn btn-outline" style="width: 100%; border-radius: 8px; padding: 12px; font-weight: 600;">Xem thêm câu hỏi</button>
                     </div>
 
                     <div class="qa-sidebar" style="position: relative; z-index: 50;">
@@ -298,21 +258,15 @@
                                     <label class="form-label">Chuyên khoa</label>
                                     <select id="qa_chuyen_khoa" required class="form-control">
                                         <option value="">Chọn chuyên khoa</option>
-                                        <option value="Nội tổng hợp">Nội khoa</option>
-                                        <option value="Nhi khoa">Nhi khoa</option>
-                                        <option value="Tim mạch">Tim mạch</option>
-                                        <option value="Thần kinh">Thần kinh</option>
-                                        <option value="Da liễu">Da liễu</option>
-                                        <option value="Cơ xương khớp">Cơ xương khớp</option>
                                     </select>
                                 </div>
                                 <div class="input-group mb-15">
                                     <label class="form-label">Tiêu đề câu hỏi</label>
-                                    <input type="text" id="qa_tieu_de" required class="form-control">
+                                    <input type="text" id="qa_tieu_de" required class="form-control" style="pointer-events: auto; background: white;">
                                 </div>
                                 <div class="input-group mb-15">
                                     <label class="form-label">Chi tiết câu hỏi</label>
-                                    <textarea id="qa_noi_dung" rows="4" required class="form-control textarea-resize"></textarea>
+                                    <textarea id="qa_noi_dung" rows="4" required class="form-control textarea-resize" style="pointer-events: auto; background: white;"></textarea>
                                 </div>
                                 <div class="checkbox-group" style="margin-bottom: 20px;">
                                     <input type="checkbox" id="qa_an_danh" class="custom-checkbox">

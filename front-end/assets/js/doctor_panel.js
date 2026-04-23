@@ -120,13 +120,18 @@ function cancelAppointment(maLK) {
 
 // 6. NGHIỆP VỤ: TRẢ LỜI CÂU HỎI Q&A
 function replyQA(maCH) {
+    const question = currentQA.find(q => q.id === maCH);
+    const currentReply = question && question.tra_loi ? question.tra_loi : '';
+    const isEditing = !!currentReply;
+
     Swal.fire({
-        title: 'Phản hồi bệnh nhân', 
+        title: isEditing ? 'Sửa câu trả lời' : 'Phản hồi bệnh nhân', 
         input: 'textarea', 
+        inputValue: currentReply,
         inputPlaceholder: 'Nhập câu trả lời của Bác sĩ...',
         showCancelButton: true, 
         confirmButtonColor: '#0284C7', 
-        confirmButtonText: 'Gửi phản hồi',
+        confirmButtonText: isEditing ? 'Cập nhật' : 'Gửi phản hồi',
         inputValidator: (value) => { if (!value) return 'Vui lòng nhập nội dung trả lời!' }
     }).then(async (result) => {
         if (result.isConfirmed && result.value) {
@@ -152,11 +157,29 @@ function replyQA(maCH) {
 // ==========================================
 async function fetchDoctorQA() {
     try {
+        // Lấy thông tin Bác sĩ đang đăng nhập
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const docSpecialtyId = userInfo.chuyen_khoa_id;
+
         const res = await fetch('http://localhost:3000/api/questions');
-        currentQA = await res.json();
+        const allQA = await res.json();
         
+        if (allQA.length > 0 && allQA[0].chuyen_khoa_id === undefined) {
+            console.error("⚠️ LỖI BACKEND: API /api/questions không trả về 'chuyen_khoa_id'. Bác sĩ sẽ không thấy câu hỏi!");
+        }
+
+        // Thuật toán: Chỉ lọc ra những câu hỏi có chuyen_khoa_id trùng với chuyên khoa của bác sĩ (Ép kiểu chuỗi)
+        if (docSpecialtyId) {
+            currentQA = allQA.filter(q => {
+                if (q.chuyen_khoa_id === undefined || q.chuyen_khoa_id === null) return false;
+                return q.chuyen_khoa_id.toString() === docSpecialtyId.toString();
+            });
+        } else {
+            currentQA = []; // Nếu bác sĩ chưa được phân khoa thì không hiển thị câu hỏi
+        }
+
         // Cập nhật số lượng câu hỏi mới trên thống kê
-        const pendingQA = currentQA.filter(q => !q.trang_thai).length;
+        const pendingQA = currentQA.filter(q => !(q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== ''))).length;
         const elQa = document.getElementById('stat_qa');
         if (elQa) elQa.innerText = pendingQA < 10 ? '0' + pendingQA : pendingQA;
 
@@ -165,7 +188,11 @@ async function fetchDoctorQA() {
         container.innerHTML = '';
 
         if (currentQA.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #64748B;">Chưa có câu hỏi nào.</p>';
+            if (!docSpecialtyId) {
+                container.innerHTML = '<p style="text-align: center; color: #EF4444; font-weight: bold;">Bạn chưa được phân chuyên khoa. Vui lòng liên hệ Admin.</p>';
+            } else {
+                container.innerHTML = '<p style="text-align: center; color: #64748B;">Chưa có câu hỏi nào thuộc chuyên khoa của bạn.</p>';
+            }
             return;
         }
 
@@ -173,8 +200,15 @@ async function fetchDoctorQA() {
             const date = new Date(q.ngay_tao || Date.now());
             const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
             
-            const btnHtml = q.trang_thai 
-                ? `<span style="color: #10B981; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> Đã trả lời: ${q.tra_loi}</span>` 
+            const isAnswered = q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== '');
+            const btnHtml = isAnswered 
+                ? `<div style="background: #F0F9FF; padding: 12px; border-radius: 8px; border-left: 4px solid #10B981;">
+                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+                       <span style="color: #10B981; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> Bác sĩ đã trả lời:</span>
+                       <button onclick="replyQA(${q.id})" style="background: none; border: none; color: #0284C7; cursor: pointer; font-size: 13px; font-weight: bold;"><i class="fa-solid fa-pen"></i> Sửa lại</button>
+                     </div>
+                     <p style="margin: 0; color: #334155; font-size: 14px; margin-top: 5px;">${q.tra_loi}</p>
+                   </div>` 
                 : `<button class="btn btn-primary" onclick="replyQA(${q.id})"><i class="fa-solid fa-reply"></i> Trả lời bệnh nhân</button>`;
 
             container.innerHTML += `
@@ -503,12 +537,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=0284C7&color=fff&rounded=true&bold=true`;
             
             if (userInfo.anh_dai_dien) {
-                // Phân loại kiểu ảnh để hiển thị URL chuẩn nhất
+                // SỬA LỖI 431: Nếu là chuỗi Base64, gán thẳng vào src, không ghép với URL server
                 if (userInfo.anh_dai_dien.startsWith('data:image')) {
                     avatarImg.src = userInfo.anh_dai_dien;
+                // Nếu là link ảnh từ bên ngoài (VD: Google, Facebook...)
                 } else if (userInfo.anh_dai_dien.startsWith('http')) {
                     avatarImg.src = userInfo.anh_dai_dien;
                 } else {
+                // Nếu chỉ là tên file (VD: 'bs_thieu.jpg'), thì mới ghép với URL server
                     avatarImg.src = `http://localhost:3000/uploads/${userInfo.anh_dai_dien}`;
                 }
                 // Nếu ảnh server bị lỗi, tự đổi sang ảnh chữ cái

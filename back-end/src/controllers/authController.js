@@ -86,8 +86,8 @@ const login = async (req, res) => {
                 SELECT 
                     tk.id, tk.ten_dang_nhap, tk.email, tk.mat_khau, tk.trang_thai, tk.vai_tro_id,
                     vt.ten_vai_tro,
-                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien,
-                    hsbs.nam_kinh_nghiem, hsbs.phi_kham, hsbs.tieu_su,
+                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien, hsnd.gioi_tinh,
+                    hsbs.nam_kinh_nghiem, hsbs.phi_kham, hsbs.tieu_su, hsbs.chuyen_khoa_id,
                     ck.ten_chuyen_khoa
                 FROM TaiKhoan tk
                 JOIN VaiTro vt ON tk.vai_tro_id = vt.id
@@ -124,11 +124,13 @@ const login = async (req, res) => {
                 role: user.ten_vai_tro,
                 email: user.email,
                 ho_ten: user.ho_ten,
+                gioi_tinh: user.gioi_tinh,
                 so_dien_thoai: user.so_dien_thoai,
                 anh_dai_dien: user.anh_dai_dien,
                 nam_kinh_nghiem: user.nam_kinh_nghiem,
                 phi_kham: user.phi_kham,
                 tieu_su: user.tieu_su,
+                chuyen_khoa_id: user.chuyen_khoa_id,
                 ten_chuyen_khoa: user.ten_chuyen_khoa
             }, 
             redirectUrl 

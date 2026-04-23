@@ -1,4 +1,5 @@
 const { sql, connectDB } = require('../config/db');
+const bcrypt = require('bcrypt');
 
 const getAllAccounts = async (req, res) => {
     try {
@@ -90,8 +91,10 @@ const updateAccount = async (req, res) => {
             reqTaiKhoan.input('vai_tro_id', sql.Int, vai_tro_id);
         }
         if (mat_khau) { // Nếu admin gõ mật khẩu mới thì mới update
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(mat_khau, salt);
             updateTaiKhoanQuery += `, mat_khau = @mat_khau`;
-            reqTaiKhoan.input('mat_khau', sql.VarChar, mat_khau);
+            reqTaiKhoan.input('mat_khau', sql.VarChar, hashedPassword);
         }
         updateTaiKhoanQuery += ` WHERE id = @id`;
         await reqTaiKhoan.query(updateTaiKhoanQuery);
@@ -119,4 +122,41 @@ const updateAccount = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server' });
     }
 };
-module.exports = { getAllAccounts, deleteAccount, updateAccount };
+
+// ==========================================
+// 4. CẬP NHẬT HỒ SƠ CÁ NHÂN (BỆNH NHÂN)
+// ==========================================
+const updateProfile = async (req, res) => {
+    try {
+        const pool = await connectDB();
+        const id = req.params.id;
+        const { ho_ten, so_dien_thoai, dia_chi, gioi_tinh } = req.body;
+
+        // Xử lý chuyển đổi giới tính (1: Nam, 0: Nữ)
+        let gioi_tinh_bit = null;
+        if (gioi_tinh === "1" || gioi_tinh === 1) gioi_tinh_bit = 1;
+        else if (gioi_tinh === "0" || gioi_tinh === 0) gioi_tinh_bit = 0;
+
+        await pool.request()
+            .input('id', sql.Int, id)
+            .input('ho_ten', sql.NVarChar, ho_ten || null)
+            .input('so_dien_thoai', sql.VarChar, so_dien_thoai || null)
+            .input('dia_chi', sql.NVarChar, dia_chi || null)
+            .input('gioi_tinh', sql.Bit, gioi_tinh_bit)
+            .query(`
+                UPDATE HoSoNguoiDung
+                SET ho_ten = @ho_ten, 
+                    so_dien_thoai = @so_dien_thoai, 
+                    dia_chi = @dia_chi, 
+                    gioi_tinh = @gioi_tinh
+                WHERE tai_khoan_id = @id
+            `);
+
+        res.status(200).json({ message: 'Cập nhật hồ sơ cá nhân thành công!' });
+    } catch (error) {
+        console.error('Lỗi cập nhật hồ sơ cá nhân:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
+module.exports = { getAllAccounts, deleteAccount, updateAccount, updateProfile };

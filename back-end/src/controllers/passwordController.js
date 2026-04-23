@@ -1,4 +1,5 @@
 const { sql, connectDB } = require('../config/db');
+const bcrypt = require('bcrypt');
 
 const resetPassword = async (req, res) => {
     try {
@@ -14,10 +15,14 @@ const resetPassword = async (req, res) => {
             return res.status(404).json({ message: 'Email này không tồn tại trong hệ thống!' });
         }
 
+        // Mã hóa mật khẩu mới trước khi lưu vào CSDL
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(mat_khau_moi, salt);
+
         // Cập nhật mật khẩu mới cho tài khoản có email trùng khớp
         await pool.request()
             .input('email', sql.VarChar, email)
-            .input('mat_khau_moi', sql.VarChar, mat_khau_moi)
+            .input('mat_khau_moi', sql.VarChar, hashedPassword)
             .query('UPDATE TaiKhoan SET mat_khau = @mat_khau_moi WHERE email = @email');
 
         res.json({ message: 'Đổi mật khẩu thành công!' });

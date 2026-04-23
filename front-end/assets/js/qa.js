@@ -33,11 +33,11 @@ function renderQATable() {
         tr.innerHTML = `
             <td style="font-weight: bold; color: var(--primary-color);">#${q.id}</td>
             <td style="font-weight: 600;">${q.nguoi_hoi || 'Ẩn danh'}</td>
-            <td>Chung</td>
+            <td><span class="badge" style="background:#e0f2fe; color:#0369a1; white-space:nowrap;">${q.ten_chuyen_khoa || 'Chung'}</span></td>
             <td style="white-space: normal; max-width: 150px; font-weight: 500;">${q.tieu_de}</td>
             <td style="white-space: normal; max-width: 250px; color: #4b5563;">${q.noi_dung}</td>
-            <td>Admin/Bác sĩ</td>
-            <td style="white-space: normal; max-width: 250px; color: #10b981; font-weight: 500;">${q.tra_loi}</td>
+            <td><span style="font-weight:500; color:#4b5563;">${q.trang_thai == 1 || q.tra_loi ? 'Bác sĩ/Admin' : 'Chưa có'}</span></td>
+            <td style="white-space: normal; max-width: 250px; color: #10b981; font-weight: 500;">${q.tra_loi || ''}</td>
             <td>${dateStr}</td>
             <td>${statusBadge}</td>
             <td>
