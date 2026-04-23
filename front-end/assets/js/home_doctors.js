@@ -14,17 +14,32 @@ function generateDoctorCardHTML(doc) {
     const defaultImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.ho_ten)}&background=random`;
     const imgSrc = doc.anh_dai_dien && doc.anh_dai_dien.trim() !== "" ? doc.anh_dai_dien : defaultImg;
 
+    // Logic hiển thị Sao: Nếu chưa ai đánh giá thì mờ đi, nếu có thì hiện màu vàng
+    const ratingDisplay = doc.luot_danh_gia > 0 
+        ? `<span style="color: #f59e0b;"><i class="fa-solid fa-star"></i> ${doc.diem_danh_gia}</span> <span style="color: #64748b; font-size: 12px; font-weight: 500;">(${doc.luot_danh_gia})</span>`
+        : `<span style="color: #94a3b8; font-size: 12px; font-weight: 500;">Chưa có đánh giá</span>`;
+
     return `
-        <div class="doctor-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px; width: 280px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background: #fff;">
-            <img src="${imgSrc}" onerror="this.onerror=null; this.src='${defaultImg}';" alt="${doc.ho_ten}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid #f3f4f6;">
-            <h3 style="font-size: 18px; margin: 0 0 10px 0; color: #1f2937;">${doc.ho_ten}</h3>
-            <p style="color: #0284c7; font-weight: 600; margin: 0 0 8px 0; font-size: 15px;"><i class="fa-solid fa-stethoscope"></i> ${doc.ten_chuyen_khoa || 'Chưa cập nhật'}</p>
-            <p style="color: #6b7280; font-size: 14px; margin: 0 0 15px 0;">Kinh nghiệm: ${doc.nam_kinh_nghiem || 0} năm</p>
-            <p style="color: #ef4444; font-weight: bold; font-size: 16px; margin: 0 0 15px 0;">${formatCurrency(doc.phi_kham)}</p>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="showDoctorDetails(${doc.id})" style="background-color: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; padding: 10px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: 600; transition: background 0.3s;">Chi tiết</button>
-                
-                <button onclick="bookDoctor(${doc.id}, event)" style="background-color: #0284c7; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: 600; transition: background 0.3s;">Đặt Lịch</button>
+        <div class="doctor-card" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 15px; width: 280px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); background: #fff; transition: 0.3s; display: flex; flex-direction: column;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <span style="background: #0284c7; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">Đang làm việc</span>
+                <div style="font-size: 14px; font-weight: 700;">
+                    ${ratingDisplay}
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                <img src="${imgSrc}" onerror="this.onerror=null; this.src='${defaultImg}';" alt="${doc.ho_ten}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f9ff;">
+            </div>
+
+            <h3 style="font-size: 17px; margin: 0 0 5px 0; color: #0f172a; text-align: left;">${doc.ho_ten}</h3>
+            <p style="color: #0284c7; font-weight: 600; margin: 0 0 5px 0; font-size: 14px; text-align: left;">${doc.ten_chuyen_khoa || 'Chưa cập nhật'}</p>
+            <p style="color: #64748b; font-size: 13px; margin: 0 0 20px 0; text-align: left;">${doc.nam_kinh_nghiem || 0} năm kinh nghiệm</p>
+            
+            <div style="display: flex; gap: 10px; margin-top: auto;">
+                <button onclick="showDoctorDetails(${doc.id})" style="background-color: #f8fafc; color: #334155; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: 600; transition: 0.2s;">Chi tiết</button>
+                <button onclick="bookDoctor(${doc.id}, event)" style="background-color: #0284c7; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: 600; transition: 0.2s;">Đặt Lịch</button>
             </div>
         </div>
     `;

@@ -22,12 +22,25 @@ function renderQATable() {
     }
 
     questions.forEach((q) => {
-        const statusBadge = q.trang_thai == 1 
+        const statusBadge = q.trang_thai == 1 || q.tra_loi
             ? `<span class="badge" style="background-color: #dcfce7; color: #166534;">Đã trả lời</span>` 
             : `<span class="badge" style="background-color: #fef08a; color: #854d0e;">Chưa trả lời</span>`;
 
         const date = new Date(q.ngay_tao || Date.now());
         const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+
+        // XỬ LÝ LOGIC HIỂN THỊ NGƯỜI TRẢ LỜI Ở ĐÂY
+        let nguoiTraLoi = 'Chưa có';
+        if (q.tra_loi) {
+            if (q.vai_tro_tra_loi === 'Admin') {
+                nguoiTraLoi = '<span style="color: #ef4444; font-weight: 700;">Admin</span>';
+            } else if (q.ten_nguoi_tra_loi) {
+                // Nếu là bác sĩ thì ghép thêm chữ BS. đằng trước
+                nguoiTraLoi = `<span style="color: #0284c7; font-weight: 600;">BS. ${q.ten_nguoi_tra_loi}</span>`;
+            } else {
+                nguoiTraLoi = '<span style="color: #0284c7; font-weight: 600;">Bác sĩ</span>'; // Backup
+            }
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -36,7 +49,9 @@ function renderQATable() {
             <td><span class="badge" style="background:#e0f2fe; color:#0369a1; white-space:nowrap;">${q.ten_chuyen_khoa || 'Chung'}</span></td>
             <td style="white-space: normal; max-width: 150px; font-weight: 500;">${q.tieu_de}</td>
             <td style="white-space: normal; max-width: 250px; color: #4b5563;">${q.noi_dung}</td>
-            <td><span style="font-weight:500; color:#4b5563;">${q.trang_thai == 1 || q.tra_loi ? 'Bác sĩ/Admin' : 'Chưa có'}</span></td>
+            
+            <td>${nguoiTraLoi}</td>
+            
             <td style="white-space: normal; max-width: 250px; color: #10b981; font-weight: 500;">${q.tra_loi || ''}</td>
             <td>${dateStr}</td>
             <td>${statusBadge}</td>
@@ -53,19 +68,20 @@ async function replyQA(id) {
     const q = questions.find(item => item.id === id);
     if(!q) return;
     
+    // LẤY THÔNG TIN NGƯỜI ĐANG ĐĂNG NHẬP (Admin hoặc Bác sĩ)
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+
     Swal.fire({
         title: 'Trả lời Bệnh nhân',
         input: 'textarea',
-        inputLabel: 'Nhập câu trả lời của Bác sĩ:',
+        inputLabel: 'Nhập câu trả lời của Bác sĩ/Admin:',
         inputValue: q.tra_loi || '',
         showCancelButton: true,
         confirmButtonColor: '#0284C7',
         confirmButtonText: 'Gửi trả lời',
         cancelButtonText: 'Hủy',
         inputValidator: (value) => {
-            if (!value) {
-                return 'Vui lòng nhập nội dung trả lời!'
-            }
+            if (!value) return 'Vui lòng nhập nội dung trả lời!'
         }
     }).then(async (result) => {
         if (result.isConfirmed) {
@@ -73,11 +89,16 @@ async function replyQA(id) {
                 const res = await fetch(`http://localhost:3000/api/questions/${id}/reply`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tra_loi: result.value })
+                    // ĐÃ SỬA: Gửi kèm ID người trả lời và Vai trò lên Backend
+                    body: JSON.stringify({ 
+                        tra_loi: result.value,
+                        nguoi_tra_loi_id: userInfo.id,
+                        vai_tro: userInfo.role
+                    })
                 });
                 if (res.ok) {
                     Swal.fire('Đã gửi!', 'Câu trả lời đã được lưu.', 'success');
-                    fetchQuestions(); // Cập nhật lại giao diện
+                    fetchQuestions(); 
                 } else Swal.fire('Lỗi', 'Không thể trả lời!', 'error');
             } catch(e) { console.error(e); }
         }

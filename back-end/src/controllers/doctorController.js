@@ -1,7 +1,7 @@
 const { sql, connectDB } = require('../config/db');
 const bcrypt = require('bcrypt');
 
-// Lấy danh sách toàn bộ Bác sĩ
+// Lấy danh sách toàn bộ Bác sĩ (Đã thêm tính năng lấy Đánh giá)
 const getAllDoctors = async (req, res) => {
     try {
         const pool = await connectDB();
@@ -9,13 +9,24 @@ const getAllDoctors = async (req, res) => {
             SELECT tk.id, tk.ten_dang_nhap, tk.email, tk.trang_thai,
                    nd.ho_ten, nd.so_dien_thoai, nd.gioi_tinh, nd.ngay_sinh, nd.anh_dai_dien, nd.dia_chi,
                    bs.nam_kinh_nghiem, bs.phi_kham, bs.tieu_su, bs.chuyen_khoa_id,
-                   ck.ten_chuyen_khoa
+                   ck.ten_chuyen_khoa,
+                   -- Tính điểm sao trung bình (Làm tròn 1 chữ số thập phân, nếu NULL thì cho là 0)
+                   COALESCE(CAST(AVG(CAST(dg.so_sao AS FLOAT)) AS DECIMAL(2,1)), 0) AS diem_danh_gia,
+                   -- Đếm tổng số lượt đánh giá
+                   COUNT(dg.id) AS luot_danh_gia
             FROM TaiKhoan tk
             JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
             JOIN HoSoBacSi bs ON tk.id = bs.tai_khoan_id
             JOIN VaiTro vt ON tk.vai_tro_id = vt.id
             LEFT JOIN ChuyenKhoa ck ON bs.chuyen_khoa_id = ck.id
+            -- Nối bảng DanhGia vào để tính điểm
+            LEFT JOIN DanhGia dg ON bs.tai_khoan_id = dg.bac_si_id
             WHERE vt.ten_vai_tro = 'BacSi'
+            -- Bắt buộc phải có GROUP BY khi dùng hàm AVG và COUNT
+            GROUP BY tk.id, tk.ten_dang_nhap, tk.email, tk.trang_thai,
+                     nd.ho_ten, nd.so_dien_thoai, nd.gioi_tinh, nd.ngay_sinh, nd.anh_dai_dien, nd.dia_chi,
+                     bs.nam_kinh_nghiem, bs.phi_kham, bs.tieu_su, bs.chuyen_khoa_id,
+                     ck.ten_chuyen_khoa
             ORDER BY tk.id ASC
         `);
         res.json(result.recordset);
