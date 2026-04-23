@@ -86,7 +86,7 @@ const login = async (req, res) => {
                 SELECT 
                     tk.id, tk.ten_dang_nhap, tk.email, tk.mat_khau, tk.trang_thai, tk.vai_tro_id,
                     vt.ten_vai_tro,
-                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien, hsnd.gioi_tinh,
+                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien, hsnd.gioi_tinh, hsnd.dia_chi,
                     hsbs.nam_kinh_nghiem, hsbs.phi_kham, hsbs.tieu_su, hsbs.chuyen_khoa_id,
                     ck.ten_chuyen_khoa
                 FROM TaiKhoan tk
@@ -125,6 +125,7 @@ const login = async (req, res) => {
                 email: user.email,
                 ho_ten: user.ho_ten,
                 gioi_tinh: user.gioi_tinh,
+                dia_chi: user.dia_chi,
                 so_dien_thoai: user.so_dien_thoai,
                 anh_dai_dien: user.anh_dai_dien,
                 nam_kinh_nghiem: user.nam_kinh_nghiem,

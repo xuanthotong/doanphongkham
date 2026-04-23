@@ -89,4 +89,15 @@ CREATE TABLE HoiDap (
     da_giai_quyet BIT DEFAULT 0, 
     ngay_tao DATETIME DEFAULT GETDATE()
 );
-
+CREATE TABLE DanhGia (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    lich_kham_id INT NOT NULL,  
+    benh_nhan_id INT NOT NULL,  
+    bac_si_id INT NOT NULL,     
+    so_sao INT NOT NULL CHECK (so_sao >= 1 AND so_sao <= 5), 
+    noi_dung NVARCHAR(MAX) NULL,                             
+    ngay_danh_gia DATETIME DEFAULT GETDATE(),              
+    FOREIGN KEY (lich_kham_id) REFERENCES LichKham(id),
+    FOREIGN KEY (benh_nhan_id) REFERENCES HoSoBenhNhan(tai_khoan_id),
+    FOREIGN KEY (bac_si_id) REFERENCES HoSoBacSi(tai_khoan_id)
+);
