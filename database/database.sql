@@ -80,7 +80,7 @@ CREATE TABLE TinTuc (
 
 CREATE TABLE HoiDap (
     id INT IDENTITY(1,1) PRIMARY KEY,
-    benh_nhan_id INT NOT NULL FOREIGN KEY REFERENCES TaiKhoan(id),
+    benh_nhan_id INT FOREIGN KEY REFERENCES TaiKhoan(id),
     bac_si_id INT FOREIGN KEY REFERENCES TaiKhoan(id), 
     chuyen_khoa_id INT FOREIGN KEY REFERENCES ChuyenKhoa(id),
     tieu_de_cau_hoi NVARCHAR(255) NOT NULL,

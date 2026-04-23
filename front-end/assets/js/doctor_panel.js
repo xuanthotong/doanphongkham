@@ -136,10 +136,14 @@ function replyQA(maCH) {
     }).then(async (result) => {
         if (result.isConfirmed && result.value) {
             try {
+                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
                 const res = await fetch(`http://localhost:3000/api/questions/${maCH}/reply`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tra_loi: result.value })
+                    body: JSON.stringify({ 
+                        tra_loi: result.value,
+                        nguoi_tra_loi_id: userInfo.id
+                    })
                 });
                 if (res.ok) {
                     Swal.fire('Đã gửi!', 'Câu trả lời đã được lưu trên hệ thống.', 'success');
@@ -201,10 +205,11 @@ async function fetchDoctorQA() {
             const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
             
             const isAnswered = q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== '');
+            const nguoiDaTraLoi = q.ten_nguoi_tra_loi ? (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên' ? 'Admin' : `BS. ${q.ten_nguoi_tra_loi}`) : 'Bác sĩ';
             const btnHtml = isAnswered 
                 ? `<div style="background: #F0F9FF; padding: 12px; border-radius: 8px; border-left: 4px solid #10B981;">
                      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-                       <span style="color: #10B981; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> Bác sĩ đã trả lời:</span>
+                       <span style="color: #10B981; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> ${nguoiDaTraLoi} đã trả lời:</span>
                        <button onclick="replyQA(${q.id})" style="background: none; border: none; color: #0284C7; cursor: pointer; font-size: 13px; font-weight: bold;"><i class="fa-solid fa-pen"></i> Sửa lại</button>
                      </div>
                      <p style="margin: 0; color: #334155; font-size: 14px; margin-top: 5px;">${q.tra_loi}</p>

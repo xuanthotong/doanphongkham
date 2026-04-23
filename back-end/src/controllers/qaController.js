@@ -61,13 +61,19 @@ const replyQuestion = async (req, res) => {
         await pool.request()
             .input('id', sql.Int, id)
             .input('tra_loi', sql.NVarChar, tra_loi)
-            .input('bac_si_id', sql.Int, nguoi_tra_loi_id || null) // Cột bac_si_id trong CSDL dùng để lưu người trả lời
-            .query(`UPDATE HoiDap SET noi_dung_tra_loi = @tra_loi, bac_si_id = @bac_si_id, da_giai_quyet = 1 WHERE id = @id`);
+            .input('bac_si_id', sql.Int, nguoi_tra_loi_id || null)
+            .query(`
+                UPDATE HoiDap 
+                SET noi_dung_tra_loi = @tra_loi, 
+                    da_giai_quyet = 1,
+                    bac_si_id = @bac_si_id
+                WHERE id = @id
+            `);
             
-        res.json({ message: 'Trả lời thành công!' });
-    } catch (error) { 
-        console.error('Lỗi khi trả lời:', error);
-        res.status(500).json({ message: 'Lỗi server' }); 
+        res.status(200).json({ message: 'Trả lời thành công!' });
+    } catch (error) {
+        console.error('Lỗi khi lưu câu trả lời:', error);
+        res.status(500).json({ message: 'Lỗi server' });
     }
 };
 
@@ -75,10 +81,13 @@ const deleteQuestion = async (req, res) => {
     try {
         const { id } = req.params;
         const pool = await connectDB();
-        await pool.request().input('id', sql.Int, id).query(`DELETE FROM HoiDap WHERE id = @id`);
-        res.json({ message: 'Xóa thành công!' });
-    } catch (error) { 
-        res.status(500).json({ message: 'Lỗi server' }); 
+        await pool.request()
+            .input('id', sql.Int, id)
+            .query(`DELETE FROM HoiDap WHERE id = @id`);
+        res.json({ message: 'Xóa câu hỏi thành công!' });
+    } catch (error) {
+        console.error('Lỗi khi xóa câu hỏi:', error);
+        res.status(500).json({ message: 'Lỗi server' });
     }
 };
 

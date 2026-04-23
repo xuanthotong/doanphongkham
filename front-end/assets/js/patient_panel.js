@@ -119,6 +119,10 @@ async function submitQuestion(e) {
     const tieuDe = document.getElementById('qa_tieu_de').value;
     const noiDung = document.getElementById('qa_noi_dung').value;
 
+    // THÊM: Lấy trạng thái của ô checkbox Ẩn danh
+    const cbAnDanh = document.getElementById('qa_an_danh');
+    const isAnDanh = cbAnDanh ? cbAnDanh.checked : false;
+
     // Bắt buộc chọn chuyên khoa
     if (!chuyenKhoa) {
         Swal.fire('Thiếu thông tin', 'Vui lòng chọn Chuyên khoa cho câu hỏi của bạn!', 'warning');
@@ -146,7 +150,8 @@ async function submitQuestion(e) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        benh_nhan_id: userInfo.id,
+                        // NẾU ẨN DANH => GỬI NULL, NẾU KHÔNG => GỬI ID THẬT
+                        benh_nhan_id: isAnDanh ? null : userInfo.id,
                         tieu_de: tieuDe,
                         noi_dung: noiDung,
                         chuyen_khoa_id: chuyenKhoa ? parseInt(chuyenKhoa) : null
@@ -224,16 +229,19 @@ function renderCommunityQA() {
         filteredQuestions.forEach(q => {
             const date = new Date(q.ngay_tao || Date.now());
             const dateString = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-            const tenNguoiHoi = q.nguoi_hoi || "Bệnh nhân";
+            
+            // Cập nhật để hiển thị chữ Ẩn danh thay vì "Bệnh nhân" trên giao diện cộng đồng
+            const tenNguoiHoi = q.nguoi_hoi ? q.nguoi_hoi : "Ẩn danh";
             const chuCaiDau = tenNguoiHoi.charAt(0).toUpperCase();
             
             const statusBadge = q.trang_thai || q.tra_loi 
                 ? `<span class="qa-badge" style="background:#dcfce7; color:#166534; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã trả lời</span>` 
                 : `<span class="qa-badge qa-pending" style="background:#fef3c7; color:#d97706; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Chờ phản hồi</span>`;
 
+            const nguoiDaTraLoi = q.ten_nguoi_tra_loi ? (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên' ? 'Quản trị viên' : `BS. ${q.ten_nguoi_tra_loi}`) : 'Bác sĩ';
             const answerHtml = q.tra_loi 
                 ? `<div style="margin-top: 15px; padding: 12px; background: #F0F9FF; border-left: 4px solid #0284C7; border-radius: 4px;">
-                     <strong>Bác sĩ trả lời:</strong> <p style="margin: 5px 0 0 0; color: #334155; font-size: 14px;">${q.tra_loi}</p>
+                     <strong style="color: #0284c7;">${nguoiDaTraLoi} trả lời:</strong> <p style="margin: 5px 0 0 0; color: #334155; font-size: 14px;">${q.tra_loi}</p>
                    </div>` 
                 : '';
 

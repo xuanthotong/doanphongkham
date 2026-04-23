@@ -32,13 +32,16 @@ function renderQATable() {
         // XỬ LÝ LOGIC HIỂN THỊ NGƯỜI TRẢ LỜI Ở ĐÂY
         let nguoiTraLoi = 'Chưa có';
         if (q.tra_loi) {
-            if (q.vai_tro_tra_loi === 'Admin') {
-                nguoiTraLoi = '<span style="color: #ef4444; font-weight: 700;">Admin</span>';
-            } else if (q.ten_nguoi_tra_loi) {
-                // Nếu là bác sĩ thì ghép thêm chữ BS. đằng trước
-                nguoiTraLoi = `<span style="color: #0284c7; font-weight: 600;">BS. ${q.ten_nguoi_tra_loi}</span>`;
+            // Nếu có tên người trả lời trong CSDL
+            if (q.ten_nguoi_tra_loi) {
+                if (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên') {
+                    nguoiTraLoi = `<span style="color: #ef4444; font-weight: 700;">Admin - ${q.ten_nguoi_tra_loi}</span>`;
+                } else {
+                    nguoiTraLoi = `<span style="color: #0284c7; font-weight: 600;">BS. ${q.ten_nguoi_tra_loi}</span>`;
+                }
             } else {
-                nguoiTraLoi = '<span style="color: #0284c7; font-weight: 600;">Bác sĩ</span>'; // Backup
+                // Backup cho những câu trả lời cũ chưa được lưu ID
+                nguoiTraLoi = q.vai_tro_tra_loi === 'Admin' ? '<span style="color: #ef4444; font-weight: 700;">Admin</span>' : '<span style="color: #0284c7; font-weight: 600;">Bác sĩ</span>';
             }
         }
 
