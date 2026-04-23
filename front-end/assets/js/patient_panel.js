@@ -339,8 +339,6 @@ async function updatePatientProfile(event) {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.id) return;
 
-    const ho_ten = document.getElementById('pt_ten').value.trim();
-    const so_dien_thoai = document.getElementById('pt_sdt').value.trim();
     const dia_chi = document.getElementById('pt_dia_chi').value.trim();
     const gioi_tinh = document.getElementById('pt_gioi_tinh').value; // Đảm bảo input này trả về 1 hoặc 0 (Nam/Nữ)
 
@@ -349,21 +347,15 @@ async function updatePatientProfile(event) {
         const response = await fetch(`http://localhost:3000/api/accounts/profile/${userInfo.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ho_ten, so_dien_thoai, dia_chi, gioi_tinh })
+            body: JSON.stringify({ dia_chi, gioi_tinh })
         });
 
         if (response.ok) {
             Swal.fire('Thành công!', 'Cập nhật hồ sơ thành công!', 'success');
             // Cập nhật lại dữ liệu đang lưu ảo trong LocalStorage
-            userInfo.ho_ten = ho_ten;
-            userInfo.so_dien_thoai = so_dien_thoai;
             userInfo.dia_chi = dia_chi;
             userInfo.gioi_tinh = parseInt(gioi_tinh);
             localStorage.setItem('userInfo', JSON.stringify(userInfo));
-            
-            // Cập nhật lại tên trên Navbar ngay lập tức
-            const elPatientName = document.getElementById('patientName');
-            if (elPatientName) elPatientName.innerText = ho_ten || userInfo.ten_dang_nhap;
             
         } else {
             const errData = await response.json();

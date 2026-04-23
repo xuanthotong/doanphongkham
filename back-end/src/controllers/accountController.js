@@ -130,7 +130,7 @@ const updateProfile = async (req, res) => {
     try {
         const pool = await connectDB();
         const id = req.params.id;
-        const { ho_ten, so_dien_thoai, dia_chi, gioi_tinh } = req.body;
+        const { dia_chi, gioi_tinh } = req.body;
 
         // Xử lý chuyển đổi giới tính (1: Nam, 0: Nữ)
         let gioi_tinh_bit = null;
@@ -139,15 +139,11 @@ const updateProfile = async (req, res) => {
 
         await pool.request()
             .input('id', sql.Int, id)
-            .input('ho_ten', sql.NVarChar, ho_ten || null)
-            .input('so_dien_thoai', sql.VarChar, so_dien_thoai || null)
             .input('dia_chi', sql.NVarChar, dia_chi || null)
             .input('gioi_tinh', sql.Bit, gioi_tinh_bit)
             .query(`
                 UPDATE HoSoNguoiDung
-                SET ho_ten = @ho_ten, 
-                    so_dien_thoai = @so_dien_thoai, 
-                    dia_chi = @dia_chi, 
+                SET dia_chi = @dia_chi, 
                     gioi_tinh = @gioi_tinh
                 WHERE tai_khoan_id = @id
             `);
