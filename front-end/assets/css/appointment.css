@@ -1,0 +1,138 @@
+/* =========================================
+   CSS CHO TRANG ĐẶT LỊCH (WIZARD VERCEL STYLE)
+   ========================================= */
+
+/* Stepper (Thanh tiến trình) */
+.stepper-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding: 0 20px; }
+.step { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 2; }
+.step-circle { width: 35px; height: 35px; border-radius: 50%; background-color: #f1f5f9; color: #64748b; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; border: 2px solid #e2e8f0; transition: 0.3s; }
+.step-label { font-size: 13px; font-weight: 600; color: #64748b; }
+.step.active .step-circle { background-color: #0284c7; color: white; border-color: #0284c7; }
+.step.active .step-label { color: #0f172a; }
+.step.completed .step-circle { background-color: #10b981; color: white; border-color: #10b981; }
+.step-line { flex: 1; height: 3px; background-color: #e2e8f0; margin: 0 15px; transform: translateY(-12px); z-index: 1; transition: 0.3s; }
+.step-line.completed { background-color: #10b981; }
+
+/* Các bước Nội dung */
+.booking-step { display: none; animation: fadeIn 0.4s ease; }
+.booking-step.active { display: block; }
+
+/* Grid Bác sĩ chọn lọc */
+.doctor-selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+.doc-select-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; }
+.doc-select-card:hover { border-color: #0284c7; background-color: #f0f9ff; }
+.doc-select-card.selected { border-color: #0284c7; background-color: #f0f9ff; box-shadow: 0 0 0 2px #bae6fd; }
+.doc-select-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+.doc-select-info h4 { margin: 0 0 5px 0; font-size: 15px; color: #0f172a; }
+.doc-select-info p { margin: 0; font-size: 13px; color: #0284c7; font-weight: 600; }
+
+/* --- BỐ CỤC CHIA 2 CỘT BƯỚC 2 (Vercel Style) --- */
+.datetime-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start; }
+.section-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+/* Khối Chọn Ngày */
+.custom-date-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 16px; color: #334155; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); font-family: inherit; pointer-events: auto; }
+.custom-date-input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px #e0f2fe; outline: none; }
+
+/* Khối Chọn Giờ (4 cột) */
+.time-slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.time-slot { border: 1px solid #cbd5e1; padding: 12px 0; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; background: white; }
+.time-slot:hover { border-color: #0284c7; color: #0284c7; background-color: #f0f9ff; }
+.time-slot.selected { background-color: #0284c7; color: white; border-color: #0284c7; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); }
+
+/* ========================================================
+   BƯỚC 4 (THẺ XÁC NHẬN) VÀ MÀN HÌNH THÀNH CÔNG
+======================================================== */
+.step-title { font-size: 20px; font-weight: 800; margin-bottom: 5px; color: #0f172a; }
+.step-desc { color: #64748b; font-size: 14px; margin-bottom: 25px; }
+
+/* Lưới Thẻ Card Bước 4 */
+.confirm-cards-container { display: flex; flex-direction: column; }
+.confirm-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.confirm-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; }
+.full-width-card { margin-top: 20px; }
+
+.confirm-card-header { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+.icon-blue { color: #0284c7; font-size: 18px; }
+.icon-small { font-size: 12px; margin-right: 5px; color: #64748b; }
+
+.confirm-item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; }
+.confirm-item-row:last-child { margin-bottom: 0; }
+.c-label { color: #64748b; font-weight: 500; }
+.c-value { color: #0f172a; font-weight: 600; text-align: right; max-width: 65%; }
+.highlight-blue { color: #0284c7; }
+.symptom-text { padding-top: 5px; color: #334155; font-size: 14px; line-height: 1.6; word-wrap: break-word; }
+
+/* Màn Hình Thành Công */
+.success-step { text-align: center; padding: 40px 20px; }
+.success-icon-wrapper { background: #dcfce7; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.success-icon-wrapper i { color: #10b981; font-size: 40px; }
+.success-title { color: #0f172a; font-weight: 800; font-size: 28px; margin-bottom: 10px; }
+.success-desc { color: #64748b; font-size: 16px; margin-bottom: 30px; }
+
+.success-info-box { background: #f8fafc; border-radius: 12px; padding: 25px; text-align: left; max-width: 500px; margin: 0 auto 30px; border: 1px solid #e2e8f0; }
+.success-info-title { margin-bottom: 15px; font-size: 15px; font-weight: 700; color: #0f172a; }
+.success-info-row { margin-bottom: 12px; font-size: 14px; display: flex; justify-content: space-between; }
+.success-info-row:last-child { margin-bottom: 0; }
+
+.success-actions { display: flex; gap: 15px; justify-content: center; }
+.success-actions .btn { border-radius: 8px; padding: 10px 20px; }
+
+/* Responsive Gom chung */
+@media (max-width: 768px) {
+    .doctor-selection-grid { grid-template-columns: 1fr; }
+    .datetime-grid { grid-template-columns: 1fr; gap: 20px; }
+    .time-slots-grid { grid-template-columns: repeat(3, 1fr); }
+    .confirm-cards-grid { grid-template-columns: 1fr; }
+    .step-label { display: none; }
+}
+
+/* ========================================================
+   CSS TAB HỒ SƠ 2 CỘT & LỊCH SỬ KHÁM BỆNH
+======================================================== */
+.profile-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* CHÌA KHÓA ĐÂY: Chia đều 2 bên 50/50 */
+    gap: 30px;
+    align-items: start; /* Ngăn chặn thẻ bị kéo dài thòng lòng xuống dưới */
+    align-items: stretch; /* Đổi thành stretch để 2 bên tự giãn chiều cao bằng nhau */
+}
+
+.record-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 15px;
+    background: #f8fafc;
+    transition: 0.3s;
+}
+.record-card:hover { border-color: #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+
+.record-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 10px;
+}
+.record-date { font-weight: 700; color: #0f172a; font-size: 14px; }
+.record-status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+.status-done { background: #dcfce7; color: #166534; }
+.status-pending { background: #fef3c7; color: #d97706; }
+
+.record-body { font-size: 14px; color: #475569; line-height: 1.6; }
+.record-body p { margin: 5px 0; display: flex; align-items: flex-start; gap: 8px; }
+.record-icon { width: 16px; color: #94a3b8; margin-top: 3px; }
+
+/* Nút và Sao đánh giá */
+.star-rating { transition: 0.2s; }
+.star-rating:hover { transform: scale(1.1); }
+.btn-rate {
+    margin-top: 12px; font-size: 13px; padding: 6px 12px;
+    border: 1px solid #0284c7; color: #0284c7; background: white; border-radius: 6px; cursor: pointer;
+    font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s;
+}
+.btn-rate:hover { background: #0284c7; color: white; }
+.rated-badge {
+    margin-top: 12px; font-size: 13px; font-weight: 600; color: #f59e0b; display: inline-flex; align-items: center; gap: 5px;
+}
+
+@media (max-width: 768px) {
+    .profile-dashboard-grid { grid-template-columns: 1fr; }
+}

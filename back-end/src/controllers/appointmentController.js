@@ -74,6 +74,38 @@ const updateAppointmentStatus = async (req, res) => {
     }
 };
 
+// 4. Đặt lịch khám mới (Bệnh nhân đặt lịch)
+const createAppointment = async (req, res) => {
+    try {
+        const { lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung } = req.body;
+        const pool = await connectDB();
+        
+        // Thêm lịch khám mới với trạng thái mặc định là 'Pending'
+        await pool.request()
+            .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
+            .input('benh_nhan_id', sql.Int, benh_nhan_id)
+            .input('mo_ta_trieu_chung', sql.NVarChar, mo_ta_trieu_chung)
+            .query(`
+                INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao)
+                VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, 'Pending', GETDATE())
+            `);
+            
+        // Tăng số lượng đã đặt trong ca làm việc lên 1
+        await pool.request()
+            .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
+            .query(`
+                UPDATE LichLamViec 
+                SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 
+                WHERE id = @lich_lam_viec_id
+            `);
+
+        res.status(201).json({ message: 'Đặt lịch khám thành công!' });
+    } catch (error) {
+        console.error('Lỗi đặt lịch hẹn:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
 // Xóa lịch hẹn
 const deleteAppointment = async (req, res) => {
     try {
@@ -97,4 +129,4 @@ const deleteAppointment = async (req, res) => {
     }
 };
 
-module.exports = { getAllAppointments, getAppointmentsByDoctor, updateAppointmentStatus, deleteAppointment };
+module.exports = { getAllAppointments, getAppointmentsByDoctor, updateAppointmentStatus, deleteAppointment, createAppointment };

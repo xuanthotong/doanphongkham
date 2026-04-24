@@ -51,7 +51,7 @@ function renderHomeDoctors(doctors) {
 
     container.innerHTML = ''; 
 
-    const activeDoctors = doctors.filter(doc => doc.trang_thai == 1);
+    const activeDoctors = doctors.filter(doc => doc.trang_thai !== 0 && doc.trang_thai !== false);
 
     if (activeDoctors.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666; width: 100%;">Hiện tại chưa có bác sĩ nào.</p>';
@@ -105,6 +105,12 @@ function showDoctorDetails(id) {
     // Hiển thị modal
     document.getElementById('doctorDetailModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+
+    // Cập nhật sự kiện cho nút "Đặt lịch khám" trong Modal để truyền đúng ID Bác sĩ
+    const modalBookBtn = document.querySelector('#doctorDetailModal .btn-primary');
+    if (modalBookBtn) {
+        modalBookBtn.onclick = (e) => bookDoctor(id, e);
+    }
 }
 
 function closeDoctorDetailsModal() {
@@ -125,22 +131,55 @@ document.addEventListener('DOMContentLoaded', fetchHomeDoctors);
 
 
 
-// HÀM XỬ LÝ KHI BẤM NÚT "ĐẶT LỊCH" TRÊN THẺ BÁC SĨ MẶT TIỀN
+// ====================================================================
+// HÀM XỬ LÝ KHI BẤM NÚT "ĐẶT LỊCH" TRÊN THẺ BÁC SĨ MẶT TIỀN (ĐÃ FIX LỖI)
+// ====================================================================
 function bookDoctor(id, event) {
     if (event) event.preventDefault();
-
+    
     // Kiểm tra xem đã có dữ liệu đăng nhập trong máy chưa
     const userInfoString = localStorage.getItem('userInfo');
 
     if (!userInfoString) {
-        // CHƯA ĐĂNG NHẬP: Bật bảng thông báo yêu cầu Đăng nhập / Đăng ký
-        if (typeof requireLoginToBook === 'function') {
-            requireLoginToBook(event);
-        } else {
-            alert("Vui lòng đăng nhập để đặt lịch khám!"); 
-        }
+        // CHƯA ĐĂNG NHẬP: Bật Popup thông báo y hệt Ảnh 3
+        Swal.fire({
+            icon: 'info',
+            title: 'Yêu cầu tài khoản',
+            text: 'Bạn cần đăng nhập hoặc tạo tài khoản mới để có thể đặt lịch khám bệnh!',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-user-plus"></i> Đăng ký ngay',
+            cancelButtonText: '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#0284c7'
+        }).then((result) => {
+            if (result.isConfirmed) {
+            window.location.href = '../auth/login.html';
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+            window.location.href = '../auth/login.html';
+            }
+        });
     } else {
-        // ĐÃ ĐĂNG NHẬP: Bay thẳng sang trang form điền Đặt lịch
-        window.location.href = 'appointment.html';
+        // ĐÃ ĐĂNG NHẬP: Lưu ID Bác sĩ lại để lát nữa Auto-Click
+        localStorage.setItem('pendingBookingDoctorId', id);
+        
+        // Kiểm tra xem đang ở trang chủ (index.html) hay trang bệnh nhân (patient.html)
+        if (window.location.pathname.includes('patient.html')) {
+            // Đang ở sẵn trang bệnh nhân -> Mở tab Đặt lịch
+            switchTab(null, 'tab-dat-lich');
+            closeDoctorDetailsModal(); // Đóng form chi tiết (nếu đang mở)
+            
+            // Auto click vào bác sĩ
+            setTimeout(() => {
+                const docCard = document.getElementById(`doc-card-${id}`);
+                if (docCard) {
+                    docCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    docCard.click();
+                }
+                localStorage.removeItem('pendingBookingDoctorId'); // Xóa cache
+            }, 300);
+        } else {
+            // Đang ở trang chủ ngoài cùng -> Nhảy sang trang patient.html
+            window.location.href = 'patient/patient.html'; 
+        }
     }
 }

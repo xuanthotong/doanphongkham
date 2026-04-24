@@ -359,18 +359,16 @@ async function updatePatientProfile(event) {
         });
 
         if (response.ok) {
-            Swal.fire('Thành công!', 'Cập nhật hồ sơ thành công!', 'success');
-            // Cập nhật lại dữ liệu đang lưu ảo trong LocalStorage
+            // Cập nhật lại localStorage để thay đổi hiển thị ngay lập tức
             userInfo.dia_chi = dia_chi;
-            userInfo.gioi_tinh = parseInt(gioi_tinh);
+            userInfo.gioi_tinh = gioi_tinh;
             localStorage.setItem('userInfo', JSON.stringify(userInfo));
-            
+            Swal.fire('Thành công', 'Cập nhật thông tin hồ sơ thành công!', 'success');
         } else {
-            const errData = await response.json();
-            Swal.fire('Lỗi!', errData.message || 'Không thể cập nhật hồ sơ.', 'error');
+            Swal.fire('Lỗi', 'Không thể cập nhật thông tin.', 'error');
         }
     } catch (error) {
-        console.error(error);
-        Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
+        console.error('Lỗi cập nhật hồ sơ:', error);
+        Swal.fire('Lỗi', 'Không thể kết nối đến máy chủ.', 'error');
     }
 }
