@@ -34,7 +34,12 @@ function confirmLogout(event) {
     }).then((result) => {
         if (result.isConfirmed) { 
             Swal.fire({ title: 'Đăng xuất thành công!', text: 'Đang chuyển hướng về trang chủ...', icon: 'success', showConfirmButton: false, timer: 1500 })
-            .then(() => { localStorage.clear(); window.location.href = '../index.html'; });
+            .then(() => { 
+                // Chỉ xóa phiên đăng nhập của Bác sĩ, không ảnh hưởng Bệnh nhân
+                localStorage.removeItem('doctorToken'); 
+                localStorage.removeItem('doctorInfo'); 
+                window.location.href = '../index.html'; 
+            });
         }
     });
 }
@@ -136,7 +141,7 @@ function replyQA(maCH) {
     }).then(async (result) => {
         if (result.isConfirmed && result.value) {
             try {
-                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
                 const res = await fetch(`http://localhost:3000/api/questions/${maCH}/reply`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -162,10 +167,11 @@ function replyQA(maCH) {
 async function fetchDoctorQA() {
     try {
         // Lấy thông tin Bác sĩ đang đăng nhập
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
         const docSpecialtyId = userInfo.chuyen_khoa_id;
 
-        const res = await fetch('http://localhost:3000/api/questions');
+        // Thêm timestamp để xóa Cache trình duyệt
+        const res = await fetch(`http://localhost:3000/api/questions?t=${new Date().getTime()}`);
         const allQA = await res.json();
         
         if (allQA.length > 0 && allQA[0].chuyen_khoa_id === undefined) {
@@ -200,6 +206,7 @@ async function fetchDoctorQA() {
             return;
         }
 
+        let qaHTML = '';
         currentQA.forEach(q => {
             const date = new Date(q.ngay_tao || Date.now());
             const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
@@ -216,7 +223,7 @@ async function fetchDoctorQA() {
                    </div>` 
                 : `<button class="btn btn-primary" onclick="replyQA(${q.id})"><i class="fa-solid fa-reply"></i> Trả lời bệnh nhân</button>`;
 
-            container.innerHTML += `
+            qaHTML += `
                 <div class="qa-item">
                     <div class="qa-header">
                         <h4>${q.tieu_de || 'Câu hỏi từ bệnh nhân'} (Mã CH: #${q.id})</h4>
@@ -227,6 +234,7 @@ async function fetchDoctorQA() {
                 </div>
             `;
         });
+        container.innerHTML = qaHTML;
     } catch (error) { console.error('Lỗi khi lấy hỏi đáp:', error); }
 }
 
@@ -305,7 +313,7 @@ function openShiftModal(shiftId = null) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const url = isEditing ? `http://localhost:3000/api/shifts/${shiftId}` : 'http://localhost:3000/api/shifts';
+                const url = isEditing ? `http://localhost:3000/api/doctors/shifts/${shiftId}` : 'http://localhost:3000/api/doctors/shifts';
                 const method = isEditing ? 'PUT' : 'POST';
                 const res = await fetch(url, {
                     method: method,
@@ -341,7 +349,7 @@ function deleteShift(shiftId) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/shifts/${shiftId}`, { method: 'DELETE' });
+                const res = await fetch(`http://localhost:3000/api/doctors/shifts/${shiftId}`, { method: 'DELETE' });
                 if (res.ok) {
                     Swal.fire('Đã xóa!', 'Ca làm việc đã bị xóa.', 'success');
                     fetchShifts();
@@ -357,13 +365,61 @@ function deleteShift(shiftId) {
     });
 }
 
+// DỪNG CA LÀM VIỆC
+function stopShift(shiftId) {
+    Swal.fire({
+        title: 'Dừng ca làm việc?',
+        text: 'Bệnh nhân sẽ không thể đặt thêm lịch vào ca này nữa!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Vâng, dừng ca!',
+        cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/doctors/shifts/${shiftId}/stop`, { method: 'PUT' });
+                if (res.ok) {
+                    Swal.fire('Đã dừng!', 'Ca làm việc đã ngừng nhận bệnh nhân.', 'success');
+                    fetchShifts();
+                } else Swal.fire('Lỗi!', 'Không thể dừng ca làm việc này.', 'error');
+            } catch (error) { Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error'); }
+        }
+    });
+}
+
+// MỞ LẠI CA LÀM VIỆC
+function resumeShift(shiftId) {
+    Swal.fire({
+        title: 'Mở lại ca làm việc?',
+        text: 'Bệnh nhân sẽ có thể tiếp tục đặt lịch vào ca này!',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Vâng, mở lại!',
+        cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/doctors/shifts/${shiftId}/resume`, { method: 'PUT' });
+                if (res.ok) {
+                    Swal.fire('Thành công!', 'Ca làm việc đã được mở lại và nhận bệnh nhân.', 'success');
+                    fetchShifts();
+                } else Swal.fire('Lỗi!', 'Không thể mở lại ca làm việc này.', 'error');
+            } catch (error) { Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error'); }
+        }
+    });
+}
+
 // ==========================================
 // HÀM FETCH VÀ RENDER DỮ LIỆU CA LÀM VIỆC
 // ==========================================
 async function fetchShifts() {
     if (!currentDoctorId) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/shifts/doctor/${currentDoctorId}`);
+        const res = await fetch(`http://localhost:3000/api/doctors/shifts/${currentDoctorId}?t=${new Date().getTime()}`);
         currentShifts = await res.json();
         
         const tbody = document.getElementById('shiftTableBody');
@@ -375,27 +431,69 @@ async function fetchShifts() {
             return;
         }
 
+        let shiftHTML = '';
+        
+        // Lấy giờ hiện tại để so sánh
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+        const currentTimeStr = now.toTimeString().substring(0, 5); // "HH:MM"
+
         currentShifts.forEach(shift => {
-            const d = new Date(shift.ngay_lam_viec);
+            const shiftDateStr = shift.ngay_lam_viec.split('T')[0];
+            const d = new Date(shiftDateStr);
             const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
             
             const booked = shift.so_luong_hien_tai || 0;
             const max = shift.so_luong_toi_da;
             const isFull = booked >= max;
+            const isStopped = shift.trang_thai === 'Stopped';
+
+            // Tách khung giờ để lấy thời gian kết thúc
+            const timeParts = shift.khung_gio.split(' - ');
+            const endTime = timeParts.length === 2 ? timeParts[1] : '23:59';
+
+            // Logic kiểm tra Hết giờ
+            let isExpired = false;
+            if (shiftDateStr < localDateStr) isExpired = true;
+            else if (shiftDateStr === localDateStr && currentTimeStr > endTime) isExpired = true;
+
+            // Giao diện trạng thái
+            let statusText = '';
+            if (isExpired) statusText = '<span style="color: #64748b; font-weight: bold;"><i class="fa-solid fa-clock-rotate-left"></i> Hết giờ</span>';
+            else if (isStopped) statusText = '<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-ban"></i> Đã dừng</span>';
+            else if (isFull) statusText = '<span style="color: #f59e0b; font-weight: bold;"><i class="fa-solid fa-users-slash"></i> Đã kín</span>';
+            else statusText = '<span style="color: #166534; font-weight: bold;"><i class="fa-regular fa-circle-check"></i> Đang nhận</span>';
             
-            tbody.innerHTML += `
-                <tr>
-                    <td><b>${formattedDate}</b></td>
-                    <td><span style="color: var(--primary); font-weight: 600;">${shift.khung_gio}</span></td>
-                    <td>${max} Bệnh nhân / Ca</td>
-                    <td><span style="color: ${isFull ? '#EF4444' : '#166534'}; font-weight: bold;">${booked}/${max} ${isFull ? '(Đã kín)' : ''}</span></td>
-                    <td style="display:flex; gap:5px;">
+            let actionBtns = '';
+            if (!isExpired) {
+                if (!isStopped) {
+                    actionBtns = `
+                        <button class="action-btn btn-warning" onclick="stopShift(${shift.id})" title="Dừng nhận bệnh nhân" style="background:#f59e0b; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-stop"></i></button>
                         <button class="action-btn btn-primary" onclick="openShiftModal(${shift.id})" title="Sửa" style="background:#0284c7; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
                         <button class="action-btn btn-danger" onclick="deleteShift(${shift.id})" title="Xóa" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
-                    </td>
+                    `;
+                } else {
+                    actionBtns = `
+                        <button class="action-btn btn-success" onclick="resumeShift(${shift.id})" title="Mở lại ca làm việc" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-play"></i></button>
+                        <button class="action-btn btn-danger" onclick="deleteShift(${shift.id})" title="Xóa" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                    `;
+                }
+            } else {
+                actionBtns = `<button class="action-btn btn-danger" onclick="deleteShift(${shift.id})" title="Xóa lịch sử ca" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>`;
+            }
+
+            shiftHTML += `
+                <tr style="${isExpired || isStopped ? 'opacity: 0.7; background: #f8fafc;' : ''}">
+                    <td><b>${formattedDate}</b></td>
+                    <td><span style="color: var(--primary); font-weight: 600;">${shift.khung_gio}</span></td>
+                    <td>${max} Bệnh nhân</td>
+                    <td>${statusText} <br><span style="font-size:12px; color:#64748b;">(${booked}/${max})</span></td>
+                    <td style="display:flex; gap:5px;">${actionBtns}</td>
                 </tr>
             `;
         });
+        tbody.innerHTML = shiftHTML;
     } catch (error) {
         console.error('Lỗi khi lấy ca làm việc:', error);
     }
@@ -407,13 +505,13 @@ async function fetchShifts() {
 async function fetchAppointments() {
     if (!currentDoctorId) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/appointments/doctor/${currentDoctorId}`);
+        const res = await fetch(`http://localhost:3000/api/appointments/doctor/${currentDoctorId}?t=${new Date().getTime()}`);
         currentAppointments = await res.json();
         
         // Đếm dữ liệu theo trạng thái
-        const pendingCount = currentAppointments.filter(app => app.trang_thai.toLowerCase() === 'pending').length;
-        const approvedCount = currentAppointments.filter(app => app.trang_thai.toLowerCase() === 'approved').length;
-        const doneCount = currentAppointments.filter(app => app.trang_thai.toLowerCase() === 'done').length;
+        const pendingCount = currentAppointments.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'pending').length;
+        const approvedCount = currentAppointments.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'approved').length;
+        const doneCount = currentAppointments.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'done').length;
         
         // Đếm số ca khám trong ngày hôm nay
         const todayStr = new Date().toISOString().split('T')[0];
@@ -464,7 +562,7 @@ function renderAppointments(filterStatus) {
     
     // 1. Lọc theo Tab Trạng thái
     if (filterStatus !== 'all') {
-        filteredList = currentAppointments.filter(app => app.trang_thai.toLowerCase() === filterStatus.toLowerCase());
+        filteredList = currentAppointments.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === filterStatus.toLowerCase());
     } else {
         // Thuật toán: Sắp xếp các lịch hẹn đăng ký mới nhất lên đầu tiên khi ở tab "Tất cả"
         filteredList.sort((a, b) => new Date(b.ngay_tao) - new Date(a.ngay_tao));
@@ -484,11 +582,12 @@ function renderAppointments(filterStatus) {
         return;
     }
 
+    let trHTML = '';
     filteredList.forEach(app => {
         let statusHtml = '';
         let actionHtml = '';
         
-        const status = app.trang_thai.toLowerCase();
+        const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
         if (status === 'pending') {
             statusHtml = `<span class="badge badge-pending" style="background:#fef3c7; color:#d97706; padding: 4px 8px; border-radius: 12px; font-size: 12px;"><span class="dot" style="background:#f59e0b; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px;"></span>Chờ duyệt</span>`;
             actionHtml = `
@@ -498,32 +597,40 @@ function renderAppointments(filterStatus) {
         } else if (status === 'approved') {
             statusHtml = `<span class="badge badge-approved" style="background:#dcfce7; color:#166534; padding: 4px 8px; border-radius: 12px; font-size: 12px;"><span class="dot" style="background:#22c55e; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px;"></span>Đã duyệt</span>`;
             actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${app.ten_benh_nhan}')" style="background:#0284c7; color:white; border:none; padding: 5px 15px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-stethoscope"></i> Khám bệnh</button>`;
-        } else {
+        } else if (status === 'cancelled') {
+            statusHtml = `<span class="badge" style="background:#fee2e2; color:#991b1b; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã hủy</span>`;
+            actionHtml = `<span style="font-size: 12px; color: #ef4444;"><i class="fa-solid fa-xmark"></i> Lịch đã bị hủy</span>`;
+        } else if (status === 'done') {
             statusHtml = `<span class="badge" style="background:#f3f4f6; color:#4b5563; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã khám xong</span>`;
             actionHtml = `<span style="font-size: 12px; color: #10B981;"><i class="fa-solid fa-check-double"></i> Hoàn thành</span>`;
+        } else {
+            // NẾU CSDL BỊ LỖI CHỮ HOẶC KÝ TỰ ẨN, BÁC SĨ SẼ NHÌN THẤY NGAY LẬP TỨC
+            statusHtml = `<span class="badge" style="background:#e2e8f0; color:#475569; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Lỗi CSDL</span>`;
+            actionHtml = `<span style="font-size: 12px; color: #ef4444;">Trạng thái lạ: ${app.trang_thai}</span>`;
         }
 
         const d = new Date(app.ngay_lam_viec);
         const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 
-        tbody.innerHTML += `
+        trHTML += `
             <tr>
                 <td><strong>#LK${app.id}</strong></td>
                 <td><b>${app.ten_benh_nhan}</b><br><span style="color:var(--text-sub); font-size:12px;">${app.so_dien_thoai || 'Chưa cập nhật'}</span></td>
-                <td>${formattedDate}<br><span style="color:var(--primary); font-size:12px; font-weight: 600;">${app.khung_gio}</span></td>
+                <td>${formattedDate}<br><span style="color:var(--primary); font-size:12px; font-weight: 600;">${app.gio_kham || app.khung_gio}</span></td>
                 <td>${app.mo_ta_trieu_chung || 'Không có'}</td>
                 <td>${statusHtml}</td>
                 <td style="display:flex; gap:5px; align-items:center;">${actionHtml}</td>
             </tr>
         `;
     });
+    tbody.innerHTML = trHTML;
 }
 
 // ==========================================
 // ĐỒNG BỘ DỮ LIỆU THẬT LÊN GIAO DIỆN BÁC SĨ
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    const userInfoString = localStorage.getItem('userInfo');
+    const userInfoString = localStorage.getItem('doctorInfo');
     
     if (userInfoString) {
         const userInfo = JSON.parse(userInfoString);
@@ -586,6 +693,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchShifts();
         fetchAppointments();
         fetchDoctorQA();
+
+        // TỰ ĐỘNG CẬP NHẬT GIAO DIỆN SAU MỖI 15 GIÂY (Chống tình trạng không cập nhật lịch)
+        setInterval(() => {
+            if (currentDoctorId) {
+                fetchShifts();
+                fetchAppointments();
+            }
+        }, 15000);
 
     } else {
         // NẾU KHÔNG CÓ DỮ LIỆU (Chưa đăng nhập) -> Đuổi về trang login

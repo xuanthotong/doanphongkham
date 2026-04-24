@@ -10,6 +10,7 @@ const postRoutes = require('./src/routes/postRoutes');
 const doctorpageRoutes = require('./src/routes/doctorpageRoutes');
 const qaRoutes = require('./src/routes/qaRoutes');
 const passwordRoutes = require('./src/routes/passwordRoutes');
+const appointmentRoutes = require('./src/routes/appointmentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.use('/api/categories', require('./src/routes/danhMucRoutes'));
 app.use('/api', doctorpageRoutes);
 app.use('/api/questions', qaRoutes);
 app.use('/api/password', passwordRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Khởi động server và kết nối DB
 app.listen(PORT, async () => {

@@ -69,6 +69,30 @@ const updateShift = async (req, res) => {
     } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
 };
 
+// Dừng ca làm việc
+const stopShift = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const pool = await connectDB();
+        await pool.request()
+            .input('id', sql.Int, id)
+            .query("UPDATE LichLamViec SET trang_thai = 'Stopped' WHERE id = @id");
+        res.json({ message: 'Dừng ca làm việc thành công!' });
+    } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
+};
+
+// Mở lại ca làm việc
+const resumeShift = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const pool = await connectDB();
+        await pool.request()
+            .input('id', sql.Int, id)
+            .query("UPDATE LichLamViec SET trang_thai = 'Active' WHERE id = @id");
+        res.json({ message: 'Mở lại ca làm việc thành công!' });
+    } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
+};
+
 // Xóa ca làm việc
 const deleteShift = async (req, res) => {
     try {
@@ -86,5 +110,23 @@ const deleteShift = async (req, res) => {
         res.json({ message: 'Xóa ca làm việc thành công!' });
     } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
 };
+// Thêm hàm này vào shiftController.js
+const getAllShifts = async (req, res) => {
+    try {
+        const pool = await connectDB();
+        const result = await pool.request().query(`
+            SELECT * FROM LichLamViec 
+            WHERE CAST(ngay_lam_viec AS DATE) >= CAST(GETDATE() AS DATE)
+            AND ISNULL(trang_thai, 'Active') = 'Active'
+        `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Lỗi lấy danh sách ca làm việc:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
 
-module.exports = { getShiftsByDoctor, createShift, updateShift, deleteShift };
+// Lưu ý: Đừng quên export getAllShifts ở cuối file.
+
+
+module.exports = { getShiftsByDoctor, createShift, updateShift, deleteShift, stopShift, getAllShifts, resumeShift};

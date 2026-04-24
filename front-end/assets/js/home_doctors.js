@@ -51,7 +51,7 @@ function renderHomeDoctors(doctors) {
 
     container.innerHTML = ''; 
 
-    const activeDoctors = doctors.filter(doc => doc.trang_thai !== 0 && doc.trang_thai !== false);
+    const activeDoctors = doctors.filter(doc => doc.trang_thai == 1);
 
     if (activeDoctors.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666; width: 100%;">Hiện tại chưa có bác sĩ nào.</p>';
@@ -88,7 +88,7 @@ function showAllDoctors(event) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function showDoctorDetails(id) {
+async function showDoctorDetails(id) {
     const doc = homeDoctorsList.find(d => d.id === id);
     if (!doc) return;
 
@@ -106,10 +106,45 @@ function showDoctorDetails(id) {
     document.getElementById('doctorDetailModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // Cập nhật sự kiện cho nút "Đặt lịch khám" trong Modal để truyền đúng ID Bác sĩ
-    const modalBookBtn = document.querySelector('#doctorDetailModal .btn-primary');
-    if (modalBookBtn) {
-        modalBookBtn.onclick = (e) => bookDoctor(id, e);
+    // Gọi API Đổ dữ liệu Lời nhận xét
+    const reviewsContainer = document.getElementById('detail_doc_reviews');
+    if (reviewsContainer) {
+        reviewsContainer.innerHTML = '<p style="color: #64748b; font-size: 14px; font-style: italic; text-align: center;">Đang tải đánh giá...</p>';
+        try {
+            const res = await fetch(`http://localhost:3000/api/doctors/${id}/reviews`);
+            const reviews = await res.json();
+            
+            reviewsContainer.innerHTML = '';
+            if (reviews.length === 0) {
+                reviewsContainer.innerHTML = '<p style="color: #64748b; font-size: 14px; font-style: italic; text-align: center;">Bác sĩ này chưa có đánh giá nào.</p>';
+            } else {
+                reviews.forEach(review => {
+                    const date = new Date(review.ngay_danh_gia);
+                    const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+                    
+                    let starsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        starsHtml += `<i class="fa-solid fa-star" style="color: ${i <= review.so_sao ? '#f59e0b' : '#e2e8f0'}; font-size: 12px;"></i>`;
+                    }
+
+                    const content = review.noi_dung ? review.noi_dung : '<span style="color: #94a3b8; font-style: italic;">Không có nhận xét chi tiết</span>';
+                    const chuCaiDau = review.ten_benh_nhan.charAt(0).toUpperCase();
+
+                    reviewsContainer.innerHTML += `
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="background: #cbd5e1; color: #475569; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px;">${chuCaiDau}</div>
+                                    <div><div style="font-weight: 600; font-size: 14px; color: #0f172a;">${review.ten_benh_nhan}</div><div style="color: #64748b; font-size: 12px;">${dateStr}</div></div>
+                                </div>
+                                <div>${starsHtml}</div>
+                            </div>
+                            <div style="color: #334155; font-size: 14px; line-height: 1.5; margin-top: 10px;">${content}</div>
+                        </div>
+                    `;
+                });
+            }
+        } catch (error) { console.error(error); reviewsContainer.innerHTML = '<p style="color: #ef4444; font-size: 14px; text-align: center;">Lỗi khi tải đánh giá.</p>'; }
     }
 }
 
@@ -131,55 +166,22 @@ document.addEventListener('DOMContentLoaded', fetchHomeDoctors);
 
 
 
-// ====================================================================
-// HÀM XỬ LÝ KHI BẤM NÚT "ĐẶT LỊCH" TRÊN THẺ BÁC SĨ MẶT TIỀN (ĐÃ FIX LỖI)
-// ====================================================================
+// HÀM XỬ LÝ KHI BẤM NÚT "ĐẶT LỊCH" TRÊN THẺ BÁC SĨ MẶT TIỀN
 function bookDoctor(id, event) {
     if (event) event.preventDefault();
-    
+
     // Kiểm tra xem đã có dữ liệu đăng nhập trong máy chưa
     const userInfoString = localStorage.getItem('userInfo');
 
     if (!userInfoString) {
-        // CHƯA ĐĂNG NHẬP: Bật Popup thông báo y hệt Ảnh 3
-        Swal.fire({
-            icon: 'info',
-            title: 'Yêu cầu tài khoản',
-            text: 'Bạn cần đăng nhập hoặc tạo tài khoản mới để có thể đặt lịch khám bệnh!',
-            showCancelButton: true,
-            confirmButtonText: '<i class="fa-solid fa-user-plus"></i> Đăng ký ngay',
-            cancelButtonText: '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập',
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#0284c7'
-        }).then((result) => {
-            if (result.isConfirmed) {
-            window.location.href = '../auth/login.html';
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-            window.location.href = '../auth/login.html';
-            }
-        });
-    } else {
-        // ĐÃ ĐĂNG NHẬP: Lưu ID Bác sĩ lại để lát nữa Auto-Click
-        localStorage.setItem('pendingBookingDoctorId', id);
-        
-        // Kiểm tra xem đang ở trang chủ (index.html) hay trang bệnh nhân (patient.html)
-        if (window.location.pathname.includes('patient.html')) {
-            // Đang ở sẵn trang bệnh nhân -> Mở tab Đặt lịch
-            switchTab(null, 'tab-dat-lich');
-            closeDoctorDetailsModal(); // Đóng form chi tiết (nếu đang mở)
-            
-            // Auto click vào bác sĩ
-            setTimeout(() => {
-                const docCard = document.getElementById(`doc-card-${id}`);
-                if (docCard) {
-                    docCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    docCard.click();
-                }
-                localStorage.removeItem('pendingBookingDoctorId'); // Xóa cache
-            }, 300);
+        // CHƯA ĐĂNG NHẬP: Bật bảng thông báo yêu cầu Đăng nhập / Đăng ký
+        if (typeof requireLoginToBook === 'function') {
+            requireLoginToBook(event);
         } else {
-            // Đang ở trang chủ ngoài cùng -> Nhảy sang trang patient.html
-            window.location.href = 'patient/patient.html'; 
+            alert("Vui lòng đăng nhập để đặt lịch khám!"); 
         }
+    } else {
+        // ĐÃ ĐĂNG NHẬP: Bay thẳng sang trang form điền Đặt lịch
+        window.location.href = 'appointment.html';
     }
 }

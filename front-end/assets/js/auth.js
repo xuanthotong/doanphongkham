@@ -16,9 +16,15 @@ async function handleLogin(event) {
         const data = await response.json();
 
         if (response.ok) {
-            // Đăng nhập thành công: Lưu Token & User Info
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('userInfo', JSON.stringify(data.user));
+            // Phân tách bộ nhớ để Bác sĩ và Bệnh nhân không bị đè dữ liệu lên nhau
+            if (data.redirectUrl && data.redirectUrl.includes('doctor')) {
+                localStorage.setItem('doctorToken', data.token);
+                localStorage.setItem('doctorInfo', JSON.stringify(data.user));
+            } else {
+                // Dành cho Bệnh nhân và Admin
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userInfo', JSON.stringify(data.user));
+            }
 
             Swal.fire({
                 title: 'Thành công!',

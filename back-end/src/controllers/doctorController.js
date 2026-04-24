@@ -189,4 +189,27 @@ const deleteDoctor = async (req, res) => {
     }
 };
 
-module.exports = { getAllDoctors, createDoctor, updateDoctor, deleteDoctor };
+// Lấy danh sách đánh giá của Bác sĩ
+const getDoctorReviews = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const pool = await connectDB();
+        const result = await pool.request()
+            .input('bac_si_id', sql.Int, id)
+            .query(`
+                SELECT dg.so_sao, dg.noi_dung, dg.ngay_danh_gia,
+                       ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan
+                FROM DanhGia dg
+                JOIN TaiKhoan tk ON dg.benh_nhan_id = tk.id
+                LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
+                WHERE dg.bac_si_id = @bac_si_id
+                ORDER BY dg.ngay_danh_gia DESC
+            `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Lỗi lấy danh sách đánh giá:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
+module.exports = { getAllDoctors, createDoctor, updateDoctor, deleteDoctor, getDoctorReviews };

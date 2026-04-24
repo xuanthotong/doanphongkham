@@ -397,12 +397,64 @@
         </div>
     </div>
 
+    <!-- MODAL QUẢN LÝ TÀI KHOẢN -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                <h2 id="accountModalTitle" style="font-size: 20px;">Sửa thông tin Tài khoản</h2>
+                <button type="button" onclick="closeAccountModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+            </div>
+            <form id="accountForm" style="margin-top: 15px;">
+                <input type="hidden" id="a_id">
+                
+                <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin hệ thống</h3>
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Email</label><input type="email" id="a_email" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Mật khẩu mới</label><input type="password" id="a_mat_khau" placeholder="Để trống nếu không đổi" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Vai trò</label>
+                        <select id="a_ten_vai_tro" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; pointer-events: none; background: #f3f4f6;" title="Không thể đổi vai trò ở đây">
+                            <option value="BenhNhan">Bệnh Nhân</option>
+                            <option value="BacSi">Bác Sĩ</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Trạng thái</label>
+                        <select id="a_trang_thai" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <option value="1">Hoạt động</option>
+                            <option value="0">Đã khóa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin cá nhân</h3>
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label>Họ và tên</label><input type="text" id="a_ho_ten" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="a_so_dien_thoai" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Ngày sinh</label><input type="date" id="a_ngay_sinh" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Giới tính</label>
+                        <select id="a_gioi_tinh" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <option value="">-- Chọn giới tính --</option>
+                            <option value="1">Nam</option>
+                            <option value="0">Nữ</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text" id="a_dia_chi" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                </div>
+
+                <div style="text-align: right; margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeAccountModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
+                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="../../assets/js/dashboard.js"></script>
     <script src="../../assets/js/doctor.js"></script>
     <script src="../../assets/js/specialty.js"></script>
     <script src="../../assets/js/category.js"></script>
     <script src="../../assets/js/post.js"></script>
-    <script src="../../assets/js/appointment.js"></script>
+    <script src="../../assets/js/admin_appointment.js"></script>
     <script src="../../assets/js/account.js"></script>
     <script src="../../assets/js/qa.js"></script>
     

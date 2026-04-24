@@ -113,7 +113,14 @@ const updateAccount = async (req, res) => {
             UPDATE HoSoNguoiDung
             SET ho_ten = @ho_ten, so_dien_thoai = @so_dien_thoai,
                 ngay_sinh = @ngay_sinh, gioi_tinh = @gioi_tinh, dia_chi = @dia_chi
-            WHERE tai_khoan_id = @id
+            WHERE tai_khoan_id = @id;
+
+            -- CHỐNG LỖI: Nếu người dùng chưa có hồ sơ thì tự động tạo mới
+            IF @@ROWCOUNT = 0
+            BEGIN
+                INSERT INTO HoSoNguoiDung (tai_khoan_id, ho_ten, so_dien_thoai, ngay_sinh, gioi_tinh, dia_chi)
+                VALUES (@id, @ho_ten, @so_dien_thoai, @ngay_sinh, @gioi_tinh, @dia_chi)
+            END
         `);
 
         res.status(200).json({ message: 'Cập nhật thành công!' });
@@ -145,7 +152,14 @@ const updateProfile = async (req, res) => {
                 UPDATE HoSoNguoiDung
                 SET dia_chi = @dia_chi, 
                     gioi_tinh = @gioi_tinh
-                WHERE tai_khoan_id = @id
+                WHERE tai_khoan_id = @id;
+
+                -- CHỐNG LỖI: Nếu người dùng chưa có hồ sơ thì tự động tạo mới
+                IF @@ROWCOUNT = 0
+                BEGIN
+                    INSERT INTO HoSoNguoiDung (tai_khoan_id, dia_chi, gioi_tinh)
+                    VALUES (@id, @dia_chi, @gioi_tinh)
+                END
             `);
 
         res.status(200).json({ message: 'Cập nhật hồ sơ cá nhân thành công!' });

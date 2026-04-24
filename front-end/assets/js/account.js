@@ -1,4 +1,5 @@
 const accountTbody = document.getElementById('accountTableBody');
+let allAccounts = []; // Lưu lại danh sách tài khoản dùng cho chức năng Sửa
 
 async function fetchAccounts() {
     // Nếu trang hiện tại không có bảng Tài khoản thì bỏ qua, tránh báo lỗi
@@ -6,8 +7,8 @@ async function fetchAccounts() {
     
     try {
         const response = await fetch('http://localhost:3000/api/accounts');
-        const accounts = await response.json();
-        renderAccountTable(accounts);
+        allAccounts = await response.json();
+        renderAccountTable(allAccounts);
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu tài khoản:', error);
     }
@@ -113,7 +114,63 @@ async function deleteAccount(id) {
 // HÀM SỬA TÀI KHOẢN
 // ==========================================
 function editAccount(id) {
-    Swal.fire('Thông báo', `Bạn vừa bấm nút SỬA cho tài khoản ID: ${id}\n(Tính năng cập nhật tài khoản đang phát triển!)`, 'info');
+    const acc = allAccounts.find(a => a.id === id);
+    if (!acc) return;
+
+    // Đổ dữ liệu cũ vào Form
+    document.getElementById('a_id').value = acc.id;
+    document.getElementById('a_email').value = acc.email || '';
+    document.getElementById('a_mat_khau').value = ''; // Để trống mật khẩu cũ
+    document.getElementById('a_ten_vai_tro').value = acc.ten_vai_tro;
+    document.getElementById('a_trang_thai').value = acc.trang_thai == 1 ? '1' : '0';
+    
+    document.getElementById('a_ho_ten').value = acc.ho_ten || '';
+    document.getElementById('a_so_dien_thoai').value = acc.so_dien_thoai || '';
+    
+    // Xử lý cắt chuỗi ngày sinh
+    if (acc.ngay_sinh) {
+        document.getElementById('a_ngay_sinh').value = acc.ngay_sinh.split('T')[0];
+    } else {
+        document.getElementById('a_ngay_sinh').value = '';
+    }
+    
+    document.getElementById('a_gioi_tinh').value = acc.gioi_tinh == 1 ? '1' : (acc.gioi_tinh == 0 ? '0' : '');
+    document.getElementById('a_dia_chi').value = acc.dia_chi || '';
+
+    document.getElementById('accountModal').style.display = 'flex';
+}
+
+function closeAccountModal() {
+    document.getElementById('accountModal').style.display = 'none';
+}
+
+// XỬ LÝ LƯU DỮ LIỆU KHI SUBMIT
+const accountForm = document.getElementById('accountForm');
+if (accountForm) {
+    accountForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('a_id').value;
+        const payload = {
+            email: document.getElementById('a_email').value,
+            mat_khau: document.getElementById('a_mat_khau').value,
+            ten_vai_tro: document.getElementById('a_ten_vai_tro').value,
+            trang_thai: parseInt(document.getElementById('a_trang_thai').value),
+            ho_ten: document.getElementById('a_ho_ten').value,
+            so_dien_thoai: document.getElementById('a_so_dien_thoai').value,
+            ngay_sinh: document.getElementById('a_ngay_sinh').value,
+            gioi_tinh: document.getElementById('a_gioi_tinh').value,
+            dia_chi: document.getElementById('a_dia_chi').value
+        };
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/accounts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            
+            if (res.ok) { Swal.fire('Thành công!', 'Cập nhật tài khoản thành công', 'success'); closeAccountModal(); fetchAccounts(); } 
+            else { Swal.fire('Lỗi!', data.message || 'Không thể cập nhật', 'error'); }
+        } catch (error) { console.error(error); Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ', 'error'); }
+    });
 }
 
 // Gọi API ngay khi tải trang

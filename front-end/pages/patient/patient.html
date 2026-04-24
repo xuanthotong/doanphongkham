@@ -360,15 +360,16 @@
         </div>
 
         <div id="tab-ho-so" class="tab-content tab-padding" style="background-color: #f8fafc; min-height: 80vh;">
-            <div class="container" style="max-width: 1100px;"> 
-                <div class="profile-dashboard-grid">
+            <div class="container" style="max-width: 1350px !important; width: 100%;"> 
+                <div class="profile-dashboard-grid" style="display: grid !important; grid-template-columns: 450px 1fr !important; gap: 30px !important; align-items: start;">
                     
-                    <div class="main-content-card patient-card" style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); height: fit-content;">
+                    <!-- CỘT TRÁI: THÔNG TIN CÁ NHÂN -->
+                    <div class="main-content-card patient-card" style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: sticky; top: 20px;">
                         <h2 class="card-title" style="font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; color: #0f172a; font-weight: 700;">
                             <i class="fa-regular fa-address-card" style="color: #0284c7; margin-right: 8px;"></i> Thông tin cá nhân
                         </h2>
                         
-                        <div class="profile-grid form-grid" style="grid-template-columns: 1fr 1fr; display: grid; gap: 20px;">
+                        <div class="profile-grid form-grid" style="display: flex; flex-direction: column; gap: 20px;">
                             <div class="input-group form-col">
                                 <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Họ và tên</label>
                                 <input type="text" id="pt_ten" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
@@ -389,12 +390,12 @@
                                     <option value="0">Nữ</option>
                                 </select>
                             </div>
-                            <div class="input-group form-col full-width" style="grid-column: 1 / -1;">
+                            <div class="input-group form-col">
                                 <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Địa chỉ liên hệ</label>
-                                <input type="text" id="pt_dia_chi" class="form-control" style="pointer-events: auto; background: white;">
+                                <textarea id="pt_dia_chi" class="form-control" rows="2" style="pointer-events: auto; background: white; resize: none;"></textarea>
                             </div>
                             
-                            <div class="full-width" style="grid-column: 1 / -1; margin-top: 10px;">
+                            <div class="full-width" style="margin-top: 10px;">
                                 <button class="btn btn-primary" onclick="updatePatientProfile(event)" style="border-radius: 8px; width: 100%; padding: 12px; font-weight: 600;">
                                     <i class="fa-solid fa-floppy-disk"></i> Cập nhật thông tin
                                 </button>
@@ -402,13 +403,21 @@
                         </div>
                     </div>
 
-                    <div class="main-content-card" style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                        <h2 class="card-title" style="font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; color: #0f172a; font-weight: 700;">
-                            <i class="fa-solid fa-file-medical" style="color: #10b981; margin-right: 8px;"></i> Hồ sơ sức khỏe & Lịch sử khám
-                        </h2>
-                        
-                        <div id="medical-history-list" style="display: flex; flex-direction: column; gap: 15px;">
-                            <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải lịch sử khám...</p>
+                    <!-- CỘT PHẢI: GỘP LỊCH SỬ & HỒ SƠ THÀNH TABS DỄ NHÌN HƠN -->
+                    <div class="main-content-card" style="background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden;">
+                        <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                            <button onclick="switchProfileTab('history')" id="btn-tab-history" style="flex: 1; padding: 18px; border: none; background: #fff; border-bottom: 3px solid #0284c7; color: #0284c7; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s;"><i class="fa-regular fa-calendar-check"></i> Lịch sử Đặt Khám</button>
+                            <button onclick="switchProfileTab('record')" id="btn-tab-record" style="flex: 1; padding: 18px; border: none; background: transparent; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s;"><i class="fa-solid fa-notes-medical"></i> Hồ Sơ Bệnh Án</button>
+                        </div>
+                        <div id="content-tab-history" style="padding: 30px; max-height: 750px; overflow-y: auto; background: #f8fafc;">
+                            <div id="lich_su_kham_list" style="display: flex; flex-direction: column; gap: 15px;">
+                                <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải lịch sử khám...</p>
+                            </div>
+                        </div>
+                        <div id="content-tab-record" style="padding: 30px; display: none; max-height: 750px; overflow-y: auto; background: #f8fafc;">
+                            <div id="ho_so_suc_khoe_list" style="display: flex; flex-direction: column; gap: 15px;">
+                                <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải hồ sơ bệnh án...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -458,6 +467,14 @@
                 <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">Tiểu sử & Kinh nghiệm</h3>
                 <p id="detail_doc_bio" style="color: #4b5563; line-height: 1.6; font-size: 15px; white-space: pre-wrap;"></p>
             </div>
+
+            <div style="margin-top: 25px;">
+                <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">Đánh giá từ Bệnh nhân</h3>
+                <div id="detail_doc_reviews" style="display: flex; flex-direction: column; gap: 15px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                    <!-- JavaScript sẽ đổ dữ liệu các dòng bình luận vào đây -->
+                </div>
+            </div>
+
             <div style="margin-top: 30px; display: flex; gap: 15px;">
                 <button onclick="closeDoctorDetailsModal()" class="btn btn-outline" style="flex: 1;">Đóng</button>
                 <button onclick="closeDoctorDetailsModal(); switchTab(event, 'tab-dat-lich');" class="btn btn-primary" style="flex: 1;">Đặt lịch khám</button>
@@ -487,12 +504,40 @@
     <footer>
         <div class="container footer-grid">
             <div class="footer-col">
-                <a href="#" class="logo footer-logo-link"><img src="../../assets/images/logo.png" alt="Logo" class="footer-logo-img"></a>
-                <p>Hệ thống đặt lịch khám trực tuyến hàng đầu.</p>
+                <a href="#" class="logo" style="color: white; margin-bottom: 20px;" onclick="switchTab(event, 'tab-trang-chu')">
+                    <img src="../../assets/images/logo.png" alt="Logo" style="filter: brightness(0) invert(1); height: 65px; width: auto;">
+                </a>
+                <p>Hệ thống đặt lịch khám trực tuyến hàng đầu. Đồng hành cùng sức khỏe của bạn và gia đình.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Liên kết</h3>
+                <ul>
+                    <li><a href="#" onclick="switchTab(event, 'tab-trang-chu')">Về TT Medical</a></li>
+                    <li><a href="#" onclick="scrollToSection('bac-si', event)">Đội ngũ bác sĩ</a></li>
+                    <li><a href="#" onclick="scrollToSection('dich-vu', event)">Dịch vụ y tế</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Chuyên khoa</h3>
+                <ul id="footer-specialty-list">
+                    <li><a href="#" onclick="scrollToSection('dich-vu', event)">Đang tải...</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Liên hệ</h3>
+                <ul>
+                    <li style="color: #94A3B8;">Hà Nội, Việt Nam</li>
+                    <li style="color: #94A3B8;"><a href="tel:19006868" style="color: inherit; text-decoration: none;">1900 6868</a></li>
+                    <li style="color: #94A3B8;">contact@ttmedical.vn</li>
+                </ul>
             </div>
         </div>
         <div class="container footer-bottom">
-            <span>&copy; 2026 TT Medical <br>Desgine by: Tống Xuân Thọ, Nguyễn Văn Thiệu</span>
+            <span>&copy; 2026 TT Medical <br>Design by: Tống Xuân Thọ, Nguyễn Văn Thiệu</span>
+            <div style="display: flex; gap: 20px;">
+                <a href="#">Bảo mật</a>
+                <a href="#">Điều khoản</a>
+            </div>
         </div>
     </footer>
 
