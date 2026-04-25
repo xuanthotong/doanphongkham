@@ -106,6 +106,15 @@ async function showDoctorDetails(id) {
     document.getElementById('doctorDetailModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
+    // Gắn sự kiện cho nút Đặt lịch trong Modal để tự động bôi xanh đúng Bác sĩ
+    const btnBookModal = document.getElementById('btn-book-modal');
+    if (btnBookModal) {
+        btnBookModal.onclick = (e) => {
+            closeDoctorDetailsModal();
+            bookDoctor(id, e);
+        };
+    }
+
     // Gọi API Đổ dữ liệu Lời nhận xét
     const reviewsContainer = document.getElementById('detail_doc_reviews');
     if (reviewsContainer) {
@@ -170,10 +179,17 @@ document.addEventListener('DOMContentLoaded', fetchHomeDoctors);
 function bookDoctor(id, event) {
     if (event) event.preventDefault();
 
-    // Kiểm tra xem đã có dữ liệu đăng nhập trong máy chưa
-    const userInfoString = localStorage.getItem('userInfo');
+    // Kiểm tra xem đã có dữ liệu đăng nhập hợp lệ trong máy chưa
+    let isLoggedIn = false;
+    try {
+        const userInfoString = localStorage.getItem('userInfo');
+        if (userInfoString) {
+            const userInfo = JSON.parse(userInfoString);
+            if (userInfo && userInfo.id) isLoggedIn = true;
+        }
+    } catch (err) {}
 
-    if (!userInfoString) {
+    if (!isLoggedIn) {
         // CHƯA ĐĂNG NHẬP: Bật bảng thông báo yêu cầu Đăng nhập / Đăng ký
         if (typeof requireLoginToBook === 'function') {
             requireLoginToBook(event);
@@ -181,7 +197,39 @@ function bookDoctor(id, event) {
             alert("Vui lòng đăng nhập để đặt lịch khám!"); 
         }
     } else {
-        // ĐÃ ĐĂNG NHẬP: Bay thẳng sang trang form điền Đặt lịch
-        window.location.href = 'appointment.html';
+        // ĐÃ ĐĂNG NHẬP: Chuyển sang Tab Đặt lịch và tự động chọn Bác sĩ
+        localStorage.setItem('pendingBookingDoctorId', id);
+
+        if (window.location.pathname.includes('patient.html')) {
+            // 1. Chuyển sang Tab Đặt lịch
+            if (typeof switchTab === 'function') {
+                const bookingTabLink = document.querySelector('a.tab-link[onclick*="tab-dat-lich"]');
+                if (bookingTabLink) {
+                    bookingTabLink.click();
+                } else {
+                    switchTab(null, 'tab-dat-lich');
+                }
+            }
+
+            // 2. Tìm và tự động click vào thẻ Bác sĩ tương ứng
+            setTimeout(() => {
+                const docCardToSelect = document.getElementById(`booking-doc-card-${id}`);
+                if (docCardToSelect) {
+                    docCardToSelect.click();
+                    docCardToSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    const specialtySelect = document.getElementById('select_chuyen_khoa');
+                    if (specialtySelect && typeof filterDoctorsBySpecialty === 'function') {
+                        specialtySelect.value = ""; 
+                        filterDoctorsBySpecialty(); 
+                        setTimeout(() => document.getElementById(`booking-doc-card-${id}`)?.click(), 200);
+                    }
+                }
+                localStorage.removeItem('pendingBookingDoctorId');
+            }, 150);
+        } else {
+            // Đang ở trang chủ -> Bay sang trang bệnh nhân
+            window.location.href = 'patient/patient.html';
+        }
     }
 }

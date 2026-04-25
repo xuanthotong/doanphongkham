@@ -49,7 +49,7 @@
             <div class="user-menu" onclick="confirmLogout(event)">
                 <div class="user-dropdown-btn">
                     <img id="nav_patient_img" src="../../assets/images/doctors/default-avatar.png" alt="Avatar">
-                    <span class="doc-name">BN. <span id="patientName">...</span></span>
+                    <span class="doc-name" style="white-space: nowrap;">BN. <span id="patientName">...</span></span>
                     <i class="fa-solid fa-caret-down nav-icon-caret"></i>
                 </div>
             </div>
@@ -361,41 +361,47 @@
 
         <div id="tab-ho-so" class="tab-content tab-padding" style="background-color: #f8fafc; min-height: 80vh;">
             <div class="container" style="max-width: 1350px !important; width: 100%;"> 
-                <div class="profile-dashboard-grid" style="display: grid !important; grid-template-columns: 450px 1fr !important; gap: 30px !important; align-items: start;">
+                <div class="profile-dashboard-grid" style="display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 30px !important; align-items: stretch;">
                     
                     <!-- CỘT TRÁI: THÔNG TIN CÁ NHÂN -->
-                    <div class="main-content-card patient-card" style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: sticky; top: 20px;">
+                    <div class="main-content-card patient-card" style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; height: 100%;">
                         <h2 class="card-title" style="font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; color: #0f172a; font-weight: 700;">
                             <i class="fa-regular fa-address-card" style="color: #0284c7; margin-right: 8px;"></i> Thông tin cá nhân
                         </h2>
                         
-                        <div class="profile-grid form-grid" style="display: flex; flex-direction: column; gap: 20px;">
-                            <div class="input-group form-col">
-                                <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Họ và tên</label>
-                                <input type="text" id="pt_ten" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
-                            </div>
-                            <div class="input-group form-col">
-                                <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Số điện thoại</label>
-                                <input type="text" id="pt_sdt" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
-                            </div>
-                            <div class="input-group form-col">
-                                <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Tài khoản Email</label>
-                                <input type="text" id="pt_email" disabled class="form-control readonly-input" style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
-                            </div>
+                        <div class="profile-grid form-grid" style="display: flex; flex-direction: column; flex: 1;">
                             
-                            <div class="input-group form-col">
-                                <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Giới tính</label>
-                                <select id="pt_gioi_tinh" class="form-control" style="pointer-events: auto; background: white; cursor: pointer;">
-                                    <option value="1">Nam</option>
-                                    <option value="0">Nữ</option>
-                                </select>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div class="input-group form-col">
+                                    <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Họ và tên</label>
+                                    <input type="text" id="pt_ten" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
+                                </div>
+                                <div class="input-group form-col">
+                                    <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Số điện thoại</label>
+                                    <input type="text" id="pt_sdt" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
+                                </div>
                             </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div class="input-group form-col">
+                                    <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Tài khoản Email</label>
+                                    <input type="text" id="pt_email" disabled class="form-control readonly-input" style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
+                                </div>
+                                <div class="input-group form-col">
+                                    <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Giới tính</label>
+                                    <select id="pt_gioi_tinh" class="form-control" style="pointer-events: auto; background: white; cursor: pointer;">
+                                        <option value="1">Nam</option>
+                                        <option value="0">Nữ</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="input-group form-col">
                                 <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Địa chỉ liên hệ</label>
                                 <textarea id="pt_dia_chi" class="form-control" rows="2" style="pointer-events: auto; background: white; resize: none;"></textarea>
                             </div>
                             
-                            <div class="full-width" style="margin-top: 10px;">
+                            <div class="full-width" style="margin-top: auto; padding-top: 20px;">
                                 <button class="btn btn-primary" onclick="updatePatientProfile(event)" style="border-radius: 8px; width: 100%; padding: 12px; font-weight: 600;">
                                     <i class="fa-solid fa-floppy-disk"></i> Cập nhật thông tin
                                 </button>
@@ -404,7 +410,7 @@
                     </div>
 
                     <!-- CỘT PHẢI: GỘP LỊCH SỬ & HỒ SƠ THÀNH TABS DỄ NHÌN HƠN -->
-                    <div class="main-content-card" style="background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden;">
+                    <div class="main-content-card" style="background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; display: flex; flex-direction: column; height: 100%;">
                         <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
                             <button onclick="switchProfileTab('history')" id="btn-tab-history" style="flex: 1; padding: 18px; border: none; background: #fff; border-bottom: 3px solid #0284c7; color: #0284c7; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s;"><i class="fa-regular fa-calendar-check"></i> Lịch sử Đặt Khám</button>
                             <button onclick="switchProfileTab('record')" id="btn-tab-record" style="flex: 1; padding: 18px; border: none; background: transparent; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s;"><i class="fa-solid fa-notes-medical"></i> Hồ Sơ Bệnh Án</button>
@@ -477,7 +483,7 @@
 
             <div style="margin-top: 30px; display: flex; gap: 15px;">
                 <button onclick="closeDoctorDetailsModal()" class="btn btn-outline" style="flex: 1;">Đóng</button>
-                <button onclick="closeDoctorDetailsModal(); switchTab(event, 'tab-dat-lich');" class="btn btn-primary" style="flex: 1;">Đặt lịch khám</button>
+                <button id="btn-book-modal" class="btn btn-primary" style="flex: 1;">Đặt lịch khám</button>
             </div>
         </div>
     </div>

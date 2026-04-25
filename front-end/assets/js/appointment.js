@@ -40,6 +40,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         filterDoctorsBySpecialty(); // Render danh sách bác sĩ ban đầu
+
+        // KIỂM TRA FOCUS BÁC SĨ (Tự động bôi xanh khi chuyển từ trang chủ sang)
+        const pendingDocId = localStorage.getItem('pendingBookingDoctorId');
+        if (pendingDocId) {
+            localStorage.removeItem('pendingBookingDoctorId'); // Xóa ngay lập tức
+            if(typeof switchTab === 'function') switchTab(null, 'tab-dat-lich');
+            setTimeout(() => {
+                const docCard = document.getElementById(`booking-doc-card-${pendingDocId}`);
+                if (docCard) {
+                    docCard.click();
+                    setTimeout(() => docCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+                }
+            }, 300);
+        }
     } catch (error) {
         console.error('Lỗi khởi tạo dữ liệu đặt lịch:', error);
     }
@@ -87,7 +101,7 @@ function filterDoctorsBySpecialty() {
         const phiKham = doc.phi_kham ? Number(doc.phi_kham).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa cập nhật';
 
         container.innerHTML += `
-            <div class="doctor-card" style="${cardStyle} padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; transition: 0.2s;" onclick="selectDoctor(${doc.id}, '${doc.ho_ten}', '${doc.ten_chuyen_khoa || 'Đa khoa'}', this)">
+            <div class="doctor-card" id="booking-doc-card-${doc.id}" style="${cardStyle} padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; transition: 0.2s;" onclick="selectDoctor(${doc.id}, '${doc.ho_ten}', '${doc.ten_chuyen_khoa || 'Đa khoa'}', this)">
                 <img src="${avatar}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
                 <div>
                     <h4 style="margin: 0; color: #0f172a;">BS. ${doc.ho_ten}</h4>

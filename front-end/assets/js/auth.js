@@ -163,6 +163,26 @@ function handleForgotPassword(event) {
 // ==================================================
 function requireLoginToBook(e) {
     if(e) e.preventDefault();
+
+    // KIỂM TRA: Nếu đã đăng nhập thì nhảy thẳng trang Đặt lịch, không bắt đăng nhập nữa
+    let isLoggedIn = false;
+    try {
+        const userInfoString = localStorage.getItem('userInfo');
+        if (userInfoString) {
+            const userInfo = JSON.parse(userInfoString);
+            if (userInfo && userInfo.id) isLoggedIn = true;
+        }
+    } catch (err) {}
+
+    if (isLoggedIn) {
+        if (window.location.pathname.includes('patient.html')) {
+            if (typeof switchTab === 'function') switchTab(null, 'tab-dat-lich');
+        } else {
+            window.location.href = 'patient/patient.html';
+        }
+        return;
+    }
+
     Swal.fire({
         title: 'Yêu cầu tài khoản',
         text: 'Bạn cần đăng nhập hoặc tạo tài khoản mới để có thể đặt lịch khám bệnh!',
