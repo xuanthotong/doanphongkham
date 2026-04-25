@@ -11,10 +11,9 @@ const doctorpageRoutes = require('./src/routes/doctorpageRoutes');
 const qaRoutes = require('./src/routes/qaRoutes');
 const passwordRoutes = require('./src/routes/passwordRoutes');
 const appointmentRoutes = require('./src/routes/appointmentRoutes');
-
+const reviewRoutes = require('./src/routes/reviewRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Tăng giới hạn dung lượng tải lên cho ảnh Base64
@@ -26,12 +25,14 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/specialties', chuyenKhoaRoutes);
 app.use('/api/posts', postRoutes);
-// Thêm dòng này vào file server.js của bạn
 app.use('/api/categories', require('./src/routes/danhMucRoutes'));
 app.use('/api', doctorpageRoutes);
 app.use('/api/questions', qaRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/appointments', appointmentRoutes);
+
+
+app.use('/api/reviews', reviewRoutes);
 
 // Khởi động server và kết nối DB
 app.listen(PORT, async () => {

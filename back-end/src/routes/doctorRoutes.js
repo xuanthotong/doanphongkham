@@ -5,6 +5,7 @@ const shiftController = require('../controllers/shiftController');
 
 // CÁC API QUẢN LÝ CA LÀM VIỆC CỦA BÁC SĨ
 router.get('/shifts', shiftController.getAllShifts);
+router.get('/shifts/admin/all', shiftController.getAllShiftsAdmin); // Route dành riêng cho Admin
 router.post('/shifts', shiftController.createShift);
 router.get('/shifts/:id', shiftController.getShiftsByDoctor);
 router.put('/shifts/:id', shiftController.updateShift);

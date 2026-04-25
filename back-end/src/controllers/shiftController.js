@@ -99,17 +99,49 @@ const deleteShift = async (req, res) => {
         const { id } = req.params;
         const pool = await connectDB();
 
-        const checkResult = await pool.request().input('id', sql.Int, id).query(`SELECT so_luong_hien_tai FROM LichLamViec WHERE id = @id`);
-        if (checkResult.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy ca làm việc' });
+        // Kiểm tra xem có lịch khám nào đang tồn tại (không phải trạng thái Cancelled) không
+        const checkApp = await pool.request().input('id', sql.Int, id).query(`
+            SELECT COUNT(*) as count FROM LichKham 
+            WHERE lich_lam_viec_id = @id AND trang_thai IN ('Pending', 'Approved', 'Done')
+        `);
         
-        if (checkResult.recordset[0].so_luong_hien_tai > 0) {
-            return res.status(400).json({ message: 'Không thể xóa ca làm việc đã có bệnh nhân đặt lịch!' });
+        if (checkApp.recordset[0].count > 0) {
+            return res.status(400).json({ message: 'Không thể xóa! Ca làm việc này đang có bệnh nhân đặt lịch hoặc đã khám xong.' });
         }
 
-        await pool.request().input('id', sql.Int, id).query(`DELETE FROM LichLamViec WHERE id = @id`);
-        res.json({ message: 'Xóa ca làm việc thành công!' });
+        // Xóa sạch các đánh giá và lịch khám rác (Cancelled) liên quan trước, sau đó xóa ca làm việc
+        await pool.request().input('id', sql.Int, id).query(`
+            DELETE FROM DanhGia WHERE lich_kham_id IN (SELECT id FROM LichKham WHERE lich_lam_viec_id = @id);
+            DELETE FROM LichKham WHERE lich_lam_viec_id = @id;
+            DELETE FROM LichLamViec WHERE id = @id;
+        `);
+        
+        res.json({ message: 'Xóa ca làm việc thành công! Hệ thống đã dọn dẹp các dữ liệu rác liên quan.' });
     } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
 };
+
+// Thêm hàm lấy TOÀN BỘ ca làm việc cho Admin
+const getAllShiftsAdmin = async (req, res) => {
+    try {
+        const pool = await connectDB();
+        const result = await pool.request().query(`
+            SELECT llv.*, 
+                   ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_bac_si,
+                   ck.ten_chuyen_khoa
+            FROM LichLamViec llv
+            JOIN TaiKhoan tk ON llv.bac_si_id = tk.id
+            LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
+            LEFT JOIN HoSoBacSi hsbs ON tk.id = hsbs.tai_khoan_id
+            LEFT JOIN ChuyenKhoa ck ON hsbs.chuyen_khoa_id = ck.id
+            ORDER BY llv.ngay_lam_viec DESC, llv.khung_gio ASC
+        `);
+        res.json(result.recordset);
+    } catch (error) {
+        console.error('Lỗi lấy danh sách ca làm cho Admin:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
 // Thêm hàm này vào shiftController.js
 const getAllShifts = async (req, res) => {
     try {
@@ -129,4 +161,4 @@ const getAllShifts = async (req, res) => {
 // Lưu ý: Đừng quên export getAllShifts ở cuối file.
 
 
-module.exports = { getShiftsByDoctor, createShift, updateShift, deleteShift, stopShift, getAllShifts, resumeShift};
+module.exports = { getShiftsByDoctor, createShift, updateShift, deleteShift, stopShift, getAllShifts, resumeShift, getAllShiftsAdmin };

@@ -20,6 +20,9 @@ router.get('/doctor/:id', appointmentController.getAppointmentsByDoctor);
 // 4. API Cập nhật trạng thái lịch hẹn (Duyệt, Hủy, Hoàn thành)
 router.put('/:id/status', appointmentController.updateAppointmentStatus);
 
+// API Cập nhật riêng ghi chú/đơn thuốc của Bác sĩ
+router.put('/:id/note', appointmentController.updateAppointmentNote);
+
 // 5. API Lấy TẤT CẢ lịch hẹn cho Admin
 router.get('/', appointmentController.getAllAppointments);
 
