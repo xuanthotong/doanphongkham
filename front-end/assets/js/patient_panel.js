@@ -412,6 +412,8 @@ function switchProfileTab(tabName) {
     }
 }
 
+window.patientAppointments = []; // Lưu trữ tạm thời lịch sử khám để dùng cho nút Sửa Đánh giá
+
 // ==================================================
 // 6. ĐỔ DỮ LIỆU HỒ SƠ SỨC KHỎE & LỊCH SỬ KHÁM
 // ==================================================
@@ -429,6 +431,8 @@ async function fetchMedicalHistory() {
         const res = await fetch(`http://localhost:3000/api/appointments/patient/${userInfo.id}?t=${new Date().getTime()}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const history = await res.json();
+        
+        window.patientAppointments = history;
 
         // ===========================================
         // 1. ĐỔ DỮ LIỆU VÀO VÙNG "LỊCH SỬ KHÁM"
@@ -515,7 +519,10 @@ async function fetchMedicalHistory() {
                     // HIỂN THỊ NÚT ĐÁNH GIÁ HOẶC SỐ SAO ĐÃ ĐÁNH GIÁ
                     let ratingHtml = '';
                     if (app.diem_danh_gia) {
-                        ratingHtml = `<span class="rated-badge" style="color: #f59e0b; font-size: 14px;"><i class="fa-solid fa-star"></i> ${app.diem_danh_gia}/5 Sao</span>`;
+                        ratingHtml = `
+                            <span class="rated-badge" style="color: #f59e0b; font-size: 14px; margin-right: 15px;"><i class="fa-solid fa-star"></i> ${app.diem_danh_gia}/5 Sao</span>
+                            <button onclick="editRating(${app.danh_gia_id})" style="background: none; border: none; color: #0284c7; cursor: pointer; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-pen"></i> Sửa đánh giá</button>
+                        `;
                     } else {
                         ratingHtml = `<button class="btn-rate" onclick="openRatingModal(${app.id}, '${app.ten_bac_si}')"><i class="fa-regular fa-star"></i> Đánh giá Bác sĩ</button>`;
                     }
@@ -561,9 +568,11 @@ async function fetchMedicalHistory() {
 // ==================================================
 let currentRatingScore = 0;
 let currentRatingAppId = null;
+let currentReviewId = null;
 
 function openRatingModal(appId, docName) {
     currentRatingAppId = appId;
+    currentReviewId = null; // Đặt lại ID Đánh giá (Báo hiệu đây là Thêm Mới)
     currentRatingScore = 0;
     document.getElementById('rate_doc_name').innerText = 'BS. ' + docName;
     document.getElementById('rate_comment').value = '';
@@ -572,6 +581,32 @@ function openRatingModal(appId, docName) {
     document.querySelectorAll('.star-rating').forEach(star => {
         star.classList.replace('fa-solid', 'fa-regular');
         star.style.color = '#cbd5e1';
+    });
+
+    openModal('ratingModal');
+}
+
+function editRating(reviewId) {
+    const app = window.patientAppointments.find(a => a.danh_gia_id === reviewId);
+    if (!app) return;
+    
+    currentReviewId = reviewId;
+    currentRatingAppId = null;
+    currentRatingScore = app.diem_danh_gia;
+    
+    document.getElementById('rate_doc_name').innerText = 'BS. ' + app.ten_bac_si;
+    document.getElementById('rate_comment').value = app.nhan_xet || '';
+
+    // Hiển thị số sao cũ
+    document.querySelectorAll('.star-rating').forEach(s => {
+        const val = parseInt(s.getAttribute('data-val'));
+        if (val <= currentRatingScore) {
+            s.classList.replace('fa-regular', 'fa-solid');
+            s.style.color = '#f59e0b';
+        } else {
+            s.classList.replace('fa-solid', 'fa-regular');
+            s.style.color = '#cbd5e1';
+        }
     });
 
     openModal('ratingModal');
@@ -603,11 +638,36 @@ async function submitRating() {
     const nhan_xet = document.getElementById('rate_comment').value.trim();
 
     try {
-        const res = await fetch(`http://localhost:3000/api/appointments/${currentRatingAppId}/rate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diem_danh_gia: currentRatingScore, nhan_xet }) });
-        if (res.ok) { Swal.fire('Cảm ơn!', 'Đánh giá của bạn đã được ghi nhận.', 'success'); closeRatingModal(); fetchMedicalHistory(); } 
-        else { 
-            const data = await res.json();
-            Swal.fire('Lỗi', data.message || 'Không thể gửi đánh giá lúc này.', 'error'); 
+        let res;
+        if (currentReviewId) {
+            // Gọi API Sửa Đánh Giá
+            res = await fetch(`http://localhost:3000/api/reviews/${currentReviewId}`, { 
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ so_sao: currentRatingScore, noi_dung: nhan_xet }) 
+            });
+        } else {
+            // Gọi API Thêm Đánh Giá Mới
+            res = await fetch(`http://localhost:3000/api/appointments/${currentRatingAppId}/rate`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ diem_danh_gia: currentRatingScore, nhan_xet }) 
+            });
+        }
+        
+        if (res.ok) { 
+            Swal.fire('Cảm ơn!', 'Đánh giá của bạn đã được ghi nhận.', 'success'); 
+            closeRatingModal(); 
+            fetchMedicalHistory(); 
+        } else { 
+            let errorMessage = 'Không thể gửi đánh giá lúc này.';
+            try {
+                const data = await res.json();
+                errorMessage = data.message || errorMessage;
+            } catch (parseError) {
+                errorMessage = 'Lỗi 404: API không tồn tại. Vui lòng khởi động lại server Backend!';
+            }
+            Swal.fire('Lỗi', errorMessage, 'error'); 
         }
     } catch (error) { console.error(error); }
 }

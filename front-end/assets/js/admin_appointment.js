@@ -69,10 +69,43 @@ function renderAppointmentTable() {
             <td>${ngayTaoStr}</td>
             <td>${statusHtml}</td>
             <td>
+                <button class="action-btn edit" onclick="editAdminAppointmentNote(${app.id})" title="Sửa ghi chú" style="background-color: #f59e0b; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
                 <button class="action-btn delete" onclick="deleteAdminAppointment(${app.id})" title="Xóa lịch hẹn"><i class="fa-solid fa-trash"></i></button>
             </td>
         `;
         appointmentTbody.appendChild(tr);
+    });
+}
+
+function editAdminAppointmentNote(id) {
+    const app = allAdminAppointments.find(a => a.id === id);
+    if (!app) return;
+
+    Swal.fire({
+        title: `Sửa ghi chú lịch hẹn #LK${id}`,
+        html: `
+            <div style="text-align: left; margin-top: 15px;">
+                <label style="font-weight: 600; display: block; margin-bottom: 5px;">Ghi chú của Bác sĩ / Đơn thuốc:</label>
+                <textarea id="admin_edit_note" class="swal2-textarea" style="width: 90%; height: 150px; margin: 0;">${app.ghi_chu_cua_bac_si || ''}</textarea>
+            </div>
+        `,
+        width: '600px', showCancelButton: true, confirmButtonText: 'Cập nhật', cancelButtonText: 'Hủy', confirmButtonColor: '#f59e0b',
+        preConfirm: () => {
+            return document.getElementById('admin_edit_note').value;
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/appointments/${id}/note`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ghi_chu_cua_bac_si: result.value })
+                });
+                const data = await res.json();
+                if (res.ok) { Swal.fire('Thành công!', 'Cập nhật ghi chú thành công!', 'success'); fetchAdminAppointments(); } 
+                else { Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra!', 'error'); }
+            } catch (error) { console.error(error); Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error'); }
+        }
     });
 }
 

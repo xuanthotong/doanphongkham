@@ -20,8 +20,12 @@ async function handleLogin(event) {
             if (data.redirectUrl && data.redirectUrl.includes('doctor')) {
                 localStorage.setItem('doctorToken', data.token);
                 localStorage.setItem('doctorInfo', JSON.stringify(data.user));
+            } else if (data.redirectUrl && data.redirectUrl.includes('admin')) {
+                // Dành riêng cho Admin
+                localStorage.setItem('adminToken', data.token);
+                localStorage.setItem('adminInfo', JSON.stringify(data.user));
             } else {
-                // Dành cho Bệnh nhân và Admin
+                // Dành cho Bệnh nhân
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('userInfo', JSON.stringify(data.user));
             }

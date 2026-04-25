@@ -71,8 +71,8 @@ async function replyQA(id) {
     const q = questions.find(item => item.id === id);
     if(!q) return;
     
-    // LẤY THÔNG TIN NGƯỜI ĐANG ĐĂNG NHẬP (Admin hoặc Bác sĩ)
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    // LẤY THÔNG TIN ADMIN ĐANG ĐĂNG NHẬP ĐỂ TRẢ LỜI CÂU HỎI
+    const adminInfo = JSON.parse(localStorage.getItem('adminInfo') || '{}');
 
     Swal.fire({
         title: 'Trả lời Bệnh nhân',
@@ -95,8 +95,8 @@ async function replyQA(id) {
                     // ĐÃ SỬA: Gửi kèm ID người trả lời và Vai trò lên Backend
                     body: JSON.stringify({ 
                         tra_loi: result.value,
-                        nguoi_tra_loi_id: userInfo.id,
-                        vai_tro: userInfo.role
+                        nguoi_tra_loi_id: adminInfo.id,
+                        vai_tro: adminInfo.role || 'Admin'
                     })
                 });
                 if (res.ok) {

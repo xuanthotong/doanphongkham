@@ -84,12 +84,15 @@ function filterDoctorsBySpecialty() {
             }
         }
 
+        const phiKham = doc.phi_kham ? Number(doc.phi_kham).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa cập nhật';
+
         container.innerHTML += `
             <div class="doctor-card" style="${cardStyle} padding: 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; transition: 0.2s;" onclick="selectDoctor(${doc.id}, '${doc.ho_ten}', '${doc.ten_chuyen_khoa || 'Đa khoa'}', this)">
                 <img src="${avatar}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover;">
                 <div>
                     <h4 style="margin: 0; color: #0f172a;">BS. ${doc.ho_ten}</h4>
                     <p style="margin: 3px 0 0 0; font-size: 13px; color: #64748b;">${doc.ten_chuyen_khoa || 'Đa khoa'}</p>
+                    <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 600; color: #ef4444;">Phí khám: ${phiKham}</p>
                     ${statusHtml}
                 </div>
             </div>
@@ -287,17 +290,24 @@ async function submitBooking() {
         const result = await res.json();
 
         if (res.ok) {
-            Swal.close();
-            // Cập nhật UI màn hình thành công
-            document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
-            document.getElementById('step-success').classList.add('active');
-            
-            document.getElementById('succ_bac_si').innerText = 'BS. ' + bookingData.bac_si_ten;
-            document.getElementById('succ_chuyen_khoa').innerText = bookingData.chuyen_khoa_ten;
-            
-            const dateObj = new Date(bookingData.ngay_kham);
-            document.getElementById('succ_ngay').innerText = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth()+1).padStart(2, '0')}/${dateObj.getFullYear()}`;
-            document.getElementById('succ_gio').innerText = bookingData.gio_kham;
+            Swal.fire({
+                title: 'Thành công!',
+                text: 'Lịch khám của bạn đã được ghi nhận.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                // Cập nhật UI màn hình thành công
+                document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
+                document.getElementById('step-success').classList.add('active');
+                
+                document.getElementById('succ_bac_si').innerText = 'BS. ' + bookingData.bac_si_ten;
+                document.getElementById('succ_chuyen_khoa').innerText = bookingData.chuyen_khoa_ten;
+                
+                const dateObj = new Date(bookingData.ngay_kham);
+                document.getElementById('succ_ngay').innerText = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth()+1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                document.getElementById('succ_gio').innerText = bookingData.gio_kham;
+            });
         } else {
             Swal.fire('Lỗi', result.message || 'Lỗi đặt lịch!', 'error');
         }

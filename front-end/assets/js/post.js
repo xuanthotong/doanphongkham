@@ -70,8 +70,8 @@ function openPostModal() {
     postModalTitle.innerText = 'Đăng bài viết mới';
     
     // Gán mặc định Tác giả và Ngày hôm nay
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    document.getElementById('p_tac_gia').value = userInfo.username || "Admin";
+    const adminInfo = JSON.parse(localStorage.getItem('adminInfo') || '{}');
+    document.getElementById('p_tac_gia').value = adminInfo.ho_ten || adminInfo.ten_dang_nhap || "Admin";
     
     document.getElementById('p_ngay_xuat_ban').value = new Date().toISOString().split('T')[0]; 
 
@@ -151,12 +151,12 @@ if (postForm) {
         const savePostData = async (finalImageUrl) => {
             const idValue = document.getElementById('p_id').value;
             
-            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const adminInfo = JSON.parse(localStorage.getItem('adminInfo') || '{}');
             const newPost = {
                 tieu_de: document.getElementById('p_tieu_de').value,
                 danh_muc_id: parseInt(document.getElementById('p_danh_muc').value),
                 anh_thu_nho: finalImageUrl, 
-                tac_gia_id: userInfo.id || 1, // Lấy chuẩn ID của người đang đăng nhập
+                tac_gia_id: adminInfo.id || 1, // Lấy chuẩn ID của người đang đăng nhập
                 ngay_xuat_ban: document.getElementById('p_ngay_xuat_ban').value,
                 noi_dung: document.getElementById('p_noi_dung').value
             };

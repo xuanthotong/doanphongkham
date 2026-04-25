@@ -6,12 +6,20 @@ let currentQA = [];
 
 // 1. CHUYỂN TABS CHÍNH
 function switchTab(event, tabId) {
-    event.preventDefault();
+    if (event) event.preventDefault();
+
     document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
-    event.target.classList.add('active');
+    
+    // Cập nhật lại trạng thái active cho đúng mục trên thanh Menu ngang
+    const navLink = document.querySelector(`.nav-links a[onclick*="${tabId}"]`);
+    if (navLink) navLink.classList.add('active');
 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) targetTab.classList.add('active');
+
+    // Thêm hiệu ứng cuộn mượt mà lên trên cùng
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // 2. CHUYỂN SUB-TABS (LỌC LỊCH KHÁM)
@@ -120,6 +128,41 @@ function cancelAppointment(maLK) {
                 }
             } catch(e) { console.error(e); }
         } 
+    });
+}
+
+// SỬA GHI CHÚ / ĐƠN THUỐC CỦA LỊCH ĐÃ KHÁM
+function editMedicalRecord(maLK) {
+    const app = currentAppointments.find(a => a.id == maLK);
+    if (!app) return;
+
+    Swal.fire({
+        title: `Sửa hồ sơ: ${app.ten_benh_nhan} (#${maLK})`,
+        html: `
+            <div style="text-align: left; margin-top: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px;">Cập nhật Kê đơn / Ghi chú</label>
+                    <textarea id="edit_don_thuoc" class="swal2-textarea" style="width: 90%; margin: 0; height: 120px;">${app.ghi_chu_cua_bac_si || ''}</textarea>
+                </div>
+            </div>
+        `,
+        width: '600px', showCancelButton: true, confirmButtonText: 'Lưu thay đổi', cancelButtonText: 'Hủy', confirmButtonColor: '#f59e0b',
+        preConfirm: () => {
+            const donThuoc = document.getElementById('edit_don_thuoc').value;
+            return { ghi_chu: donThuoc };
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/appointments/${maLK}/note`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ghi_chu_cua_bac_si: result.value.ghi_chu })
+                });
+                if(res.ok) { Swal.fire('Thành công!', 'Ghi chú đã được cập nhật.', 'success'); fetchAppointments(); } 
+                else { Swal.fire('Lỗi', 'Không thể cập nhật ghi chú', 'error'); }
+            } catch(e) { console.error(e); Swal.fire('Lỗi', 'Lỗi kết nối', 'error'); }
+        }
     });
 }
 
@@ -335,36 +378,6 @@ function openShiftModal(shiftId = null) {
     });
 }
 
-// XÓA CA LÀM VIỆC
-function deleteShift(shiftId) {
-    Swal.fire({
-        title: 'Bạn chắc chắn chứ?',
-        text: 'Ca làm việc này sẽ bị xóa. (Không thể xóa nếu đã có bệnh nhân đặt lịch)',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Vâng, xóa đi!',
-        cancelButtonText: 'Hủy'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(`http://localhost:3000/api/doctors/shifts/${shiftId}`, { method: 'DELETE' });
-                if (res.ok) {
-                    Swal.fire('Đã xóa!', 'Ca làm việc đã bị xóa.', 'success');
-                    fetchShifts();
-                } else {
-                    const data = await res.json();
-                    Swal.fire('Lỗi!', data.message || 'Không thể xóa ca làm việc này.', 'error');
-                }
-            } catch (error) {
-                console.error(error);
-                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
-            }
-        }
-    });
-}
-
 // DỪNG CA LÀM VIỆC
 function stopShift(shiftId) {
     Swal.fire({
@@ -471,16 +484,14 @@ async function fetchShifts() {
                     actionBtns = `
                         <button class="action-btn btn-warning" onclick="stopShift(${shift.id})" title="Dừng nhận bệnh nhân" style="background:#f59e0b; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-stop"></i></button>
                         <button class="action-btn btn-primary" onclick="openShiftModal(${shift.id})" title="Sửa" style="background:#0284c7; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
-                        <button class="action-btn btn-danger" onclick="deleteShift(${shift.id})" title="Xóa" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
                     `;
                 } else {
                     actionBtns = `
                         <button class="action-btn btn-success" onclick="resumeShift(${shift.id})" title="Mở lại ca làm việc" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-play"></i></button>
-                        <button class="action-btn btn-danger" onclick="deleteShift(${shift.id})" title="Xóa" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
                     `;
                 }
             } else {
-                actionBtns = `<button class="action-btn btn-danger" onclick="deleteShift(${shift.id})" title="Xóa lịch sử ca" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>`;
+                actionBtns = `<span style="color: #94a3b8; font-size: 12px; font-weight: 500;">Lịch sử</span>`;
             }
 
             shiftHTML += `
@@ -602,7 +613,10 @@ function renderAppointments(filterStatus) {
             actionHtml = `<span style="font-size: 12px; color: #ef4444;"><i class="fa-solid fa-xmark"></i> Lịch đã bị hủy</span>`;
         } else if (status === 'done') {
             statusHtml = `<span class="badge" style="background:#f3f4f6; color:#4b5563; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã khám xong</span>`;
-            actionHtml = `<span style="font-size: 12px; color: #10B981;"><i class="fa-solid fa-check-double"></i> Hoàn thành</span>`;
+            actionHtml = `
+                <button class="action-btn" onclick="editMedicalRecord('${app.id}')" title="Sửa ghi chú/đơn thuốc" style="background:#f59e0b; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
+                <span style="font-size: 12px; color: #10B981; margin-left: 5px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> Xong</span>
+            `;
         } else {
             // NẾU CSDL BỊ LỖI CHỮ HOẶC KÝ TỰ ẨN, BÁC SĨ SẼ NHÌN THẤY NGAY LẬP TỨC
             statusHtml = `<span class="badge" style="background:#e2e8f0; color:#475569; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Lỗi CSDL</span>`;

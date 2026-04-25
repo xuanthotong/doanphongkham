@@ -26,6 +26,7 @@
             <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
             <li class="menu-item" onclick="switchTab('category', this)"><i class="fa-solid fa-list"></i> Quản lý Danh mục</li>
             <li class="menu-item" onclick="switchTab('appointment', this)"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
+            <li class="menu-item" onclick="switchTab('shift', this)"><i class="fa-solid fa-clock"></i> Quản lý Ca làm việc</li>
             <li class="menu-item" onclick="switchTab('qa', this)"><i class="fa-solid fa-circle-question"></i> Quản lý Câu hỏi</li>
         </ul>
     </aside>
@@ -204,6 +205,37 @@
                     </thead>
                     <tbody id="appointmentTableBody">
                         </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-shift" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý Ca làm việc</h1>
+            </div>
+            <div class="table-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="font-size: 22px; margin: 0;">Danh sách Ca làm việc</h2>
+                    <div class="search-box" style="position: relative;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <input type="text" id="searchAdminShift" oninput="renderAdminShiftTable()" placeholder="Tìm tên Bác sĩ, mã ca..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 300px; outline: none; transition: border-color 0.3s;">
+                    </div>
+                </div>
+                <table style="white-space: nowrap;">
+                    <thead>
+                        <tr>
+                            <th>Mã ca làm</th>
+                            <th>Bác sĩ</th>
+                            <th>Chuyên khoa</th>
+                            <th>Ngày làm việc</th>
+                            <th>Khung giờ</th>
+                            <th>Số lượng (Đặt / Tối đa)</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shiftAdminTableBody">
+                    </tbody>
                 </table>
             </div>
         </section>
