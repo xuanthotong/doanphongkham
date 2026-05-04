@@ -94,8 +94,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr; /* CHÌA KHÓA ĐÂY: Chia đều 2 bên 50/50 */
     gap: 30px;
-    align-items: start; /* Ngăn chặn thẻ bị kéo dài thòng lòng xuống dưới */
-    align-items: stretch; /* Đổi thành stretch để 2 bên tự giãn chiều cao bằng nhau */
+    align-items: start; /* Khóa chiều cao theo nội dung thực tế của từng bên */
 }
 
 .record-card {
@@ -135,4 +134,53 @@
 
 @media (max-width: 768px) {
     .profile-dashboard-grid { grid-template-columns: 1fr; }
+}
+/* =========================================
+   BƯỚC 5: THANH TOÁN
+========================================= */
+.payment-methods-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px; 
+}
+.payment-option input[type="radio"] { 
+    display: none; 
+}
+.payment-card-content { 
+    border: 2px solid #e2e8f0; 
+    border-radius: 12px; 
+    padding: 20px; 
+    text-align: center; 
+    cursor: pointer; 
+    background: #fff; 
+    transition: 0.3s; 
+}
+.payment-option input[type="radio"]:checked + .payment-card-content { 
+    border-color: #0284c7; 
+    background: #f0f9ff; 
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.1); 
+}
+.btn-pay-tab { 
+    padding: 10px 25px; 
+    border: 2px solid #e2e8f0; 
+    background: #f8fafc; 
+    border-radius: 30px; 
+    font-size: 15px; 
+    font-weight: 600; 
+    color: #64748b; 
+    cursor: pointer; 
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-pay-tab:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+.btn-pay-tab.active { 
+    background: #0284c7; 
+    color: white; 
+    border-color: #0284c7; 
+    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.25);
 }

@@ -140,7 +140,6 @@ const updateAppointmentStatus = async (req, res) => {
                 const d = new Date(info.ngay_lam_viec);
                 const ngay_kham_str = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
                 
-
                 if (info.email_benh_nhan) {
                     const mailOptions = {
                         from: '"TT Medical" <tongthobro456@gmail.com>',
@@ -185,7 +184,6 @@ const updateAppointmentNote = async (req, res) => {
         const { ghi_chu_cua_bac_si } = req.body;
         const pool = await connectDB();
 
-        // Kiểm tra xem lịch khám có tồn tại không
         const checkQuery = await pool.request().input('id', sql.Int, id).query('SELECT id FROM LichKham WHERE id = @id');
         if (checkQuery.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy lịch hẹn!' });
 
@@ -201,13 +199,12 @@ const updateAppointmentNote = async (req, res) => {
     }
 };
 
-// 4. Đặt lịch khám mới (Bệnh nhân đặt lịch)
+// Đặt lịch khám mới (Cũ - Giữ lại theo yêu cầu)
 const createAppointment1 = async (req, res) => {
     try {
         const { lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung } = req.body;
         const pool = await connectDB();
         
-        // Thêm lịch khám mới với trạng thái mặc định là 'Pending'
         await pool.request()
             .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
             .input('benh_nhan_id', sql.Int, benh_nhan_id)
@@ -217,7 +214,6 @@ const createAppointment1 = async (req, res) => {
                 VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, 'Pending', GETDATE())
             `);
             
-        // Tăng số lượng đã đặt trong ca làm việc lên 1
         await pool.request()
             .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
             .query(`
@@ -244,17 +240,14 @@ const deleteAppointment = async (req, res) => {
         
         const { lich_lam_viec_id, trang_thai } = appInfo.recordset[0];
         
-        // 1. CHẶN XÓA NẾU LỊCH ĐÃ KHÁM XONG
         if (trang_thai.trim().toLowerCase() === 'done') {
             return res.status(400).json({ message: 'Không thể xóa lịch đã khám xong! Dữ liệu này cần được giữ lại làm hồ sơ bệnh án và bảo vệ đánh giá của bệnh nhân.' });
         }
         
-        // 2. Hoàn lại số lượng chỗ trống nếu lịch đang ở trạng thái Pending hoặc Approved
         if (trang_thai.trim().toLowerCase() !== 'cancelled') {
             await pool.request().input('lich_lam_viec_id', sql.Int, lich_lam_viec_id).query('UPDATE LichLamViec SET so_luong_hien_tai = CASE WHEN so_luong_hien_tai > 0 THEN so_luong_hien_tai - 1 ELSE 0 END WHERE id = @lich_lam_viec_id');
         }
         
-        // 3. Tiến hành xóa lịch hẹn (Lúc này chắc chắn an toàn, không bị dính khóa ngoại của bảng Đánh Giá)
         await pool.request().input('id', sql.Int, id).query('DELETE FROM LichKham WHERE id = @id');
         res.json({ message: 'Xóa lịch hẹn thành công!' });
     } catch (error) {
@@ -263,7 +256,7 @@ const deleteAppointment = async (req, res) => {
     }
 };
 
-// 1. API: Lấy danh sách các giờ đã được đặt để KHÓA LẠI ở Frontend
+// API: Lấy danh sách các giờ đã được đặt
 const getBookedSlots = async (req, res) => {
     try {
         const { bac_si_id, ngay } = req.query;
@@ -290,101 +283,147 @@ const getBookedSlots = async (req, res) => {
     }
 };
 
-// 2. API: Tạo lịch khám mới (Đồng bộ CSDL + Gửi Email)
+// =========================================================================
+// API CHÍNH: TẠO LỊCH KHÁM MỚI (TÍCH HỢP TRANSACTION & BẢNG THANH TOÁN)
+// =========================================================================
 const createAppointment = async (req, res) => {
     try {
-        const { benh_nhan_id, bac_si_id, ngay_lam_viec, khung_gio, mo_ta_trieu_chung, ho_ten, email } = req.body;
+        const { benh_nhan_id, bac_si_id, ngay_lam_viec, khung_gio, mo_ta_trieu_chung, ho_ten, email, phuong_thuc_thanh_toan } = req.body;
         const pool = await connectDB();
 
-        // 1. Tìm lich_lam_viec_id tương ứng với bác sĩ và ngày
-        const shiftQuery = await pool.request()
-            .input('bac_si_id', sql.Int, bac_si_id)
-            .input('ngay_lam_viec', sql.Date, ngay_lam_viec)
-            .query(`
-                SELECT llv.id, hsbs.phi_kham, ISNULL(hsnd.ho_ten, tk.ten_dang_nhap) as ten_bac_si
-                FROM LichLamViec llv
-                LEFT JOIN HoSoBacSi hsbs ON llv.bac_si_id = hsbs.tai_khoan_id
-                LEFT JOIN HoSoNguoiDung hsnd ON llv.bac_si_id = hsnd.tai_khoan_id
-                LEFT JOIN TaiKhoan tk ON llv.bac_si_id = tk.id
-                WHERE llv.bac_si_id = @bac_si_id AND CAST(llv.ngay_lam_viec AS DATE) = CAST(@ngay_lam_viec AS DATE)
-            `);
-            
-        if (shiftQuery.recordset.length === 0) return res.status(400).json({ message: 'Bác sĩ không có ca làm việc ngày này!' });
-        const lich_lam_viec_id = shiftQuery.recordset[0].id;
-        const phi_kham = shiftQuery.recordset[0].phi_kham;
-        const ten_bac_si = shiftQuery.recordset[0].ten_bac_si;
-        const tong_tien = phi_kham ? Number(phi_kham).toLocaleString('en-US') : '0';
+        // Xử lý logic phương thức thanh toán
+        const ptttoan = phuong_thuc_thanh_toan || 'cash';
+        
+        // GIẢ LẬP KIỂM TRA NGÂN HÀNG:
+        // Đáng lẽ chỗ này sẽ chọc API sang ngân hàng kiểm tra mã giao dịch. 
+        // Trong phạm vi đồ án, mình giả định luôn là "Chuyển khoản = Đã thanh toán thành công (1)"
+        // Nếu muốn demo lỗi "Chưa nhận được tiền", bạn có thể tạo điều kiện if(mo_ta_trieu_chung == 'loi_bank') res.status(400) nhé!
+        const trang_thai_tt = ptttoan === 'transfer' ? 1 : 0; 
 
-        // 2. Lưu vào CSDL
-        const result = await pool.request()
-            .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
-            .input('benh_nhan_id', sql.Int, benh_nhan_id)
-            .input('gio_kham', sql.VarChar, khung_gio)
-            .input('mo_ta_trieu_chung', sql.NVarChar, mo_ta_trieu_chung)
-            .input('trang_thai', sql.VarChar, 'Pending')
-            .query(`
-                INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao, gio_kham) 
-                OUTPUT inserted.id
-                VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, @trang_thai, GETDATE(), @gio_kham);
+        // Khởi tạo Transaction
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            // 1. Tìm lich_lam_viec_id tương ứng với bác sĩ và ngày
+            const shiftQuery = await new sql.Request(transaction)
+                .input('bac_si_id', sql.Int, bac_si_id)
+                .input('ngay_lam_viec', sql.Date, ngay_lam_viec)
+                .query(`
+                    SELECT llv.id, hsbs.phi_kham, ISNULL(hsnd.ho_ten, tk.ten_dang_nhap) as ten_bac_si
+                    FROM LichLamViec llv
+                    LEFT JOIN HoSoBacSi hsbs ON llv.bac_si_id = hsbs.tai_khoan_id
+                    LEFT JOIN HoSoNguoiDung hsnd ON llv.bac_si_id = hsnd.tai_khoan_id
+                    LEFT JOIN TaiKhoan tk ON llv.bac_si_id = tk.id
+                    WHERE llv.bac_si_id = @bac_si_id AND CAST(llv.ngay_lam_viec AS DATE) = CAST(@ngay_lam_viec AS DATE)
+                `);
                 
-                -- Tự động tăng số lượng hiện tại trong Ca làm việc
-                UPDATE LichLamViec 
-                SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 
-                WHERE id = @lich_lam_viec_id;
-            `);
+            if (shiftQuery.recordset.length === 0) {
+                await transaction.rollback();
+                return res.status(400).json({ message: 'Bác sĩ không có ca làm việc ngày này!' });
+            }
+            const lich_lam_viec_id = shiftQuery.recordset[0].id;
+            const phi_kham = shiftQuery.recordset[0].phi_kham || 0;
+            const ten_bac_si = shiftQuery.recordset[0].ten_bac_si;
+            const tong_tien = phi_kham ? Number(phi_kham).toLocaleString('en-US') : '0';
 
-        const appointmentId = result.recordset[0].id;
+            // 2. Lưu vào CSDL Bảng LichKham
+            const result = await new sql.Request(transaction)
+                .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
+                .input('benh_nhan_id', sql.Int, benh_nhan_id)
+                .input('gio_kham', sql.VarChar, khung_gio)
+                .input('mo_ta_trieu_chung', sql.NVarChar, mo_ta_trieu_chung)
+                .input('trang_thai', sql.VarChar, 'Pending')
+                .query(`
+                    INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao, gio_kham) 
+                    OUTPUT inserted.id
+                    VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, @trang_thai, GETDATE(), @gio_kham);
+                    
+                    -- Tự động tăng số lượng hiện tại trong Ca làm việc
+                    UPDATE LichLamViec 
+                    SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 
+                    WHERE id = @lich_lam_viec_id;
+                `);
 
-        // Tiến hành gửi Email bất đồng bộ (không block người dùng)
-        if (email) {
-            const dateObj = new Date(ngay_lam_viec);
-            const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+            const appointmentId = result.recordset[0].id;
 
-            const mailOptions = {
-                from: '"TT Medical" <tongthobro456@gmail.com>',
-                to: email,
-                subject: `[TT Medical] Xác nhận đặt lịch thành công - Lịch khám #${appointmentId}`,
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
-                        <div style="background-color: #0284C7; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-                            <h2>Xác Nhận Đặt Lịch Khám</h2>
+            // 3. Lưu vào Bảng ThanhToan
+            await new sql.Request(transaction)
+                .input('lich_kham_id', sql.Int, appointmentId)
+                .input('so_tien', sql.Decimal(18, 2), phi_kham)
+                .input('phuong_thuc', sql.VarChar(50), ptttoan)
+                .input('trang_thai_tt', sql.Int, trang_thai_tt)
+                .query(`
+                    INSERT INTO ThanhToan (lich_kham_id, so_tien, phuong_thuc_thanh_toan, trang_thai_thanh_toan, ngay_tao)
+                    VALUES (@lich_kham_id, @so_tien, @phuong_thuc, @trang_thai_tt, GETDATE());
+                `);
+
+            // MỌI THỨ HOÀN HẢO -> LƯU VÀO DB
+            await transaction.commit();
+
+            // Tiến hành gửi Email bất đồng bộ (không block người dùng)
+            if (email) {
+                const dateObj = new Date(ngay_lam_viec);
+                const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                
+                // Logic hiển thị chữ Đã thanh toán / Chưa thanh toán trong Email
+                const textTrangThaiThanhToan = ptttoan === 'transfer' ? 
+                    `<span style="color: #10B981;">Đã thanh toán (Online)</span>` : 
+                    `<span style="color: #F59E0B;">Chưa thanh toán (Thu tại quầy)</span>`;
+
+                const mailOptions = {
+                    from: '"TT Medical" <tongthobro456@gmail.com>',
+                    to: email,
+                    subject: `[TT Medical] Xác nhận đặt lịch thành công - Lịch khám #${appointmentId}`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
+                            <div style="background-color: #0284C7; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                                <h2>Xác Nhận Đặt Lịch Khám</h2>
+                            </div>
+                            <div style="padding: 20px; line-height: 1.6; color: #334155;">
+                                <p>Xin chào <strong>${ho_ten}</strong>,</p>
+                                <p>Lịch khám bệnh của bạn đã được ghi nhận trên hệ thống. Dưới đây là thông tin chi tiết:</p>
+                                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${ten_bac_si}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Mã lịch khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#${appointmentId}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${formattedDate}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${khung_gio}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Triệu chứng:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${mo_ta_trieu_chung}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Tổng tiền khám bệnh: </strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${tong_tien} VND</td></tr>    
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Trạng thái: </strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${textTrangThaiThanhToan}</td></tr>
+                                </table>
+                                <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
+                                <p style="margin-top: 20px;">Vui lòng có mặt trước 15 phút tại bệnh viện để làm thủ tục check-in.</p>
+                                <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
+                            </div>
                         </div>
-                        <div style="padding: 20px; line-height: 1.6; color: #334155;">
-                            <p>Xin chào <strong>${ho_ten}</strong>,</p>
-                            <p>Lịch khám bệnh của bạn đã được ghi nhận trên hệ thống. Dưới đây là thông tin chi tiết:</p>
-                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${ten_bac_si}</td></tr>
-                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Mã lịch khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#${appointmentId}</td></tr>
-                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${formattedDate}</td></tr>
-                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${khung_gio}</td></tr>
-                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Triệu chứng:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${mo_ta_trieu_chung}</td></tr>
-                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Tổng tiền khám bệnh: </strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${tong_tien} VND</td></tr>    
-                            </table>
-                            <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
-                            <p style="margin-top: 20px;">Vui lòng có mặt trước 15 phút tại bệnh viện để làm thủ tục check-in.</p>
-                            <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
-                        </div>
-                    </div>
-                `
-            };
-            transporter.sendMail(mailOptions).catch(err => console.error('Lỗi gửi email:', err));
+                    `
+                };
+                transporter.sendMail(mailOptions).catch(err => console.error('Lỗi gửi email:', err));
+            }
+
+            res.status(201).json({ message: 'Đặt lịch thành công!', appointmentId });
+
+        } catch (transErr) {
+            // LỖI: HOÀN TÁC TOÀN BỘ DB VỀ NHƯ CŨ
+            await transaction.rollback();
+            console.error('Lỗi Transaction (Rollback DB):', transErr);
+            return res.status(500).json({ message: 'Lỗi lưu dữ liệu. Đã hủy bỏ giao dịch!' });
         }
 
-        res.status(201).json({ message: 'Đặt lịch thành công!', appointmentId });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Lỗi server' });
+        console.error('Lỗi kết nối hoặc xử lý server:', error);
+        res.status(500).json({ message: 'Lỗi hệ thống máy chủ' });
     }
 };
 
-// 5. Đánh giá Bác sĩ lưu vào bảng DanhGia
+// 6. Đánh giá Bác sĩ lưu vào bảng DanhGia
 const rateAppointment = async (req, res) => {
     try {
         const lich_kham_id = req.params.id;
         const { diem_danh_gia, nhan_xet } = req.body;
         const pool = await connectDB();
 
-        // 1. Lấy thông tin lịch khám để biết Bệnh nhân và Bác sĩ
         const lkInfo = await pool.request().input('id', sql.Int, lich_kham_id).query(`
             SELECT lk.benh_nhan_id, llv.bac_si_id, lk.trang_thai
             FROM LichKham lk
@@ -399,17 +438,14 @@ const rateAppointment = async (req, res) => {
 
         const { benh_nhan_id, bac_si_id } = lkInfo.recordset[0];
 
-        // 2. Kiểm tra xem đã đánh giá chưa
         const checkRated = await pool.request().input('lich_kham_id', sql.Int, lich_kham_id).query('SELECT id FROM DanhGia WHERE lich_kham_id = @lich_kham_id');
         if (checkRated.recordset.length > 0) return res.status(400).json({ message: 'Bạn đã đánh giá lịch khám này rồi!' });
 
-        // 3. Đảm bảo Bệnh nhân có trong bảng HoSoBenhNhan (Chống lỗi Khóa ngoại - Foreign Key)
         await pool.request().input('benh_nhan_id', sql.Int, benh_nhan_id).query(`
             IF NOT EXISTS (SELECT 1 FROM HoSoBenhNhan WHERE tai_khoan_id = @benh_nhan_id)
             BEGIN INSERT INTO HoSoBenhNhan (tai_khoan_id) VALUES (@benh_nhan_id) END
         `);
 
-        // 4. Lưu vào bảng DanhGia
         await pool.request()
             .input('lich_kham_id', sql.Int, lich_kham_id).input('benh_nhan_id', sql.Int, benh_nhan_id).input('bac_si_id', sql.Int, bac_si_id)
             .input('so_sao', sql.Int, diem_danh_gia).input('noi_dung', sql.NVarChar, nhan_xet)

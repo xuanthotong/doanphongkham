@@ -197,6 +197,8 @@
                     <div class="step" id="step-nav-3"><div class="step-circle">3</div><span class="step-label">Thông tin</span></div>
                     <div class="step-line"></div>
                     <div class="step" id="step-nav-4"><div class="step-circle">4</div><span class="step-label">Xác nhận</span></div>
+                    <div class="step-line"></div>
+                    <div class="step" id="step-nav-5"><div class="step-circle">5</div><span class="step-label">Thanh toán</span></div>
                 </div>
 
                 <div class="qa-form-box" style="padding: 30px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; position: relative; z-index: 50; pointer-events: auto;">
@@ -331,7 +333,89 @@
 
                         <div style="display: flex; justify-content: space-between; margin-top: 30px;">
                             <button type="button" class="btn btn-outline" onclick="nextStep(3)">&larr; Quay lại</button>
-                            <button type="button" class="btn btn-primary btn-save" onclick="submitBooking()"><i class="fa-regular fa-calendar-check"></i> Xác nhận đặt lịch</button>
+                            <button type="button" class="btn btn-primary btn-save" onclick="nextStep(5)">Tiếp tục thanh toán &rarr;</button>
+                        </div>
+                    </div>
+
+                    <!-- BƯỚC 5: CHỌN PHƯƠNG THỨC THANH TOÁN -->
+                    <div id="step-5" class="booking-step">
+                        <h3 class="step-title">Thanh toán</h3>
+                        <p class="step-desc">Chọn phương thức thanh toán phù hợp với bạn.</p>
+
+                        <div class="payment-methods-grid">
+                            <!-- Option Tiền mặt -->
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="cash" checked>
+                                <div class="payment-card-content">
+                                    <i class="fa-solid fa-money-bill-wave" style="color: #10b981; font-size: 24px; margin-bottom: 10px;"></i>
+                                    <h4 style="margin: 0; font-size: 15px; color: #0f172a;">Tiền mặt</h4>
+                                    <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Thanh toán tại quầy khi đến khám</p>
+                                </div>
+                            </label>
+
+                            <!-- Option Chuyển khoản -->
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="transfer">
+                                <div class="payment-card-content">
+                                    <i class="fa-solid fa-building-columns" style="color: #0284c7; font-size: 24px; margin-bottom: 10px;"></i>
+                                    <h4 style="margin: 0; font-size: 15px; color: #0f172a;">Chuyển khoản</h4>
+                                    <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Ví Momo hoặc Tài khoản Ngân hàng</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="step-actions">
+                           <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                             <button type="button" class="btn btn-outline" onclick="nextStep(4)">&larr; Quay lại</button>
+                             <button type="button" class="btn btn-primary btn-save" onclick="processPayment()"><i class="fa-regular fa-calendar-check"></i> Xác nhận đặt lịch</button>
+                           </div>
+                        </div>
+                    </div>
+
+                    <!-- BƯỚC 6: QUÉT MÃ THANH TOÁN (Chỉ hiện khi chọn Chuyển khoản) -->
+                    <div id="step-6" class="booking-step">
+                        <h3 class="step-title">Quét mã thanh toán</h3>
+                        <p class="step-desc">Vui lòng dùng ứng dụng Ngân hàng hoặc Momo để quét mã QR bên dưới.</p>
+
+                        <div id="transfer-details-box" style="margin-top: 10px;">
+                            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 25px;">
+                                <button type="button" id="tab-momo" class="btn-pay-tab active" onclick="switchPayTab('momo')"><i class="fa-solid fa-wallet" style="margin-right: 8px;"></i> Ví Momo</button>
+                                <button type="button" id="tab-bank" class="btn-pay-tab" onclick="switchPayTab('bank')"><i class="fa-solid fa-building-columns" style="margin-right: 8px;"></i> Ngân hàng</button>
+                            </div>
+                            
+                            <div id="content-momo" style="display: flex; flex-direction: column; align-items: center; background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px; max-width: 420px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
+                                <div style="background: #a50064; color: white; padding: 6px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Quét mã ứng dụng Momo</div>
+                                <div style="padding: 15px; border: 1px solid #f1f5f9; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                                    <img src="../../assets/images/qr-momo.png" alt="Momo QR" style="width: 250px; height: 250px; object-fit: contain;">
+                                </div>
+                                <h3 style="margin: 0 0 10px 0; color: #a50064; font-size: 20px; font-weight: 800;">TT MEDICAL NVT</h3>
+                                <div style="background: #f8fafc; padding: 12px 20px; border-radius: 10px; width: 100%; text-align: center; border: 1px solid #f1f5f9;">
+                                    <p style="margin: 0; color: #64748b; font-size: 13px;">Số điện thoại</p>
+                                    <p style="margin: 5px 0 0 0; color: #0f172a; font-weight: 800; font-size: 22px; letter-spacing: 2px;">0347 366 948</p>
+                                </div>
+                                <p style="margin: 15px 0 0 0; font-size: 13px; color: #ef4444; font-style: italic;">* Nội dung CK: <strong style="color:#0f172a;">Họ Tên + SĐT</strong></p>
+                            </div>
+
+                            <div id="content-bank" style="display: none; flex-direction: column; align-items: center; background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px; max-width: 420px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
+                                <div style="background: #0284c7; color: white; padding: 6px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Quét mã App Ngân hàng</div>
+                                <div style="padding: 15px; border: 1px solid #f1f5f9; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                                    <img src="../../assets/images/qr-bank.png" alt="Bank QR" style="width: 250px; height: 250px; object-fit: contain;">
+                                </div>
+                                <p style="margin: 0 0 5px 0; color: #0284c7; font-size: 15px; font-weight: 700;">Techcombank</p>
+                                <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 20px; font-weight: 800;">TT MEDICAL TXT</h3>
+                                <div style="background: #f8fafc; padding: 12px 20px; border-radius: 10px; width: 100%; text-align: center; border: 1px solid #f1f5f9;">
+                                    <p style="margin: 0; color: #64748b; font-size: 13px;">Số tài khoản</p>
+                                    <p style="margin: 5px 0 0 0; color: #0f172a; font-weight: 800; font-size: 22px; letter-spacing: 2px;">101010101010</p>
+                                </div>
+                                <p style="margin: 15px 0 0 0; font-size: 13px; color: #ef4444; font-style: italic;">* Nội dung CK: <strong style="color:#0f172a;">Họ Tên + SĐT</strong></p>
+                            </div>
+                        </div>
+
+                        <div class="step-actions">
+                           <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                               <button type="button" class="btn btn-outline" onclick="backToStep5()">&larr; Chọn lại phương thức</button>
+                               <button type="button" class="btn btn-primary btn-save" onclick="submitBookingAPI()"><i class="fa-regular fa-circle-check"></i> Tôi đã thanh toán thành công</button>
+                            </div>
                         </div>
                     </div>
 
@@ -364,7 +448,7 @@
                 <div class="profile-dashboard-grid" style="display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 30px !important; align-items: start;">
                     
                     <!-- CỘT TRÁI: THÔNG TIN CÁ NHÂN -->
-                    <div class="main-content-card patient-card" style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex-start; flex-direction: column;">
+                    <div class="main-content-card patient-card" style="background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column;">
                         <h2 class="card-title" style="font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; color: #0f172a; font-weight: 700;">
                             <i class="fa-regular fa-address-card" style="color: #0284c7; margin-right: 8px;"></i> Thông tin cá nhân
                         </h2>
@@ -411,16 +495,16 @@
 
                     <!-- CỘT PHẢI: GỘP LỊCH SỬ & HỒ SƠ THÀNH TABS DỄ NHÌN HƠN -->
                     <div class="main-content-card" style="background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; display: flex; flex-direction: column;">
-                        <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                        <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;">
                             <button onclick="switchProfileTab('history')" id="btn-tab-history" style="flex: 1; padding: 18px; border: none; background: #fff; border-bottom: 3px solid #0284c7; color: #0284c7; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s;"><i class="fa-regular fa-calendar-check"></i> Lịch sử Đặt Khám</button>
                             <button onclick="switchProfileTab('record')" id="btn-tab-record" style="flex: 1; padding: 18px; border: none; background: transparent; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.3s;"><i class="fa-solid fa-notes-medical"></i> Hồ Sơ Bệnh Án</button>
                         </div>
-                        <div id="content-tab-history" style="padding: 30px; max-height: 750px; overflow-y: auto; background: #f8fafc;">
+                        <div id="content-tab-history" style="padding: 30px; max-height: 350px; overflow-y: auto; background: #f8fafc;">
                             <div id="lich_su_kham_list" style="display: flex; flex-direction: column; gap: 15px;">
                                 <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải lịch sử khám...</p>
                             </div>
                         </div>
-                        <div id="content-tab-record" style="padding: 30px; display: none; max-height: 750px; overflow-y: auto; background: #f8fafc;">
+                        <div id="content-tab-record" style="padding: 30px; display: none; max-height: 350px; overflow-y: auto; background: #f8fafc;">
                             <div id="ho_so_suc_khoe_list" style="display: flex; flex-direction: column; gap: 15px;">
                                 <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải hồ sơ bệnh án...</p>
                             </div>
@@ -456,6 +540,7 @@
         </div>
     </div>
 
+    <!-- MODAL CHI TIẾT BÁC SĨ -->
     <div id="doctorDetailModal" class="modal-overlay">
         <div class="auth-card" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
             <span class="close-btn" onclick="closeDoctorDetailsModal()">&times;</span>
@@ -488,6 +573,7 @@
         </div>
     </div>
 
+    <!-- POPUP ĐÁNH GIÁ BÁC SĨ -->
     <div id="ratingModal" class="modal-overlay">
         <div class="auth-card" style="max-width: 450px; padding: 30px; border-radius: 16px;">
             <span class="close-btn" onclick="closeRatingModal()" style="font-size: 24px;">&times;</span>

@@ -216,7 +216,7 @@ function selectTimeSlot(element, slot) {
 }
 
 // ======================================================
-// ĐIỀU HƯỚNG CÁC BƯỚC (NEXT STEP)
+// ĐIỀU HƯỚNG CÁC BƯỚC (NEXT STEP) - SỬA LẠI ĐỂ CÓ BƯỚC 5
 // ======================================================
 function nextStep(step) {
     // Validate Bước 1
@@ -262,20 +262,57 @@ function nextStep(step) {
 
     // UI chuyển Step
     document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     
-    document.getElementById(`step-${step}`).classList.add('active');
-    for(let i = 1; i <= step; i++) {
-        document.getElementById(`step-nav-${i}`).classList.add('active');
+    // Cập nhật lại thanh tiến trình 5 Bước
+    for(let i = 1; i <= 5; i++) {
+        const nav = document.getElementById(`step-nav-${i}`);
+        if(nav) {
+            if(i < step) { nav.classList.add('completed'); nav.classList.remove('active'); } 
+            else if (i === step) { nav.classList.add('active'); nav.classList.remove('completed'); } 
+            else { nav.classList.remove('active', 'completed'); }
+        }
     }
+    document.querySelectorAll('.step-line').forEach((line, index) => {
+        if(index < step - 1) line.classList.add('completed');
+        else line.classList.remove('completed');
+    });
+
+    document.getElementById(`step-${step}`).classList.add('active');
 }
 
 // ======================================================
-// XÁC NHẬN VÀ LƯU DATABASE (BƯỚC 4)
+// XỬ LÝ CHUYỂN BƯỚC THANH TOÁN (TỪ BƯỚC 5 SANG BƯỚC 6)
+// ======================================================
+function processPayment() {
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    if (paymentMethod === 'cash') {
+        // NẾU LÀ TIỀN MẶT: Gọi thẳng API lưu luôn
+        submitBooking();
+    } else if (paymentMethod === 'transfer') {
+        // NẾU LÀ CHUYỂN KHOẢN: Lật sang Bước 6 để quét mã QR
+        document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
+        document.getElementById('step-6').classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function backToStep5() {
+    document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
+    document.getElementById('step-5').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ======================================================
+// XÁC NHẬN VÀ LƯU DATABASE TỪ BƯỚC 5 (TIỀN MẶT) HOẶC BƯỚC 6 (QR)
 // ======================================================
 async function submitBooking() {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     
+    // Lấy phương thức thanh toán người dùng chọn
+    const paymentMethodElement = document.querySelector('input[name="payment_method"]:checked');
+    const paymentMethod = paymentMethodElement ? paymentMethodElement.value : 'cash';
+
     const payload = {
         benh_nhan_id: userInfo.id,
         bac_si_id: bookingData.bac_si_id,
@@ -283,7 +320,9 @@ async function submitBooking() {
         khung_gio: bookingData.gio_kham,
         mo_ta_trieu_chung: document.getElementById('bk_trieu_chung').value,
         ho_ten: document.getElementById('bk_ten').value,
-        email: document.getElementById('bk_email').value
+        email: document.getElementById('bk_email').value,
+        // Đẩy thêm biến paymentMethod xuống DB nếu bảng Appointment của bạn có cột này
+         phuong_thuc_thanh_toan: paymentMethod 
     };
 
     // Nút loading UI
@@ -313,6 +352,11 @@ async function submitBooking() {
             }).then(() => {
                 // Cập nhật UI màn hình thành công
                 document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
+                
+                // Ẩn thanh Stepper đi khi thành công
+                const stepper = document.querySelector('.stepper-container');
+                if (stepper) stepper.style.display = 'none';
+
                 document.getElementById('step-success').classList.add('active');
                 
                 document.getElementById('succ_bac_si').innerText = 'BS. ' + bookingData.bac_si_ten;
@@ -338,6 +382,13 @@ function resetBooking() {
     document.querySelector('.time-slots-grid').innerHTML = '';
     document.getElementById('bk_trieu_chung').value = '';
     
+    // Reset lại phương thức thanh toán về Tiền mặt mặc định
+    const cashRadio = document.querySelector('input[name="payment_method"][value="cash"]');
+    if(cashRadio) { cashRadio.checked = true; togglePaymentDetails(); }
+
+    const stepper = document.querySelector('.stepper-container');
+    if (stepper) stepper.style.display = 'flex';
+
     document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
     document.getElementById('step-nav-1').classList.add('active');
     
@@ -345,4 +396,33 @@ function resetBooking() {
     document.getElementById('step-1').classList.add('active');
     
     filterDoctorsBySpecialty();
+}
+
+// ==========================================
+// HÀM XỬ LÝ GIAO DIỆN THANH TOÁN
+// ==========================================
+function togglePaymentDetails() {
+    const paymentMethodElement = document.querySelector('input[name="payment_method"]:checked');
+    if (!paymentMethodElement) return;
+    
+    const paymentMethod = paymentMethodElement.value;
+    const transferBox = document.getElementById('transfer-details-box');
+    
+    if (transferBox) {
+        if (paymentMethod === 'transfer') {
+            transferBox.style.display = 'block';
+        } else {
+            transferBox.style.display = 'none';
+        }
+    }
+}
+
+function switchPayTab(type) {
+    document.getElementById('tab-momo').classList.remove('active');
+    document.getElementById('tab-bank').classList.remove('active');
+    document.getElementById(`tab-${type}`).classList.add('active');
+
+    document.getElementById('content-momo').style.display = 'none';
+    document.getElementById('content-bank').style.display = 'none';
+    document.getElementById(`content-${type}`).style.display = 'flex';
 }

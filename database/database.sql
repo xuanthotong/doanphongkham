@@ -101,3 +101,13 @@ CREATE TABLE DanhGia (
     FOREIGN KEY (benh_nhan_id) REFERENCES HoSoBenhNhan(tai_khoan_id),
     FOREIGN KEY (bac_si_id) REFERENCES HoSoBacSi(tai_khoan_id)
 );
+CREATE TABLE ThanhToan (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    lich_kham_id INT NOT NULL FOREIGN KEY REFERENCES LichKham(id),
+    so_tien DECIMAL(18, 2) NOT NULL,
+    phuong_thuc_thanh_toan VARCHAR(50) NOT NULL,
+    trang_thai_thanh_toan INT DEFAULT 0,        
+    ma_giao_dich VARCHAR(100) NULL,            
+    ngay_tao DATETIME DEFAULT GETDATE(),
+    ngay_thanh_toan DATETIME NULL               
+);
