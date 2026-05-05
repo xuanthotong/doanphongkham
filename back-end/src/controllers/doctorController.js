@@ -176,16 +176,38 @@ const deleteDoctor = async (req, res) => {
         const { id } = req.params;
         const pool = await connectDB();
         
-        // Phải xóa dữ liệu ở bảng phụ trước khi xóa tài khoản ở bảng chính
-        await pool.request().input('id', sql.Int, id).query(`DELETE FROM HoSoBacSi WHERE tai_khoan_id = @id`);
-        await pool.request().input('id', sql.Int, id).query(`DELETE FROM HoSoNguoiDung WHERE tai_khoan_id = @id`);
-        await pool.request().input('id', sql.Int, id).query(`DELETE FROM TaiKhoan WHERE id = @id`);
-        
-        res.json({ message: 'Xóa Bác sĩ thành công!' });
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            // 1. Hủy liên kết Bài viết (Giữ lại bài viết nhưng gỡ tên tác giả)
+            await transaction.request().input('id', sql.Int, id).query(`UPDATE TinTuc SET tac_gia_id = NULL WHERE tac_gia_id = @id`);
+            
+            // 2. Hủy liên kết Hỏi Đáp
+            await transaction.request().input('id', sql.Int, id).query(`UPDATE HoiDap SET bac_si_id = NULL WHERE bac_si_id = @id`);
+            
+            // 3. Xóa Đánh giá
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM DanhGia WHERE bac_si_id = @id`);
+            
+            // 4. Xóa Thanh toán và Lịch khám
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM ThanhToan WHERE lich_kham_id IN (SELECT id FROM LichKham WHERE lich_lam_viec_id IN (SELECT id FROM LichLamViec WHERE bac_si_id = @id))`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM LichKham WHERE lich_lam_viec_id IN (SELECT id FROM LichLamViec WHERE bac_si_id = @id)`);
+            
+            // 5. Xóa Ca làm việc, Hồ sơ và Tài khoản
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM LichLamViec WHERE bac_si_id = @id`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoBacSi WHERE tai_khoan_id = @id`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoNguoiDung WHERE tai_khoan_id = @id`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM TaiKhoan WHERE id = @id`);
+            
+            await transaction.commit();
+            res.json({ message: 'Xóa Bác sĩ thành công!' });
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
     } catch (error) {
         console.error('Lỗi khi xóa bác sĩ:', error);
-        if (error.number === 547) return res.status(400).json({ message: 'Không thể xóa do bác sĩ này đã có lịch khám hoặc dữ liệu liên quan!' });
-        res.status(500).json({ message: 'Lỗi server' });
+        res.status(500).json({ message: 'Lỗi hệ thống khi xóa bác sĩ!' });
     }
 };
 

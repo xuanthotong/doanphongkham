@@ -50,6 +50,54 @@ window.onclick = function(event) {
     }
 }
 
+// =========================================================
+// LOGIC SLIDER TRANG CHỦ
+// =========================================================
+let heroSlideInterval;
+let isSliderAnimating = false;
+
+function initHeroSlider() {
+    const slider = document.getElementById('hero-slider');
+    if (!slider) return;
+    startHeroSlideInterval();
+}
+
+function moveSlide(direction) {
+    if (isSliderAnimating) return;
+    const slider = document.getElementById('hero-slider');
+    if (!slider) return;
+    
+    isSliderAnimating = true;
+    clearInterval(heroSlideInterval);
+    
+    if (direction === 1) {
+        slider.style.transition = 'transform 0.8s ease-in-out';
+        slider.style.transform = 'translateX(-100%)';
+        setTimeout(() => {
+            slider.style.transition = 'none';
+            slider.appendChild(slider.firstElementChild);
+            slider.style.transform = 'translateX(0)';
+            isSliderAnimating = false;
+            startHeroSlideInterval();
+        }, 800);
+    } else {
+        slider.style.transition = 'none';
+        slider.prepend(slider.lastElementChild);
+        slider.style.transform = 'translateX(-100%)';
+        slider.offsetHeight; 
+        slider.style.transition = 'transform 0.8s ease-in-out';
+        slider.style.transform = 'translateX(0)';
+        setTimeout(() => {
+            isSliderAnimating = false;
+            startHeroSlideInterval();
+        }, 800);
+    }
+}
+
+function startHeroSlideInterval() {
+    heroSlideInterval = setInterval(() => { moveSlide(1); }, 6000); // 6 giây đổi 1 lần
+}
+
 // ==================================================
 // 2. ĐỔ DỮ LIỆU TỪ LOCALSTORAGE VÀO GIAO DIỆN BỆNH NHÂN
 // ==================================================
@@ -109,6 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Tải Hồ sơ sức khỏe & Lịch sử khám bệnh
         fetchMedicalHistory();
+
+        // 4. Khởi chạy Slider
+        initHeroSlider();
 
     } else {
         // Chưa đăng nhập -> Trở về trang chủ

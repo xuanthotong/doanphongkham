@@ -1,5 +1,9 @@
 let homeDoctorsList = []; // Lưu trữ danh sách bác sĩ toàn cục để dùng cho chức năng xem chi tiết
 
+let currentDoctorReviews = []; // Biến lưu đánh giá tạm thời
+let currentReviewPage = 1;     // Trang đánh giá hiện tại
+const reviewsPerPage = 5;      // Số nhận xét hiển thị mỗi trang (Chỉnh thành 1 theo yêu cầu để test)
+
 async function fetchHomeDoctors() {
     try {
         const response = await fetch('http://localhost:3000/api/doctors');
@@ -121,40 +125,101 @@ async function showDoctorDetails(id) {
         reviewsContainer.innerHTML = '<p style="color: #64748b; font-size: 14px; font-style: italic; text-align: center;">Đang tải đánh giá...</p>';
         try {
             const res = await fetch(`http://localhost:3000/api/doctors/${id}/reviews`);
-            const reviews = await res.json();
-            
-            reviewsContainer.innerHTML = '';
-            if (reviews.length === 0) {
-                reviewsContainer.innerHTML = '<p style="color: #64748b; font-size: 14px; font-style: italic; text-align: center;">Bác sĩ này chưa có đánh giá nào.</p>';
-            } else {
-                reviews.forEach(review => {
-                    const date = new Date(review.ngay_danh_gia);
-                    const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-                    
-                    let starsHtml = '';
-                    for (let i = 1; i <= 5; i++) {
-                        starsHtml += `<i class="fa-solid fa-star" style="color: ${i <= review.so_sao ? '#f59e0b' : '#e2e8f0'}; font-size: 12px;"></i>`;
-                    }
-
-                    const content = review.noi_dung ? review.noi_dung : '<span style="color: #94a3b8; font-style: italic;">Không có nhận xét chi tiết</span>';
-                    const chuCaiDau = review.ten_benh_nhan.charAt(0).toUpperCase();
-
-                    reviewsContainer.innerHTML += `
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="background: #cbd5e1; color: #475569; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px;">${chuCaiDau}</div>
-                                    <div><div style="font-weight: 600; font-size: 14px; color: #0f172a;">${review.ten_benh_nhan}</div><div style="color: #64748b; font-size: 12px;">${dateStr}</div></div>
-                                </div>
-                                <div>${starsHtml}</div>
-                            </div>
-                            <div style="color: #334155; font-size: 14px; line-height: 1.5; margin-top: 10px;">${content}</div>
-                        </div>
-                    `;
-                });
-            }
+            currentDoctorReviews = await res.json();
+            currentReviewPage = 1;
+            renderDoctorReviews();
         } catch (error) { console.error(error); reviewsContainer.innerHTML = '<p style="color: #ef4444; font-size: 14px; text-align: center;">Lỗi khi tải đánh giá.</p>'; }
     }
+}
+
+function renderDoctorReviews() {
+    const reviewsContainer = document.getElementById('detail_doc_reviews');
+    if (!reviewsContainer) return;
+    
+    reviewsContainer.innerHTML = '';
+    if (currentDoctorReviews.length === 0) {
+        reviewsContainer.innerHTML = '<p style="color: #64748b; font-size: 14px; font-style: italic; text-align: center;">Bác sĩ này chưa có đánh giá nào.</p>';
+        return;
+    }
+
+    const startIndex = (currentReviewPage - 1) * reviewsPerPage;
+    const endIndex = startIndex + reviewsPerPage;
+    const paginatedReviews = currentDoctorReviews.slice(startIndex, endIndex);
+
+    paginatedReviews.forEach(review => {
+        const date = new Date(review.ngay_danh_gia);
+        const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+        
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            starsHtml += `<i class="fa-solid fa-star" style="color: ${i <= review.so_sao ? '#f59e0b' : '#e2e8f0'}; font-size: 12px;"></i>`;
+        }
+
+        const content = review.noi_dung ? review.noi_dung : '<span style="color: #94a3b8; font-style: italic;">Không có nhận xét chi tiết</span>';
+        const chuCaiDau = review.ten_benh_nhan.charAt(0).toUpperCase();
+
+        reviewsContainer.innerHTML += `
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="background: #cbd5e1; color: #475569; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px;">${chuCaiDau}</div>
+                        <div><div style="font-weight: 600; font-size: 14px; color: #0f172a;">${review.ten_benh_nhan}</div><div style="color: #64748b; font-size: 12px;">${dateStr}</div></div>
+                    </div>
+                    <div>${starsHtml}</div>
+                </div>
+                <div style="color: #334155; font-size: 14px; line-height: 1.5; margin-top: 10px;">${content}</div>
+            </div>
+        `;
+    });
+
+    renderReviewPagination();
+}
+
+function renderReviewPagination() {
+    const reviewsContainer = document.getElementById('detail_doc_reviews');
+    if (!reviewsContainer || currentDoctorReviews.length <= reviewsPerPage) return;
+
+    const totalPages = Math.ceil(currentDoctorReviews.length / reviewsPerPage);
+    let paginationHtml = '<div style="display: flex; justify-content: center; gap: 8px; margin-top: 20px; padding-bottom: 10px;">';
+
+    paginationHtml += `<button onclick="changeReviewPage(${currentReviewPage - 1})" ${currentReviewPage === 1 ? 'disabled' : ''} style="padding: 6px 12px; border: 1px solid #e2e8f0; background: ${currentReviewPage === 1 ? '#f8fafc' : 'white'}; color: ${currentReviewPage === 1 ? '#94a3b8' : '#0284c7'}; border-radius: 6px; cursor: ${currentReviewPage === 1 ? 'not-allowed' : 'pointer'}; font-weight: bold; transition: 0.2s;">&laquo;</button>`;
+
+    let startPage = Math.max(1, currentReviewPage - 2);
+    let endPage = Math.min(totalPages, currentReviewPage + 2);
+    
+    if (startPage > 1) {
+        paginationHtml += `<button onclick="changeReviewPage(1)" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; color: #334155; border-radius: 6px; cursor: pointer; transition: 0.2s;">1</button>`;
+        if (startPage > 2) {
+            paginationHtml += `<span style="padding: 6px 5px; color: #64748b;">...</span>`;
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === currentReviewPage) {
+            paginationHtml += `<button style="padding: 6px 12px; border: 1px solid #0284c7; background: #0284c7; color: white; border-radius: 6px; font-weight: bold; cursor: default;">${i}</button>`;
+        } else {
+            paginationHtml += `<button onclick="changeReviewPage(${i})" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; color: #334155; border-radius: 6px; cursor: pointer; transition: 0.2s;">${i}</button>`;
+        }
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            paginationHtml += `<span style="padding: 6px 5px; color: #64748b;">...</span>`;
+        }
+        paginationHtml += `<button onclick="changeReviewPage(${totalPages})" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; color: #334155; border-radius: 6px; cursor: pointer; transition: 0.2s;">${totalPages}</button>`;
+    }
+
+    paginationHtml += `<button onclick="changeReviewPage(${currentReviewPage + 1})" ${currentReviewPage === totalPages ? 'disabled' : ''} style="padding: 6px 12px; border: 1px solid #e2e8f0; background: ${currentReviewPage === totalPages ? '#f8fafc' : 'white'}; color: ${currentReviewPage === totalPages ? '#94a3b8' : '#0284c7'}; border-radius: 6px; cursor: ${currentReviewPage === totalPages ? 'not-allowed' : 'pointer'}; font-weight: bold; transition: 0.2s;">&raquo;</button>`;
+
+    paginationHtml += '</div>';
+    reviewsContainer.innerHTML += paginationHtml;
+}
+
+function changeReviewPage(page) {
+    const totalPages = Math.ceil(currentDoctorReviews.length / reviewsPerPage);
+    if (page < 1 || page > totalPages) return;
+    currentReviewPage = page;
+    renderDoctorReviews();
 }
 
 function closeDoctorDetailsModal() {

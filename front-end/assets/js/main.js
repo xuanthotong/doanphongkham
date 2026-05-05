@@ -41,3 +41,60 @@ function scrollToSection(sectionId, event) {
         document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
     }
 }
+
+// =========================================================
+// LOGIC SLIDER TRANG CHỦ
+// =========================================================
+let heroSlideInterval;
+let isSliderAnimating = false; // Cờ chống click spam liên tục
+
+function initHeroSlider() {
+    const slider = document.getElementById('hero-slider');
+    if (!slider) return;
+    
+    startHeroSlideInterval();
+}
+
+function moveSlide(direction) {
+    if (isSliderAnimating) return; // Nếu đang chạy hiệu ứng thì không nhận click mới
+    const slider = document.getElementById('hero-slider');
+    if (!slider) return;
+    
+    isSliderAnimating = true;
+    clearInterval(heroSlideInterval); // Tạm dừng tự động chạy
+    
+    if (direction === 1) {
+        // Trượt sang trái (Next)
+        slider.style.transition = 'transform 0.8s ease-in-out';
+        slider.style.transform = 'translateX(-100%)';
+        
+        setTimeout(() => {
+            slider.style.transition = 'none'; // Tắt hiệu ứng để lén xếp lại ảnh
+            slider.appendChild(slider.firstElementChild); // Cắt ảnh đầu gắn xuống cuối
+            slider.style.transform = 'translateX(0)'; // Đặt lại khung nhìn
+            isSliderAnimating = false;
+            startHeroSlideInterval();
+        }, 800); // 800ms bằng đúng thời gian CSS transition chạy
+    } else {
+        // Trượt sang phải (Prev)
+        slider.style.transition = 'none';
+        slider.prepend(slider.lastElementChild); // Lấy ảnh cuối đưa lên đầu
+        slider.style.transform = 'translateX(-100%)';
+        
+        slider.offsetHeight; // Ép trình duyệt vẽ lại (reflow)
+        
+        slider.style.transition = 'transform 0.8s ease-in-out';
+        slider.style.transform = 'translateX(0)';
+        
+        setTimeout(() => {
+            isSliderAnimating = false;
+            startHeroSlideInterval();
+        }, 800);
+    }
+}
+
+function startHeroSlideInterval() {
+    heroSlideInterval = setInterval(() => { moveSlide(1); }, 6000); // 6 giây đổi 1 lần
+}
+
+document.addEventListener('DOMContentLoaded', initHeroSlider);

@@ -30,32 +30,34 @@ const deleteAccount = async (req, res) => {
         const pool = await connectDB();
         const id = req.params.id;
 
-        // BƯỚC 1: Xóa ở bảng HoSoBenhNhan (Theo lỗi bạn vừa gửi)
-        await pool.request()
-            .input('id', sql.Int, id)
-            .query('DELETE FROM HoSoBenhNhan WHERE tai_khoan_id = @id');
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
 
-        // BƯỚC 2: Xóa ở bảng HoSoNguoiDung
-        await pool.request()
-            .input('id', sql.Int, id)
-            .query('DELETE FROM HoSoNguoiDung WHERE tai_khoan_id = @id');
-
-        // BƯỚC 3: Nếu bạn có bảng Lịch Hẹn, Bài Viết... liên quan đến ID này thì cũng phải xóa ở đây
-        // await pool.request().input('id', sql.Int, id).query('DELETE FROM LichHen WHERE tai_khoan_id = @id');
-
-        // BƯỚC 4: Cuối cùng mới xóa ở bảng cha TaiKhoan
-        const result = await pool.request()
-            .input('id', sql.Int, id)
-            .query('DELETE FROM TaiKhoan WHERE id = @id');
-
-        if (result.rowsAffected[0] > 0) {
-            res.status(200).json({ message: 'Xóa tài khoản và các hồ sơ liên quan thành công!' });
-        } else {
-            res.status(404).json({ message: 'Không tìm thấy tài khoản để xóa!' });
+        try {
+            // 1. Cập nhật bài viết (Nếu tài khoản này là Admin có viết bài)
+            await transaction.request().input('id', sql.Int, id).query(`UPDATE TinTuc SET tac_gia_id = NULL WHERE tac_gia_id = @id`);
+            
+            // 2. Xóa các Đánh giá, Hỏi đáp, Thanh toán và Lịch khám (Nếu là Bệnh nhân)
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM DanhGia WHERE benh_nhan_id = @id`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoiDap WHERE benh_nhan_id = @id`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM ThanhToan WHERE lich_kham_id IN (SELECT id FROM LichKham WHERE benh_nhan_id = @id)`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM LichKham WHERE benh_nhan_id = @id`);
+            
+            // 3. Xóa Hồ sơ
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoBenhNhan WHERE tai_khoan_id = @id`);
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoNguoiDung WHERE tai_khoan_id = @id`);
+            
+            // 4. Xóa Tài khoản
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM TaiKhoan WHERE id = @id`);
+            
+            await transaction.commit();
+            res.status(200).json({ message: 'Xóa tài khoản và các dữ liệu liên quan thành công!' });
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
         }
     } catch (error) {
         console.error('Lỗi xóa tài khoản:', error);
-        // Nếu vẫn báo lỗi FK khác, bạn nhìn tên bảng trong lỗi rồi thêm 1 bước DELETE bảng đó lên trên là được
         res.status(500).json({ message: 'Lỗi server: Vi phạm ràng buộc dữ liệu' });
     }
 };

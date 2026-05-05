@@ -33,7 +33,9 @@ function formatCurrency(amount) {
 // Format hiển thị ngày sinh (Từ YYYY-MM-DD sang DD/MM/YYYY)
 function formatDate(dateString) {
     if (!dateString) return "";
-    const parts = dateString.split("-");
+    // Cắt bỏ phần đuôi thời gian (VD: T00:00:00.000Z) nếu có
+    const dateOnly = dateString.split("T")[0];
+    const parts = dateOnly.split("-");
     if (parts.length !== 3) return dateString;
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
@@ -121,7 +123,7 @@ function editDoctor(id) {
     document.getElementById('d_email').value = doc.email;
     
     document.getElementById('d_ho_ten').value = doc.ho_ten;
-    document.getElementById('d_ngay_sinh').value = doc.ngay_sinh;
+    document.getElementById('d_ngay_sinh').value = doc.ngay_sinh ? doc.ngay_sinh.split('T')[0] : '';
     document.getElementById('d_gioi_tinh').value = doc.gioi_tinh;
     document.getElementById('d_so_dien_thoai').value = doc.so_dien_thoai;
     document.getElementById('d_dia_chi').value = doc.dia_chi;

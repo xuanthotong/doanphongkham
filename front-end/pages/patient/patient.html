@@ -70,10 +70,19 @@
                                 <a href="#bac-si" class="btn btn-outline" onclick="scrollToSection('bac-si', event)"><i class="fa-solid fa-user-doctor"></i> Xem bác sĩ</a>
                             </div>
                         </div>
-                        <div class="hero-image">
-                            <div class="hero-image-circle"><i class="fa-solid fa-shield-halved"></i></div>
-                            <h3>Chăm sóc tận tâm</h3>
-                            <p>Đội ngũ y bác sĩ chuyên nghiệp</p>
+                        <div class="hero-image slider-container">
+                            <div class="slides-wrapper" id="hero-slider">
+                                <!-- Slide 1: Thông tin gốc -->
+                               <div class="slide slide-img"><img src="../../assets/images/slide3.png" alt="Medical Team"></div>
+                                <!-- Slide 2: Ảnh minh họa -->
+                                <div class="slide slide-img"><img src="../../assets/images/slide1.png" alt="Medical Team"></div>
+                                <!-- Slide 3: Ảnh minh họa -->
+                               <div class="slide slide-img"><img src="../../assets/images/slide5.png" alt="Medical Team"></div>
+                               <div class="slide slide-img"><img src="../../assets/images/slide4.png" alt="Modern Hospital"></div>
+                               <div class="slide slide-img"><img src="../../assets/images/slide2.png" alt="Modern Hospital"></div>
+                            </div>
+                            <button class="slider-btn prev" onclick="moveSlide(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button class="slider-btn next" onclick="moveSlide(1)"><i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
                 </section>
@@ -529,7 +538,7 @@
 
     <!-- MODAL CHI TIẾT BÁC SĨ -->
     <div id="doctorDetailModal" class="modal-overlay">
-        <div class="auth-card" style="max-height: 90vh; overflow-y: auto; max-width: 600px;">
+        <div class="auth-card" style="max-height: 90vh; overflow-y: auto; width: 95%; max-width: 900px;">
             <span class="close-btn" onclick="closeDoctorDetailsModal()">&times;</span>
             <div class="card-header" style="text-align: center; margin-bottom: 20px;"><h1 class="title">Thông tin Bác sĩ</h1></div>
             <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
@@ -548,7 +557,7 @@
 
             <div style="margin-top: 25px;">
                 <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">Đánh giá từ Bệnh nhân</h3>
-                <div id="detail_doc_reviews" style="display: flex; flex-direction: column; gap: 15px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                <div id="detail_doc_reviews" style="display: flex; flex-direction: column; gap: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
                     <!-- JavaScript sẽ đổ dữ liệu các dòng bình luận vào đây -->
                 </div>
             </div>
