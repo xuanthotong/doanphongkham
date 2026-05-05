@@ -35,9 +35,6 @@ app.use('/api/appointments', appointmentRoutes);
 
 app.use('/api/reviews', reviewRoutes);
 
-// Đón lõng Webhook của PayOS (Phải đặt TRƯỚC lệnh app.listen)
-app.post('/api/payos-webhook', appointmentController.payosWebhook);
-
 // Khởi động server và kết nối DB
 app.listen(PORT, async () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
