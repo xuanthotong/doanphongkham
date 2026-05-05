@@ -28,7 +28,7 @@
 
 /* --- BỐ CỤC CHIA 2 CỘT BƯỚC 2 (Vercel Style) --- */
 .datetime-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start; }
-.section-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+.apt-section-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
 /* Khối Chọn Ngày */
 .custom-date-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 16px; color: #334155; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); font-family: inherit; pointer-events: auto; }
