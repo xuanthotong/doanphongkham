@@ -374,47 +374,34 @@
 
                     <!-- BƯỚC 6: QUÉT MÃ THANH TOÁN (Chỉ hiện khi chọn Chuyển khoản) -->
                     <div id="step-6" class="booking-step">
-                        <h3 class="step-title">Quét mã thanh toán</h3>
-                        <p class="step-desc">Vui lòng dùng ứng dụng Ngân hàng hoặc Momo để quét mã QR bên dưới.</p>
+                        <h3 class="step-title">Thanh toán chuyển khoản</h3>
+                        <p class="step-desc">Vui lòng dùng ứng dụng Ngân hàng quét mã QR bên dưới. Hệ thống sẽ tự động xác nhận sau khi bạn thanh toán thành công.</p>
 
                         <div id="transfer-details-box" style="margin-top: 10px;">
-                            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 25px;">
-                                <button type="button" id="tab-momo" class="btn-pay-tab active" onclick="switchPayTab('momo')"><i class="fa-solid fa-wallet" style="margin-right: 8px;"></i> Ví Momo</button>
-                                <button type="button" id="tab-bank" class="btn-pay-tab" onclick="switchPayTab('bank')"><i class="fa-solid fa-building-columns" style="margin-right: 8px;"></i> Ngân hàng</button>
-                            </div>
                             
-                            <div id="content-momo" style="display: flex; flex-direction: column; align-items: center; background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px; max-width: 420px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
-                                <div style="background: #a50064; color: white; padding: 6px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Quét mã ứng dụng Momo</div>
+                            <div id="content-bank" style="display: flex; flex-direction: column; align-items: center; background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px; max-width: 420px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
+                                <div style="background: #0284c7; color: white; padding: 6px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Quét mã QR Ngân hàng</div>
                                 <div style="padding: 15px; border: 1px solid #f1f5f9; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                                    <img src="../../assets/images/qr-momo.png" alt="Momo QR" style="width: 250px; height: 250px; object-fit: contain;">
+                                    <!-- Ảnh QR sẽ được nhúng động bằng JS vào đây -->
+                                    <img id="dynamic-vietqr-img" src="" alt="Bank QR" style="width: 250px; height: 250px; object-fit: contain; display: none;">
+                                    <div id="qr-loading-spinner" style="width: 250px; height: 250px; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                                        <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                                    </div>
                                 </div>
-                                <h3 style="margin: 0 0 10px 0; color: #a50064; font-size: 20px; font-weight: 800;">TT MEDICAL NVT</h3>
-                                <div style="background: #f8fafc; padding: 12px 20px; border-radius: 10px; width: 100%; text-align: center; border: 1px solid #f1f5f9;">
-                                    <p style="margin: 0; color: #64748b; font-size: 13px;">Số điện thoại</p>
-                                    <p style="margin: 5px 0 0 0; color: #0f172a; font-weight: 800; font-size: 22px; letter-spacing: 2px;">0347 366 948</p>
+                                <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 20px; font-weight: 800;">Số tiền: <span id="pay-amount-text" style="color: #ef4444;">...</span> VNĐ</h3>
+                                
+                                <!-- Khối hiển thị trạng thái chờ -->
+                                <div id="auto-check-payment-status" style="display: flex; align-items: center; gap: 10px; background: #f0fdf4; color: #166534; padding: 12px 20px; border-radius: 10px; border: 1px solid #bbf7d0; font-weight: 600; font-size: 14px;">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i> Hệ thống đang chờ thanh toán...
                                 </div>
-                                <p style="margin: 15px 0 0 0; font-size: 13px; color: #ef4444; font-style: italic;">* Nội dung CK: <strong style="color:#0f172a;">Họ Tên + SĐT</strong></p>
-                            </div>
-
-                            <div id="content-bank" style="display: none; flex-direction: column; align-items: center; background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px; max-width: 420px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
-                                <div style="background: #0284c7; color: white; padding: 6px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Quét mã App Ngân hàng</div>
-                                <div style="padding: 15px; border: 1px solid #f1f5f9; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                                    <img src="../../assets/images/qr-bank.png" alt="Bank QR" style="width: 250px; height: 250px; object-fit: contain;">
-                                </div>
-                                <p style="margin: 0 0 5px 0; color: #0284c7; font-size: 15px; font-weight: 700;">Techcombank</p>
-                                <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 20px; font-weight: 800;">TT MEDICAL TXT</h3>
-                                <div style="background: #f8fafc; padding: 12px 20px; border-radius: 10px; width: 100%; text-align: center; border: 1px solid #f1f5f9;">
-                                    <p style="margin: 0; color: #64748b; font-size: 13px;">Số tài khoản</p>
-                                    <p style="margin: 5px 0 0 0; color: #0f172a; font-weight: 800; font-size: 22px; letter-spacing: 2px;">101010101010</p>
-                                </div>
-                                <p style="margin: 15px 0 0 0; font-size: 13px; color: #ef4444; font-style: italic;">* Nội dung CK: <strong style="color:#0f172a;">Họ Tên + SĐT</strong></p>
+                                <p style="margin: 15px 0 0 0; font-size: 13px; color: #ef4444; font-style: italic; text-align: center;">Lưu ý: Không thay đổi nội dung chuyển khoản để hệ thống tự động xác nhận.</p>
                             </div>
                         </div>
 
                         <div class="step-actions">
                            <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-                               <button type="button" class="btn btn-outline" onclick="backToStep5()">&larr; Chọn lại phương thức</button>
-                               <button type="button" class="btn btn-primary btn-save" onclick="submitBookingAPI()"><i class="fa-regular fa-circle-check"></i> Tôi đã thanh toán thành công</button>
+                               <!-- Nút chọn lại phương thức không cần thiết nếu đã tạo đơn, nhưng có thể cho phép Về trang chủ -->
+                               <button type="button" class="btn btn-outline" onclick="window.location.reload()"><i class="fa-solid fa-house"></i> Về trang chủ</button>
                             </div>
                         </div>
                     </div>

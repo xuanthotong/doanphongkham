@@ -12,6 +12,7 @@ const qaRoutes = require('./src/routes/qaRoutes');
 const passwordRoutes = require('./src/routes/passwordRoutes');
 const appointmentRoutes = require('./src/routes/appointmentRoutes');
 const reviewRoutes = require('./src/routes/reviewRoutes');
+const appointmentController = require('./src/controllers/appointmentController');
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Middleware
@@ -33,6 +34,9 @@ app.use('/api/appointments', appointmentRoutes);
 
 
 app.use('/api/reviews', reviewRoutes);
+
+// Đón lõng Webhook của PayOS (Phải đặt TRƯỚC lệnh app.listen)
+app.post('/api/payos-webhook', appointmentController.payosWebhook);
 
 // Khởi động server và kết nối DB
 app.listen(PORT, async () => {

@@ -5,6 +5,12 @@ const appointmentController = require('../controllers/appointmentController');
 // 1. API lấy danh sách các giờ đã được đặt để khóa ở Frontend
 router.get('/booked', appointmentController.getBookedSlots);
 
+// API Casso Webhook nhận thông báo thanh toán
+router.post('/casso-webhook', appointmentController.cassoWebhook);
+
+// API Kiểm tra trạng thái thanh toán của 1 lịch hẹn (Dùng cho Frontend Polling)
+router.get('/:id/payment-status', appointmentController.checkPaymentStatus);
+
 // 2. API Tạo lịch khám mới (Bệnh nhân đặt lịch)
 router.post('/', appointmentController.createAppointment);
 

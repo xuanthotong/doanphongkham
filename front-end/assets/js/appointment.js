@@ -284,17 +284,8 @@ function nextStep(step) {
 // XỬ LÝ CHUYỂN BƯỚC THANH TOÁN (TỪ BƯỚC 5 SANG BƯỚC 6)
 // ======================================================
 function processPayment() {
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-    
-    if (paymentMethod === 'cash') {
-        // NẾU LÀ TIỀN MẶT: Gọi thẳng API lưu luôn
-        submitBooking();
-    } else if (paymentMethod === 'transfer') {
-        // NẾU LÀ CHUYỂN KHOẢN: Lật sang Bước 6 để quét mã QR
-        document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
-        document.getElementById('step-6').classList.add('active');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // Dù là tiền mặt hay chuyển khoản, BẤM VÀO LÀ GỌI API LƯU LỊCH TRƯỚC
+    submitBooking();
 }
 
 function backToStep5() {
@@ -303,8 +294,29 @@ function backToStep5() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// Hàm loại bỏ dấu Tiếng Việt cho QR Code
+function removeVietnameseTones(str) {
+    str = str.replace(/à|á|ạ|ả|ã|â|ă|ằ|ắ|ặ|ẳ|ẵ|â|ầ|ấ|ậ|ẩ|ẫ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");
+    str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ/g, "A");
+    str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+    str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+    str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+    str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+    str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+    str = str.replace(/Đ/g, "D");
+    return str;
+}
+
+let pollingInterval = null;
+
 // ======================================================
-// XÁC NHẬN VÀ LƯU DATABASE TỪ BƯỚC 5 (TIỀN MẶT) HOẶC BƯỚC 6 (QR)
+// XÁC NHẬN VÀ LƯU DATABASE TỪ BƯỚC 5
 // ======================================================
 async function submitBooking() {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -321,8 +333,7 @@ async function submitBooking() {
         mo_ta_trieu_chung: document.getElementById('bk_trieu_chung').value,
         ho_ten: document.getElementById('bk_ten').value,
         email: document.getElementById('bk_email').value,
-        // Đẩy thêm biến paymentMethod xuống DB nếu bảng Appointment của bạn có cột này
-         phuong_thuc_thanh_toan: paymentMethod 
+        phuong_thuc_thanh_toan: paymentMethod 
     };
 
     // Nút loading UI
@@ -343,86 +354,85 @@ async function submitBooking() {
         const result = await res.json();
 
         if (res.ok) {
-            Swal.fire({
-                title: 'Thành công!',
-                text: 'Lịch khám của bạn đã được ghi nhận.',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                // Cập nhật UI màn hình thành công
+            Swal.close();
+            
+            if (paymentMethod === 'cash') {
+                // Tiền mặt -> Thành công luôn
                 document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
-                
-                // Ẩn thanh Stepper đi khi thành công
-                const stepper = document.querySelector('.stepper-container');
-                if (stepper) stepper.style.display = 'none';
-
                 document.getElementById('step-success').classList.add('active');
                 
                 document.getElementById('succ_bac_si').innerText = 'BS. ' + bookingData.bac_si_ten;
                 document.getElementById('succ_chuyen_khoa').innerText = bookingData.chuyen_khoa_ten;
                 
-                const dateObj = new Date(bookingData.ngay_kham);
-                document.getElementById('succ_ngay').innerText = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth()+1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                const d = new Date(bookingData.ngay_kham);
+                document.getElementById('succ_ngay').innerText = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
                 document.getElementById('succ_gio').innerText = bookingData.gio_kham;
-            });
+            } else {
+                // Chuyển khoản -> Mở Bước 6 hiện QR
+                document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
+                document.getElementById('step-6').classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // TẠO QR ĐỘNG (Bạn thay thông tin Ngân hàng thật của bạn vào đây)
+                const bankBin = "MB"; // Ví dụ: 970436 là Vietcombank
+                const bankAccount = "00003082058888"; // Số tài khoản
+                const accountName = "TONG XUAN THO"; // Tên tài khoản
+                
+                const patientNameNoAccent = removeVietnameseTones(payload.ho_ten).toUpperCase();
+                // Cú pháp nội dung chuẩn bắt buộc phải có "TTMED [ID]" để Webhook Casso bắt được
+                const transferContent = `TTMED ${result.appointmentId} BN ${patientNameNoAccent}`;
+                const amount = result.phi_kham;
+                
+                document.getElementById('pay-amount-text').innerText = Number(amount).toLocaleString('en-US');
+
+                const qrUrl = `https://img.vietqr.io/image/${bankBin}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
+                
+                const qrImg = document.getElementById('dynamic-vietqr-img');
+                const spinner = document.getElementById('qr-loading-spinner');
+                
+                qrImg.onload = () => {
+                    spinner.style.display = 'none';
+                    qrImg.style.display = 'block';
+                };
+                qrImg.src = qrUrl;
+
+                // BẮT ĐẦU VÒNG LẶP KIỂM TRA TRẠNG THÁI THANH TOÁN MỖI 3 GIÂY
+                pollingInterval = setInterval(() => {
+                    checkPaymentStatus(result.appointmentId);
+                }, 3000);
+            }
         } else {
-            Swal.fire('Lỗi', result.message || 'Lỗi đặt lịch!', 'error');
+            Swal.fire('Lỗi', result.message || 'Không thể lưu lịch hẹn lúc này.', 'error');
         }
     } catch (error) {
-        console.error(error);
-        Swal.fire('Lỗi', 'Không thể kết nối đến Server.', 'error');
+        Swal.fire('Lỗi', 'Hệ thống đang bảo trì, vui lòng thử lại sau.', 'error');
     }
 }
 
-function resetBooking() {
-    bookingData = { chuyen_khoa_id: null, chuyen_khoa_ten: '', bac_si_id: null, bac_si_ten: '', ngay_kham: '', gio_kham: '' };
-    document.getElementById('select_chuyen_khoa').value = '';
-    document.getElementById('booking_date').value = '';
-    document.querySelector('.time-slots-grid').innerHTML = '';
-    document.getElementById('bk_trieu_chung').value = '';
-    
-    // Reset lại phương thức thanh toán về Tiền mặt mặc định
-    const cashRadio = document.querySelector('input[name="payment_method"][value="cash"]');
-    if(cashRadio) { cashRadio.checked = true; togglePaymentDetails(); }
-
-    const stepper = document.querySelector('.stepper-container');
-    if (stepper) stepper.style.display = 'flex';
-
-    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-    document.getElementById('step-nav-1').classList.add('active');
-    
-    document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
-    document.getElementById('step-1').classList.add('active');
-    
-    filterDoctorsBySpecialty();
-}
-
-// ==========================================
-// HÀM XỬ LÝ GIAO DIỆN THANH TOÁN
-// ==========================================
-function togglePaymentDetails() {
-    const paymentMethodElement = document.querySelector('input[name="payment_method"]:checked');
-    if (!paymentMethodElement) return;
-    
-    const paymentMethod = paymentMethodElement.value;
-    const transferBox = document.getElementById('transfer-details-box');
-    
-    if (transferBox) {
-        if (paymentMethod === 'transfer') {
-            transferBox.style.display = 'block';
-        } else {
-            transferBox.style.display = 'none';
+// HÀM CALL API CHECK TRẠNG THÁI (ĐƯỢC GỌI BỞI VÒNG LẶP)
+async function checkPaymentStatus(appointmentId) {
+    try {
+        const res = await fetch(`http://localhost:3000/api/appointments/${appointmentId}/payment-status`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.paid === true) {
+                clearInterval(pollingInterval); // Dừng vòng lặp
+                
+                // Chuyển UI sang màn hình Thành công
+                document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
+                document.getElementById('step-success').classList.add('active');
+                
+                document.getElementById('succ_bac_si').innerText = 'BS. ' + bookingData.bac_si_ten;
+                document.getElementById('succ_chuyen_khoa').innerText = bookingData.chuyen_khoa_ten;
+                
+                const d = new Date(bookingData.ngay_kham);
+                document.getElementById('succ_ngay').innerText = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
+                document.getElementById('succ_gio').innerText = bookingData.gio_kham;
+                
+                Swal.fire('Thanh toán thành công!', 'Hệ thống đã nhận được tiền và xác nhận lịch hẹn của bạn.', 'success');
+            }
         }
+    } catch (error) {
+        console.error("Polling error:", error);
     }
-}
-
-function switchPayTab(type) {
-    document.getElementById('tab-momo').classList.remove('active');
-    document.getElementById('tab-bank').classList.remove('active');
-    document.getElementById(`tab-${type}`).classList.add('active');
-
-    document.getElementById('content-momo').style.display = 'none';
-    document.getElementById('content-bank').style.display = 'none';
-    document.getElementById(`content-${type}`).style.display = 'flex';
 }
