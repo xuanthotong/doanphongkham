@@ -70,7 +70,7 @@ function renderAppointmentTable() {
             <td>${statusHtml}</td>
             <td>
                 <button class="action-btn edit" onclick="editAdminAppointmentNote(${app.id})" title="Sửa ghi chú" style="background-color: #f59e0b; margin-right: 5px;"><i class="fa-solid fa-pen"></i></button>
-                <button class="action-btn delete" onclick="deleteAdminAppointment(${app.id})" title="Xóa lịch hẹn"><i class="fa-solid fa-trash"></i></button>
+                <button class="action-btn delete" onclick="deleteAdminAppointment(${app.id})" title="Hủy lịch hẹn"><i class="fa-solid fa-ban"></i></button>
             </td>
         `;
         appointmentTbody.appendChild(tr);
@@ -111,18 +111,18 @@ function editAdminAppointmentNote(id) {
 
 function deleteAdminAppointment(id) {
     Swal.fire({
-        title: 'Xác nhận xóa',
-        text: `Bạn có chắc chắn muốn xóa lịch hẹn #LK${id} không? Hành động này không thể hoàn tác!`,
+        title: 'Xác nhận hủy lịch',
+        text: `Bạn có chắc chắn muốn hủy lịch hẹn #LK${id} không?`,
         icon: 'warning',
-        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: 'Đồng ý xóa', cancelButtonText: 'Hủy'
+        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: 'Đồng ý hủy', cancelButtonText: 'Bỏ qua'
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
                 const response = await fetch(`http://localhost:3000/api/appointments/${id}`, { method: 'DELETE' });
                 const data = await response.json();
-                if (response.ok) { Swal.fire('Đã xóa!', 'Xóa lịch hẹn thành công!', 'success'); fetchAdminAppointments(); } 
-                else { Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra khi xóa lịch hẹn!', 'error'); }
-            } catch (error) { console.error('Lỗi API Xóa:', error); Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error'); }
+                if (response.ok) { Swal.fire('Thành công!', data.message || 'Hủy lịch hẹn thành công!', 'success'); fetchAdminAppointments(); } 
+                else { Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra khi hủy lịch hẹn!', 'error'); }
+            } catch (error) { console.error('Lỗi API Hủy:', error); Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error'); }
         }
     });
 }

@@ -247,17 +247,25 @@ const deleteAppointment = async (req, res) => {
         const { lich_lam_viec_id, trang_thai } = appInfo.recordset[0];
         
         if (trang_thai.trim().toLowerCase() === 'done') {
-            return res.status(400).json({ message: 'Không thể xóa lịch đã khám xong! Dữ liệu này cần được giữ lại làm hồ sơ bệnh án và bảo vệ đánh giá của bệnh nhân.' });
+            return res.status(400).json({ message: 'Không thể hủy lịch đã khám xong! Dữ liệu này cần được giữ lại làm hồ sơ bệnh án và bảo vệ đánh giá của bệnh nhân.' });
+        }
+        
+        // KIỂM TRA LOGIC THANH TOÁN (Tránh mất tiền của khách hàng)
+        const paymentCheck = await pool.request().input('id', sql.Int, id).query('SELECT trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @id');
+        if (paymentCheck.recordset.length > 0 && paymentCheck.recordset[0].trang_thai_thanh_toan === 1) {
+            return res.status(400).json({ message: 'Lịch khám này đã được thanh toán. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
         }
         
         if (trang_thai.trim().toLowerCase() !== 'cancelled') {
             await pool.request().input('lich_lam_viec_id', sql.Int, lich_lam_viec_id).query('UPDATE LichLamViec SET so_luong_hien_tai = CASE WHEN so_luong_hien_tai > 0 THEN so_luong_hien_tai - 1 ELSE 0 END WHERE id = @lich_lam_viec_id');
         }
         
-        await pool.request().input('id', sql.Int, id).query('DELETE FROM LichKham WHERE id = @id');
-        res.json({ message: 'Xóa lịch hẹn thành công!' });
+        // Thực hiện Xóa mềm (Soft Delete) - Cập nhật trạng thái thành Cancelled
+        await pool.request().input('id', sql.Int, id).query("UPDATE LichKham SET trang_thai = 'Cancelled' WHERE id = @id");
+        
+        res.json({ message: 'Hủy lịch hẹn thành công!' });
     } catch (error) {
-        console.error('Lỗi xóa lịch hẹn:', error);
+        console.error('Lỗi hủy lịch hẹn:', error);
         res.status(500).json({ message: 'Lỗi server' });
     }
 };
@@ -511,7 +519,10 @@ const cassoWebhook = async (req, res) => {
                     // Kiểm tra số tiền
                     if (amountPaid >= info.so_tien) {
                         await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
-                            UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_cap_nhat = GETDATE() WHERE lich_kham_id = @lich_kham_id;
+                            UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = GETDATE() WHERE lich_kham_id = @lich_kham_id;
+                            
+                            -- Tự động duyệt lịch khám (Auto Approve) khi thanh toán chuyển khoản thành công
+                            UPDATE LichKham SET trang_thai = 'Approved' WHERE id = @lich_kham_id;
                             
                             -- Thanh toán xong mới chiếm slot của ca làm việc
                             DECLARE @lich_lam_viec_id INT;
@@ -527,7 +538,7 @@ const cassoWebhook = async (req, res) => {
                 }
             }
         }
-        res.status(200).json({ error: 0, message: "Webhook processed" });
+        res.status(200).json({ error: 0, message: "success" });
     } catch (error) {
         console.error("Casso Webhook Error:", error);
         res.status(500).send('Server Error');
