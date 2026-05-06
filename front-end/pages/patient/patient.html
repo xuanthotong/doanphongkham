@@ -368,7 +368,17 @@
                                 <div class="payment-card-content">
                                     <i class="fa-solid fa-building-columns" style="color: #0284c7; font-size: 24px; margin-bottom: 10px;"></i>
                                     <h4 style="margin: 0; font-size: 15px; color: #0f172a;">Chuyển khoản</h4>
-                                    <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Ví Momo hoặc Tài khoản Ngân hàng</p>
+                                    <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Quét mã QR bằng ứng dụng Ngân hàng</p>
+                                </div>
+                            </label>
+
+                            <!-- Option Momo -->
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="momo">
+                                <div class="payment-card-content">
+                                    <i class="fa-solid fa-wallet" style="color: #A50064; font-size: 24px; margin-bottom: 10px;"></i>
+                                    <h4 style="margin: 0; font-size: 15px; color: #0f172a;">Ví MoMo</h4>
+                                    <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Quét mã QR bằng ứng dụng MoMo</p>
                                 </div>
                             </label>
                         </div>
@@ -403,14 +413,16 @@
                                 <div id="auto-check-payment-status" style="display: flex; align-items: center; gap: 10px; background: #f0fdf4; color: #166534; padding: 12px 20px; border-radius: 10px; border: 1px solid #bbf7d0; font-weight: 600; font-size: 14px;">
                                     <i class="fa-solid fa-circle-notch fa-spin"></i> Hệ thống đang chờ thanh toán...
                                 </div>
+                                <div id="payment-countdown" style="margin-top: 15px; font-size: 16px; font-weight: 700; color: #ef4444;">
+                                    Thời gian còn lại: <span id="countdown-timer">30:00</span>
+                                </div>
                                 <p style="margin: 15px 0 0 0; font-size: 13px; color: #ef4444; font-style: italic; text-align: center;">Lưu ý: Không thay đổi nội dung chuyển khoản để hệ thống tự động xác nhận.</p>
                             </div>
                         </div>
 
                         <div class="step-actions">
                            <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-                               <!-- Nút chọn lại phương thức không cần thiết nếu đã tạo đơn, nhưng có thể cho phép Về trang chủ -->
-                               <button type="button" class="btn btn-outline" onclick="window.location.reload()"><i class="fa-solid fa-house"></i> Về trang chủ</button>
+                               <button type="button" class="btn btn-outline" onclick="cancelUnpaidAndGoBack()"><i class="fa-solid fa-arrow-left"></i> Quay lại chọn phương thức</button>
                             </div>
                         </div>
                     </div>

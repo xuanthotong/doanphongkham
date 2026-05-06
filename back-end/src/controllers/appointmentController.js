@@ -114,7 +114,7 @@ const updateAppointmentStatus = async (req, res) => {
             if (paymentCheck.recordset.length > 0) {
                 const payment = paymentCheck.recordset[0];
                 // Chỉ chặn hủy nếu thanh toán Chuyển khoản (transfer) và đã chuyển tiền thành công (1)
-                if (payment.phuong_thuc_thanh_toan === 'transfer' && payment.trang_thai_thanh_toan === 1) {
+                if ((payment.phuong_thuc_thanh_toan === 'transfer' || payment.phuong_thuc_thanh_toan === 'momo') && payment.trang_thai_thanh_toan === 1) {
                     return res.status(400).json({ message: 'Lịch khám này đã được thanh toán Online. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
                 }
             }
@@ -267,7 +267,7 @@ const deleteAppointment = async (req, res) => {
         if (paymentCheck.recordset.length > 0) {
             const payment = paymentCheck.recordset[0];
             // Chỉ chặn hủy nếu thanh toán Chuyển khoản (transfer) và đã chuyển tiền thành công (1)
-            if (payment.phuong_thuc_thanh_toan === 'transfer' && payment.trang_thai_thanh_toan === 1) {
+            if ((payment.phuong_thuc_thanh_toan === 'transfer' || payment.phuong_thuc_thanh_toan === 'momo') && payment.trang_thai_thanh_toan === 1) {
                 return res.status(400).json({ message: 'Lịch khám này đã được thanh toán Online. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
             }
         }
@@ -390,6 +390,50 @@ const createAppointment = async (req, res) => {
                     VALUES (@lich_kham_id, @so_tien, @phuong_thuc, @trang_thai_tt, GETDATE());
                 `);
 
+            // GỌI API PAYOS TẠO MÃ QR NẾU LÀ THANH TOÁN MOMO 
+            let payosQrCode = null;
+            if (ptttoan === 'momo') {
+                const crypto = require('crypto');
+                const clientId = "b536ddff-4e27-4381-974b-111a259eaacf";
+                const apiKey = "a658fb17-588d-4414-8970-af7b705137d3";
+                const checksumKey = "7bfaf9c39c83794c2a3b3988a6fcf32d874d5fb9b99779a03a3107b9db29d6ab";
+                
+                const orderCode = appointmentId; 
+                const amount = parseInt(phi_kham) < 2000 ? 2000 : parseInt(phi_kham);
+                
+                // Lọc bỏ dấu tiếng Việt và ký tự đặc biệt để nội dung thanh toán không bị lỗi font
+                const removeAccents = (str) => {
+                    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^a-zA-Z0-9 ]/g, '');
+                };
+                const patientNameNoAccent = removeAccents(ho_ten).toUpperCase();
+                let description = `TTMED ${appointmentId} BN ${patientNameNoAccent}`;
+                
+                // PayOS giới hạn nội dung chuyển khoản tối đa chỉ được 25 ký tự
+                if (description.length > 25) description = description.substring(0, 25).trim();
+
+                const cancelUrl = "http://localhost:5500/pages/patient/patient.html";
+                const returnUrl = "http://localhost:5500/pages/patient/patient.html";
+
+                const signData = `amount=${amount}&cancelUrl=${cancelUrl}&description=${description}&orderCode=${orderCode}&returnUrl=${returnUrl}`;
+                const signature = crypto.createHmac('sha256', checksumKey).update(signData).digest('hex');
+
+                const body = { orderCode, amount, description, cancelUrl, returnUrl, signature };
+
+                const payosRes = await fetch('https://api-merchant.payos.vn/v2/payment-requests', {
+                    method: 'POST',
+                    headers: { 'x-client-id': clientId, 'x-api-key': apiKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const payosData = await payosRes.json();
+                
+                if (payosData.code === '00') {
+                    payosQrCode = payosData.data.qrCode;
+                } else {
+                    await transaction.rollback();
+                    return res.status(400).json({ message: 'Lỗi cấu hình PayOS: ' + payosData.desc });
+                }
+            }
+
             // MỌI THỨ HOÀN HẢO -> LƯU VÀO DB
             await transaction.commit();
 
@@ -399,7 +443,7 @@ const createAppointment = async (req, res) => {
             }
 
             // Trả về số tiền để frontend tạo mã QR nếu là chuyển khoản
-            res.status(201).json({ message: 'Tạo đơn thành công!', appointmentId, phi_kham });
+            res.status(201).json({ message: 'Tạo đơn thành công!', appointmentId, phi_kham, payosQrCode });
 
         } catch (transErr) {
             // LỖI: HOÀN TÁC TOÀN BỘ DB VỀ NHƯ CŨ
@@ -499,22 +543,48 @@ const sendConfirmationEmail = (email, ho_ten, ten_bac_si, appointmentId, ngay_la
 // WEBHOOK CASSO XỬ LÝ THANH TOÁN TỰ ĐỘNG
 const cassoWebhook = async (req, res) => {
     try {
-        const { data } = req.body; // Dữ liệu Casso gửi về dạng mảng
-        if (!data || data.length === 0) return res.status(200).send('OK');
+        // --- THÊM 2 DÒNG NÀY ĐỂ BẮT LỖI ---
+        console.log("=== CÓ TIỀN VỀ! DỮ LIỆU PAYOS GỬI CHO BẠN LÀ: ===");
+        console.log(JSON.stringify(req.body, null, 2));
+
+        // Lấy cục data từ request body
+        let rawData = req.body.data;
+        let transactions = [];
+
+        if (Array.isArray(rawData)) {
+            transactions = rawData; 
+        } else if (rawData && Array.isArray(rawData.records)) {
+            transactions = rawData.records; 
+        } else if (rawData && typeof rawData === 'object') {
+            transactions = [rawData]; 
+        }
+
+        if (transactions.length === 0) {
+            console.log("❌ LỖI: Không tìm thấy giao dịch nào trong payload của Casso.");
+            return res.status(200).send('OK');
+        }
 
         const pool = await connectDB();
 
-        for (const transaction of data) {
-            const description = transaction.description.toUpperCase();
-            const amountPaid = transaction.amount;
+        for (const transaction of transactions) {
+            // Tương thích mọi định dạng: Tìm description hoặc remark
+            const description = (transaction.description || transaction.remark || '').toUpperCase();
+            const amountPaid = parseFloat(transaction.amount || 0);
 
-            // Tìm kiếm chuỗi TTMED kèm theo số (Mã lịch khám)
+            console.log(`\n➡️ Đang xử lý giao dịch: +${amountPaid} VNĐ`);
+            console.log(`➡️ Nội dung: "${description}"`);
+
+            if (!description) {
+                console.log("❌ BỎ QUA: Giao dịch không có nội dung chuyển khoản.");
+                continue;
+            }
+
             const match = description.match(/TTMED\s*(\d+)/);
             
             if (match) {
                 const appointmentId = parseInt(match[1]);
+                console.log(`✅ Tìm thấy Mã lịch khám: #${appointmentId}`);
 
-                // Lấy thông tin thanh toán của lịch khám này
                 const checkThanhToan = await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
                     SELECT tt.id, tt.so_tien, lk.gio_kham, lk.mo_ta_trieu_chung, llv.ngay_lam_viec,
                            tk.email as email_benh_nhan,
@@ -532,32 +602,92 @@ const cassoWebhook = async (req, res) => {
 
                 if (checkThanhToan.recordset.length > 0) {
                     const info = checkThanhToan.recordset[0];
-                    // Kiểm tra số tiền
-                    if (amountPaid >= info.so_tien) {
+                    console.log(`✅ Cần thu: ${info.so_tien} VNĐ | Khách chuyển: ${amountPaid} VNĐ`);
+
+                    // Ép kiểu float an toàn để so sánh
+                    if (amountPaid >= parseFloat(info.so_tien)) {
+                        console.log("✅ Đủ tiền! Tiến hành cập nhật Database...");
+                        
                         await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
                             UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = GETDATE() WHERE lich_kham_id = @lich_kham_id;
-                            
-                            -- Tự động duyệt lịch khám (Auto Approve) khi thanh toán chuyển khoản thành công
                             UPDATE LichKham SET trang_thai = 'Approved' WHERE id = @lich_kham_id;
-                            
-                            -- Thanh toán xong mới chiếm slot của ca làm việc
                             DECLARE @lich_lam_viec_id INT;
                             SELECT @lich_lam_viec_id = lich_lam_viec_id FROM LichKham WHERE id = @lich_kham_id;
                             UPDATE LichLamViec SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 WHERE id = @lich_lam_viec_id;
                         `);
 
                         if (info.email_benh_nhan) {
+                            console.log("✅ Gửi email xác nhận...");
                             const tong_tien = Number(info.so_tien).toLocaleString('en-US');
                             sendConfirmationEmail(info.email_benh_nhan, info.ten_benh_nhan, info.ten_bac_si, appointmentId, info.ngay_lam_viec, info.gio_kham, info.mo_ta_trieu_chung, tong_tien, true);
                         }
+                        console.log("🎉 CẬP NHẬT THÀNH CÔNG!");
+                    } else {
+                        console.log(`❌ TỪ CHỐI: Khách chuyển THIẾU TIỀN!`);
                     }
+                } else {
+                    console.log("❌ TỪ CHỐI: Lịch hẹn đã được thanh toán hoặc ID không tồn tại.");
+                }
+            } else {
+                console.log("❌ TỪ CHỐI: Nội dung chuyển khoản không chứa mã TTMED hợp lệ.");
+            }
+        }
+        console.log("================================================\n");
+        res.status(200).json({ error: 0, message: "success" });
+    } catch (error) {
+        console.error("❌ Casso Webhook Error:", error);
+        res.status(500).send('Server Error');
+    }
+};
+
+// WEBHOOK PAYOS XỬ LÝ THANH TOÁN MOMO TỰ ĐỘNG
+const payosWebhook = async (req, res) => {
+    try {
+        const { data, success } = req.body; 
+        if (!success || !data) return res.status(200).json({ success: true });
+
+        const appointmentId = data.orderCode;
+        const amountPaid = data.amount;
+
+        const pool = await connectDB();
+
+        const checkThanhToan = await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
+            SELECT tt.id, tt.so_tien, lk.gio_kham, lk.mo_ta_trieu_chung, llv.ngay_lam_viec,
+                   tk.email as email_benh_nhan,
+                   ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan,
+                   ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si
+            FROM ThanhToan tt
+            JOIN LichKham lk ON tt.lich_kham_id = lk.id
+            JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+            JOIN TaiKhoan tk ON lk.benh_nhan_id = tk.id
+            LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
+            JOIN TaiKhoan bs_tk ON llv.bac_si_id = bs_tk.id
+            LEFT JOIN HoSoNguoiDung bs_nd ON bs_tk.id = bs_nd.tai_khoan_id
+            WHERE tt.lich_kham_id = @lich_kham_id AND tt.trang_thai_thanh_toan = 0
+        `);
+
+        if (checkThanhToan.recordset.length > 0) {
+            const info = checkThanhToan.recordset[0];
+            const soTienCanThu = parseFloat(info.so_tien);
+            
+            if (amountPaid >= soTienCanThu || amountPaid >= 2000) {
+                await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
+                    UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = GETDATE() WHERE lich_kham_id = @lich_kham_id;
+                    UPDATE LichKham SET trang_thai = 'Approved' WHERE id = @lich_kham_id;
+                    DECLARE @lich_lam_viec_id INT;
+                    SELECT @lich_lam_viec_id = lich_lam_viec_id FROM LichKham WHERE id = @lich_kham_id;
+                    UPDATE LichLamViec SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 WHERE id = @lich_lam_viec_id;
+                `);
+
+                if (info.email_benh_nhan) {
+                    const tong_tien = Number(info.so_tien).toLocaleString('en-US');
+                    sendConfirmationEmail(info.email_benh_nhan, info.ten_benh_nhan, info.ten_bac_si, appointmentId, info.ngay_lam_viec, info.gio_kham, info.mo_ta_trieu_chung, tong_tien, true);
                 }
             }
         }
-        res.status(200).json({ error: 0, message: "success" });
+        res.status(200).json({ success: true });
     } catch (error) {
-        console.error("Casso Webhook Error:", error);
-        res.status(500).send('Server Error');
+        res.status(500).json({ success: false });
     }
 };
 
@@ -578,4 +708,32 @@ const checkPaymentStatus = async (req, res) => {
     }
 };
 
-module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1,  createAppointment, getBookedSlots, rateAppointment, cassoWebhook, checkPaymentStatus };
+// Hủy lịch hẹn chưa thanh toán (Khi bấm quay lại hoặc hết giờ)
+const deleteUnpaidAppointment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const pool = await connectDB();
+        
+        const check = await pool.request().input('id', sql.Int, id).query(`
+            SELECT tt.trang_thai_thanh_toan 
+            FROM LichKham lk 
+            JOIN ThanhToan tt ON lk.id = tt.lich_kham_id 
+            WHERE lk.id = @id
+        `);
+
+        if (check.recordset.length > 0 && check.recordset[0].trang_thai_thanh_toan === 0) {
+            await pool.request().input('id', sql.Int, id).query(`
+                DELETE FROM ThanhToan WHERE lich_kham_id = @id;
+                DELETE FROM LichKham WHERE id = @id;
+            `);
+            res.json({ message: 'Đã xóa lịch hẹn chưa thanh toán' });
+        } else {
+            res.status(400).json({ message: 'Không thể xóa lịch hẹn này' });
+        }
+    } catch (err) {
+        console.error('Lỗi khi xóa lịch chưa thanh toán:', err);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
+module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1,  createAppointment, getBookedSlots, rateAppointment, cassoWebhook, payosWebhook, checkPaymentStatus, deleteUnpaidAppointment };

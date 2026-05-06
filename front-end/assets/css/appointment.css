@@ -140,7 +140,7 @@
 ========================================= */
 .payment-methods-grid { 
     display: grid; 
-    grid-template-columns: 1fr 1fr; 
+    grid-template-columns: repeat(3, 1fr); 
     gap: 20px; 
 }
 .payment-option input[type="radio"] { 
@@ -183,4 +183,10 @@
     color: white; 
     border-color: #0284c7; 
     box-shadow: 0 4px 15px rgba(2, 132, 199, 0.25);
+}
+
+@media (max-width: 768px) {
+    .payment-methods-grid { 
+        grid-template-columns: 1fr; 
+    }
 }

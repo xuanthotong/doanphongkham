@@ -8,8 +8,14 @@ router.get('/booked', appointmentController.getBookedSlots);
 // API Casso Webhook nhận thông báo thanh toán
 router.post('/casso-webhook', appointmentController.cassoWebhook);
 
+// API PayOS Webhook nhận thông báo thanh toán (Dành cho Momo)
+router.post('/payos-webhook', appointmentController.payosWebhook);
+
 // API Kiểm tra trạng thái thanh toán của 1 lịch hẹn (Dùng cho Frontend Polling)
 router.get('/:id/payment-status', appointmentController.checkPaymentStatus);
+
+// API Hủy lịch hẹn chưa thanh toán (khi quay lại hoặc hết giờ)
+router.delete('/:id/unpaid', appointmentController.deleteUnpaidAppointment);
 
 // 2. API Tạo lịch khám mới (Bệnh nhân đặt lịch)
 router.post('/', appointmentController.createAppointment);

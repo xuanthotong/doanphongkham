@@ -13,6 +13,7 @@ let bookingData = {
 // KHỞI TẠO VÀ TẢI DỮ LIỆU (BƯỚC 1)
 // ======================================================
 document.addEventListener('DOMContentLoaded', async () => {
+
     // Load Chuyên khoa cho Bước 1
     try {
         const resCK = await fetch('http://localhost:3000/api/specialties');
@@ -314,6 +315,56 @@ function removeVietnameseTones(str) {
 }
 
 let pollingInterval = null;
+let paymentCountdownInterval = null;
+let currentPendingAppointmentId = null;
+
+function startPaymentCountdown(durationInSeconds) {
+    clearInterval(paymentCountdownInterval);
+    const display = document.getElementById('countdown-timer');
+    let timer = durationInSeconds;
+    
+    paymentCountdownInterval = setInterval(async () => {
+        let minutes = parseInt(timer / 60, 10);
+        let seconds = parseInt(timer % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        if (display) display.textContent = minutes + ":" + seconds;
+
+        if (--timer < 0) {
+            clearInterval(paymentCountdownInterval);
+            clearInterval(pollingInterval);
+            if (currentPendingAppointmentId) {
+                await fetch(`http://localhost:3000/api/appointments/${currentPendingAppointmentId}/unpaid`, { method: 'DELETE' });
+                currentPendingAppointmentId = null;
+            }
+            Swal.fire({
+                title: 'Hết thời gian!',
+                text: 'Thời gian thanh toán đã hết. Lịch hẹn của bạn đã bị hủy.',
+                icon: 'warning',
+                confirmButtonText: 'Đóng'
+            }).then(() => {
+                backToStep5();
+            });
+        }
+    }, 1000);
+}
+
+async function cancelUnpaidAndGoBack() {
+    clearInterval(pollingInterval);
+    clearInterval(paymentCountdownInterval);
+    
+    if (currentPendingAppointmentId) {
+        try {
+            await fetch(`http://localhost:3000/api/appointments/${currentPendingAppointmentId}/unpaid`, { method: 'DELETE' });
+            currentPendingAppointmentId = null;
+        } catch (error) {
+            console.error('Lỗi hủy lịch:', error);
+        }
+    }
+    backToStep5();
+}
 
 // ======================================================
 // XÁC NHẬN VÀ LƯU DATABASE TỪ BƯỚC 5
@@ -356,6 +407,8 @@ async function submitBooking() {
         if (res.ok) {
             Swal.close();
             
+            currentPendingAppointmentId = result.appointmentId;
+            
             if (paymentMethod === 'cash') {
                 // Tiền mặt -> Thành công luôn
                 document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
@@ -367,17 +420,12 @@ async function submitBooking() {
                 const d = new Date(bookingData.ngay_kham);
                 document.getElementById('succ_ngay').innerText = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
                 document.getElementById('succ_gio').innerText = bookingData.gio_kham;
-            } else {
-                // Chuyển khoản -> Mở Bước 6 hiện QR
+            } else if (paymentMethod === 'transfer' || paymentMethod === 'momo') {
+                // Chuyển khoản hoặc MoMo -> Đều mở Bước 6 hiện QR
                 document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
                 document.getElementById('step-6').classList.add('active');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                // TẠO QR ĐỘNG (Bạn thay thông tin Ngân hàng thật của bạn vào đây)
-                const bankBin = "MB"; // Ví dụ: 970436 là Vietcombank
-                const bankAccount = "00003082058888"; // Số tài khoản
-                const accountName = "TONG XUAN THO"; // Tên tài khoản
-                
                 const patientNameNoAccent = removeVietnameseTones(payload.ho_ten).toUpperCase();
                 // Cú pháp nội dung chuẩn bắt buộc phải có "TTMED [ID]" để Webhook Casso bắt được
                 const transferContent = `TTMED ${result.appointmentId} BN ${patientNameNoAccent}`;
@@ -385,8 +433,33 @@ async function submitBooking() {
                 
                 document.getElementById('pay-amount-text').innerText = Number(amount).toLocaleString('en-US');
 
-                const qrUrl = `https://img.vietqr.io/image/${bankBin}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
+                let qrUrl = '';
                 
+                // ĐỔI GIAO DIỆN VÀ GÁN THÔNG TIN TÀI KHOẢN THEO PHƯƠNG THỨC MÀ KHÁCH CHỌN
+                if (paymentMethod === 'transfer') {
+                    // LOGIC CỦA ANH THỌ (DÙNG CASSO + VIETQR)
+                    document.querySelector('#step-6 .step-title').innerText = 'Thanh toán chuyển khoản';
+                    document.querySelector('#step-6 .step-desc').innerText = 'Vui lòng dùng ứng dụng Ngân hàng quét mã QR bên dưới. Hệ thống sẽ tự động xác nhận sau khi bạn thanh toán thành công.';
+                    document.querySelector('#content-bank > div:first-child').innerText = 'Quét mã QR Ngân hàng';
+                    document.querySelector('#content-bank > div:first-child').style.background = '#0284c7';
+                    document.getElementById('content-bank').style.borderColor = '#cbd5e1'; // Viền mặc định
+                    
+                    const bankBin = "MB"; 
+                    const bankAccount = "00003082058888"; 
+                    const accountName = "TONG XUAN THO"; 
+                    qrUrl = `https://img.vietqr.io/image/${bankBin}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
+                } else if (paymentMethod === 'momo') {
+                    // LOGIC CỦA BẠN (DÙNG PAYOS CHO VÍ MOMO)
+                    document.querySelector('#step-6 .step-title').innerText = 'Thanh toán qua Ví MoMo';
+                    document.querySelector('#step-6 .step-desc').innerText = 'Vui lòng mở ứng dụng MoMo trên điện thoại và quét mã QR bên dưới để thanh toán. Hệ thống sẽ tự động xác nhận.';
+                    document.querySelector('#content-bank > div:first-child').innerText = 'Dùng App MoMo quét mã này';
+                    document.querySelector('#content-bank > div:first-child').style.background = '#A50064'; // Màu hồng MoMo
+                    document.getElementById('content-bank').style.borderColor = '#A50064'; // Đổi viền nét đứt sang màu hồng MoMo
+                    
+                    // Tạo link ảnh QR dựa trên chuỗi mã hóa mà PayOS gửi từ Backend
+                    qrUrl = `https://quickchart.io/qr?size=300&margin=2&text=${encodeURIComponent(result.payosQrCode)}`;
+                }
+
                 const qrImg = document.getElementById('dynamic-vietqr-img');
                 const spinner = document.getElementById('qr-loading-spinner');
                 
@@ -395,6 +468,8 @@ async function submitBooking() {
                     qrImg.style.display = 'block';
                 };
                 qrImg.src = qrUrl;
+
+                startPaymentCountdown(30 * 60); // 30 phút (Tính bằng giây)
 
                 // BẮT ĐẦU VÒNG LẶP KIỂM TRA TRẠNG THÁI THANH TOÁN MỖI 3 GIÂY
                 pollingInterval = setInterval(() => {
@@ -417,6 +492,7 @@ async function checkPaymentStatus(appointmentId) {
             const data = await res.json();
             if (data.paid === true) {
                 clearInterval(pollingInterval); // Dừng vòng lặp
+                clearInterval(paymentCountdownInterval); // Dừng đếm ngược
                 
                 // Chuyển UI sang màn hình Thành công
                 document.querySelectorAll('.booking-step').forEach(el => el.classList.remove('active'));
