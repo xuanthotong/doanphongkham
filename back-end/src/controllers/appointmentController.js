@@ -108,6 +108,18 @@ const updateAppointmentStatus = async (req, res) => {
         if (oldStatusQuery.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy lịch hẹn!' });
         const oldStatus = oldStatusQuery.recordset[0].trang_thai;
 
+        // Bổ sung chặn Hủy lịch nếu đã thanh toán chuyển khoản
+        if (trang_thai === 'Cancelled') {
+            const paymentCheck = await pool.request().input('id', sql.Int, id).query('SELECT phuong_thuc_thanh_toan, trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @id');
+            if (paymentCheck.recordset.length > 0) {
+                const payment = paymentCheck.recordset[0];
+                // Chỉ chặn hủy nếu thanh toán Chuyển khoản (transfer) và đã chuyển tiền thành công (1)
+                if (payment.phuong_thuc_thanh_toan === 'transfer' && payment.trang_thai_thanh_toan === 1) {
+                    return res.status(400).json({ message: 'Lịch khám này đã được thanh toán Online. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
+                }
+            }
+        }
+
         let query = `UPDATE LichKham SET trang_thai = @trang_thai`;
         const request = pool.request()
             .input('id', sql.Int, id)
@@ -251,9 +263,13 @@ const deleteAppointment = async (req, res) => {
         }
         
         // KIỂM TRA LOGIC THANH TOÁN (Tránh mất tiền của khách hàng)
-        const paymentCheck = await pool.request().input('id', sql.Int, id).query('SELECT trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @id');
-        if (paymentCheck.recordset.length > 0 && paymentCheck.recordset[0].trang_thai_thanh_toan === 1) {
-            return res.status(400).json({ message: 'Lịch khám này đã được thanh toán. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
+        const paymentCheck = await pool.request().input('id', sql.Int, id).query('SELECT phuong_thuc_thanh_toan, trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @id');
+        if (paymentCheck.recordset.length > 0) {
+            const payment = paymentCheck.recordset[0];
+            // Chỉ chặn hủy nếu thanh toán Chuyển khoản (transfer) và đã chuyển tiền thành công (1)
+            if (payment.phuong_thuc_thanh_toan === 'transfer' && payment.trang_thai_thanh_toan === 1) {
+                return res.status(400).json({ message: 'Lịch khám này đã được thanh toán Online. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
+            }
         }
         
         if (trang_thai.trim().toLowerCase() !== 'cancelled') {
