@@ -397,7 +397,6 @@ const createAppointment = async (req, res) => {
                 const clientId = "b536ddff-4e27-4381-974b-111a259eaacf";
                 const apiKey = "a658fb17-588d-4414-8970-af7b705137d3";
                 const checksumKey = "7bfaf9c39c83794c2a3b3988a6fcf32d874d5fb9b99779a03a3107b9db29d6ab";
-                
                 const orderCode = appointmentId; 
                 const amount = parseInt(phi_kham) < 2000 ? 2000 : parseInt(phi_kham);
                 
@@ -621,15 +620,15 @@ const cassoWebhook = async (req, res) => {
                             const tong_tien = Number(info.so_tien).toLocaleString('en-US');
                             sendConfirmationEmail(info.email_benh_nhan, info.ten_benh_nhan, info.ten_bac_si, appointmentId, info.ngay_lam_viec, info.gio_kham, info.mo_ta_trieu_chung, tong_tien, true);
                         }
-                        console.log("🎉 CẬP NHẬT THÀNH CÔNG!");
+                        console.log(" CẬP NHẬT THÀNH CÔNG!");
                     } else {
-                        console.log(`❌ TỪ CHỐI: Khách chuyển THIẾU TIỀN!`);
+                        console.log(` TỪ CHỐI: Khách chuyển THIẾU TIỀN!`);
                     }
                 } else {
-                    console.log("❌ TỪ CHỐI: Lịch hẹn đã được thanh toán hoặc ID không tồn tại.");
+                    console.log("TỪ CHỐI: Lịch hẹn đã được thanh toán hoặc ID không tồn tại.");
                 }
             } else {
-                console.log("❌ TỪ CHỐI: Nội dung chuyển khoản không chứa mã TTMED hợp lệ.");
+                console.log("TỪ CHỐI: Nội dung chuyển khoản không chứa mã TTMED hợp lệ.");
             }
         }
         console.log("================================================\n");

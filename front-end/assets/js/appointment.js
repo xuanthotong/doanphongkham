@@ -240,7 +240,19 @@ function nextStep(step) {
     }
     // Validate Bước 3 và đẩy sang Bước 4 (Xác nhận)
     if (step === 4) {
+        const ngaySinh = document.getElementById('bk_ngay_sinh').value;
+        const gtNam = document.getElementById('bk_gt_nam').checked;
+        const gtNu = document.getElementById('bk_gt_nu').checked;
         const trieuChung = document.getElementById('bk_trieu_chung').value;
+        
+        if (!ngaySinh) {
+            Swal.fire('Lỗi', 'Vui lòng chọn ngày sinh!', 'warning');
+            return;
+        }
+        if (!gtNam && !gtNu) {
+            Swal.fire('Lỗi', 'Vui lòng chọn giới tính!', 'warning');
+            return;
+        }
         if (!trieuChung) {
             Swal.fire('Lỗi', 'Vui lòng nhập triệu chứng / lý do khám!', 'warning');
             return;
@@ -257,7 +269,10 @@ function nextStep(step) {
         document.getElementById('cf_benh_nhan').innerText = document.getElementById('bk_ten').value;
         document.getElementById('cf_sdt').innerText = document.getElementById('bk_sdt').value;
         document.getElementById('cf_email').innerText = document.getElementById('bk_email').value;
-        document.getElementById('cf_gioi_tinh').innerText = document.getElementById('bk_gt_nam').checked ? 'Nam' : 'Nữ';
+        
+        const nsObj = new Date(ngaySinh);
+        document.getElementById('cf_ngay_sinh').innerText = `${String(nsObj.getDate()).padStart(2, '0')}/${String(nsObj.getMonth()+1).padStart(2, '0')}/${nsObj.getFullYear()}`;
+        document.getElementById('cf_gioi_tinh').innerText = gtNam ? 'Nam' : 'Nữ';
         document.getElementById('cf_trieu_chung').innerText = trieuChung;
     }
 
@@ -511,4 +526,28 @@ async function checkPaymentStatus(appointmentId) {
     } catch (error) {
         console.error("Polling error:", error);
     }
+}
+function resetBooking() {
+        bookingData = {
+        chuyen_khoa_id: null,
+        chuyen_khoa_ten: '',
+        bac_si_id: null,
+        bac_si_ten: '',
+        ngay_kham: '',
+        gio_kham: ''
+    };
+    document.getElementById('select_chuyen_khoa').value = '';
+    filterDoctorsBySpecialty();
+    document.getElementById('booking_date').value = '';
+    document.querySelector('.time-slots-grid').innerHTML = '';
+    document.getElementById('bk_trieu_chung').value = '';
+    document.getElementById('bk_ngay_sinh').value = '';
+    document.getElementById('bk_gt_nam').checked = false;
+    document.getElementById('bk_gt_nu').checked = false;
+    document.getElementById ('step-success').classList.remove('active');
+    nextStep(1);
+    window.scrollTo({ 
+        top: 0,
+        behavior: 'smooth'
+     });
 }
