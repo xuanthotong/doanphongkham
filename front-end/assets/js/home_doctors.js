@@ -42,8 +42,8 @@ function generateDoctorCardHTML(doc) {
             <p style="color: #64748b; font-size: 13px; margin: 0 0 20px 0; text-align: left;">${doc.nam_kinh_nghiem || 0} năm kinh nghiệm</p>
             
             <div style="display: flex; gap: 10px; margin-top: auto;">
-                <button onclick="showDoctorDetails(${doc.id})" style="background-color: #f8fafc; color: #334155; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: 600; transition: 0.2s;">Chi tiết</button>
-                <button onclick="bookDoctor(${doc.id}, event)" style="background-color: #0284c7; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: 600; transition: 0.2s;">Đặt Lịch</button>
+                <button class="btn-detail" onclick="showDoctorDetails(${doc.id})" style="flex: 1; padding: 10px; font-size: 14px; border-radius: 8px; cursor: pointer; border: 1px solid #e2e8f0;">Chi tiết</button>
+                <button class="btn-book-sm" onclick="bookDoctor(${doc.id}, event)" style="flex: 1; padding: 10px; font-size: 14px; border-radius: 8px; cursor: pointer; border: none;">Đặt Lịch</button>
             </div>
         </div>
     `;

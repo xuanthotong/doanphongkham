@@ -133,15 +133,18 @@
         </div>
     </section>
 
-    <section id="hoi-dap" class="section">
+    <section id="hoi-dap" class="section bg-light">
         <div class="container">
             <div class="section-title">
                 <h2>Hỏi đáp thường gặp</h2>
-                <p>Giải đáp những thắc mắc phổ biến của bệnh nhân khi sử dụng dịch vụ tại TT Medical.</p>
+                <p>Khám phá những câu hỏi được quan tâm nhất từ cộng đồng bệnh nhân tại TT Medical.</p>
             </div>
             <!-- Container để JS tự động đổ dữ liệu hỏi đáp từ CSDL vào -->
-            <div id="faq-list-container" class="faq-container">
+            <div id="faq-list-container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
                 <p style="text-align: center; color: #6b7280; width: 100%;">Đang tải dữ liệu hỏi đáp...</p>
+            </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn btn-outline" onclick="requireLoginToBook(event)" style="border-radius: 25px; padding: 12px 30px; font-weight: 600;"><i class="fa-regular fa-comment-dots"></i> Đặt câu hỏi cho Bác sĩ</button>
             </div>
         </div>
     </section>

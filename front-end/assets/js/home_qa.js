@@ -1,33 +1,43 @@
+let homeQAData = [];
+let currentHomeQAPage = 1;
+const homeQAItemsPerPage = 4;
+
 async function fetchHomeQA() {
     try {
         const response = await fetch('http://localhost:3000/api/questions');
         const questions = await response.json();
-        renderHomeQA(questions);
+        // LỌC: Chỉ lấy những câu hỏi đã được trả lời để hiển thị ở trang chủ
+        homeQAData = questions.filter(q => q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== ''));
+        renderHomeQA();
     } catch (error) {
         console.error('Lỗi khi lấy danh sách hỏi đáp:', error);
     }
 }
 
-function renderHomeQA(questions) {
+function renderHomeQA() {
     const container = document.getElementById('faq-list-container');
     if (!container) return;
 
     container.innerHTML = '';
 
-    // LỌC: Chỉ lấy những câu hỏi đã được trả lời để hiển thị ở trang chủ (Đóng vai trò như Knowledge Base)
-    const answeredQA = questions.filter(q => q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== ''));
-    
-    // Giới hạn hiển thị 5 câu hỏi nổi bật/mới nhất cho gọn trang chủ
-    const topQA = answeredQA.slice(0, 5);
-
-    if (topQA.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px; font-size: 16px;">Hiện chưa có câu hỏi nào được giải đáp.</p>';
+    if (homeQAData.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 20px; font-size: 16px; width: 100%;">Hiện chưa có câu hỏi nào được giải đáp.</p>';
+        const paginationContainer = document.getElementById('home_qa_pagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    topQA.forEach((q) => {
+    const totalPages = Math.ceil(homeQAData.length / homeQAItemsPerPage);
+    if (currentHomeQAPage > totalPages) currentHomeQAPage = totalPages;
+    if (currentHomeQAPage < 1) currentHomeQAPage = 1;
+
+    const startIndex = (currentHomeQAPage - 1) * homeQAItemsPerPage;
+    const endIndex = startIndex + homeQAItemsPerPage;
+    const paginatedQA = homeQAData.slice(startIndex, endIndex);
+
+    paginatedQA.forEach((q) => {
         const div = document.createElement('div');
-        div.className = 'faq-item';
+        div.className = 'qa-home-card';
         
         // Xử lý tên người trả lời
         const nguoiDaTraLoi = q.ten_nguoi_tra_loi 
@@ -37,81 +47,127 @@ function renderHomeQA(questions) {
         // Tag chuyên khoa
         const chuyenKhoa = q.ten_chuyen_khoa ? `<span style="background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin-left: 12px; font-weight: 600; white-space: nowrap;">${q.ten_chuyen_khoa}</span>` : '';
 
-        // Xử lý tên người hỏi (Hiện tên thật hoặc chữ 'Ẩn danh')
-        const tenNguoiHoi = q.nguoi_hoi ? q.nguoi_hoi : 'Ẩn danh';
+        // Xử lý tên người hỏi, Avatar và Tiêu đề ẩn danh
+        let isAnDanh = false;
+        let displayTieuDe = q.tieu_de || 'Câu hỏi từ bệnh nhân';
+        
+        if (displayTieuDe.startsWith('[Ẩn danh]')) {
+            isAnDanh = true;
+            displayTieuDe = displayTieuDe.replace('[Ẩn danh] ', '').replace('[Ẩn danh]', '');
+        } else if (!q.nguoi_hoi || q.nguoi_hoi.trim() === '') {
+            isAnDanh = true;
+        }
+
+        const tenNguoiHoi = isAnDanh ? 'Ẩn danh' : q.nguoi_hoi;
+        const avatarContent = isAnDanh ? '<i class="fa-solid fa-user-secret" style="font-size: 13px;"></i>' : tenNguoiHoi.charAt(0).toUpperCase();
+
+        // Tạo nội dung tóm tắt (Loại bỏ xuống dòng để tránh vỡ giao diện thẻ)
+        const noiDungSummary = q.noi_dung ? q.noi_dung.replace(/\n/g, ' ') : '';
+        const traLoiSummary = q.tra_loi ? q.tra_loi.replace(/\n/g, ' ') : '';
 
         div.innerHTML = `
-            <button class="faq-question">
-                <div style="display: flex; align-items: center; text-align: left; padding-right: 15px; flex-wrap: wrap; gap: 8px;">
-                    <span style="font-size: 16px; color: #0f172a;">${q.tieu_de || 'Câu hỏi từ bệnh nhân'}</span>
-                    ${chuyenKhoa}
-                </div>
-                <div class="faq-icon-wrapper" style="background: #f0f9ff; min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s;">
-                    <i class="fa-solid fa-chevron-down" style="font-size: 14px; color: #0284c7;"></i>
-                </div>
-            </button>
-            <div class="faq-answer">
-                <div style="padding: 0 24px 24px 24px;">
-                    <div style="margin-bottom: 16px; color: #475569; font-size: 15px; line-height: 1.6; text-align: justify; padding-top: 10px;">
-                        <strong style="color: #ef4444;">${tenNguoiHoi} hỏi:</strong> ${q.noi_dung}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="min-width: 40px; height: 40px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">
+                        ${avatarContent}
                     </div>
-                    <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border-left: 4px solid #10b981;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                            <div style="width: 32px; height: 32px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;">
-                                <i class="fa-solid fa-user-doctor"></i>
-                            </div>
-                            <strong style="color: #166534; font-size: 14px;">${nguoiDaTraLoi} giải đáp:</strong>
-                        </div>
-                        <p style="margin: 0; color: #334155; font-size: 15px; line-height: 1.6; text-align: justify; padding: 0 !important;">${q.tra_loi}</p>
+                    <div>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 15px;">${tenNguoiHoi}</div>
+                        <div style="color: #64748b; font-size: 12px; font-weight: 500;">${q.ten_chuyen_khoa || 'Hỏi đáp chung'}</div>
                     </div>
                 </div>
             </div>
+            <div style="flex: 1;">
+                <h4 class="text-clamp-2" style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px; line-height: 1.4; height: 45px;">${displayTieuDe}</h4>
+                <p class="text-clamp-3" style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0; height: 67px;">${noiDungSummary}</p>
+            </div>
+            <div style="margin-top: auto; padding-top: 15px; border-top: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 600; color: #166534;">Đã có trả lời</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="btn-view-qa" style="background: #f0f9ff; color: #0284c7; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #bae6fd; transition: 0.3s; cursor: pointer;">Xem chi tiết <i class="fa-solid fa-arrow-right" style="font-size: 10px; margin-left: 2px;"></i></span>
+                </div>
+            </div>
         `;
+
+        // Chỉ gán sự kiện mở Popup khi click vào nút "Xem chi tiết"
+        const btnView = div.querySelector('.btn-view-qa');
+        if (btnView) {
+            btnView.onclick = (e) => {
+                e.stopPropagation();
+                Swal.fire({
+                    title: displayTieuDe,
+                    html: `
+                        <div style="text-align: left; font-size: 15px; color: #334155; line-height: 1.6;">
+                            <p style="margin-bottom: 15px;"><strong>Câu hỏi:</strong><br>${q.noi_dung ? q.noi_dung.replace(/\n/g, '<br>') : ''}</p>
+                            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                <p style="margin: 0 0 10px 0; color: #166534; font-weight: 600;"><i class="fa-solid fa-user-doctor"></i> ${nguoiDaTraLoi} giải đáp:</p>
+                                <p style="margin: 0;">${q.tra_loi ? q.tra_loi.replace(/\n/g, '<br>') : ''}</p>
+                            </div>
+                        </div>
+                    `,
+                    width: '600px',
+                    confirmButtonText: 'Đóng',
+                    confirmButtonColor: '#0284c7'
+                });
+            };
+        }
+
         container.appendChild(div);
     });
 
-    // Kêu gọi hành động (Call to action) ở cuối danh sách
-    const footerDiv = document.createElement('div');
-    footerDiv.style.textAlign = 'center';
-    footerDiv.style.marginTop = '25px';
-    footerDiv.innerHTML = `
-        <p style="color: #64748b; margin-bottom: 12px; font-size: 14px;">Bạn có triệu chứng cần bác sĩ tư vấn?</p>
-        <button class="btn btn-outline" onclick="requireLoginToBook(event)" style="border-radius: 20px;"><i class="fa-regular fa-comment-dots"></i> Đặt câu hỏi miễn phí</button>
-    `;
-    container.appendChild(footerDiv);
+    renderHomeQAPagination(totalPages);
+}
 
-    // Gắn sự kiện click (Accordion) sau khi các thẻ đã được tạo xong
-    document.querySelectorAll('.faq-question').forEach(button => {
-        button.addEventListener('click', () => {
-            const faqItem = button.parentElement;
-            const isActive = faqItem.classList.contains('active');
-            
-            // Thu gọn tất cả các thẻ đang mở
-            document.querySelectorAll('.faq-item').forEach(item => {
-                item.classList.remove('active');
-                item.querySelector('.faq-answer').style.maxHeight = null;
-                const iconWrapper = item.querySelector('.faq-icon-wrapper');
-                if(iconWrapper) {
-                    iconWrapper.style.background = '#f0f9ff';
-                    iconWrapper.querySelector('i').style.color = '#0284c7';
-                }
-            });
-            
-            // Mở thẻ vừa được click
-            if (!isActive) {
-                faqItem.classList.add('active');
-                const answer = faqItem.querySelector('.faq-answer');
-                answer.style.maxHeight = answer.scrollHeight + "px";
-                
-                // Đổi màu icon khi đang mở
-                const iconWrapper = faqItem.querySelector('.faq-icon-wrapper');
-                if(iconWrapper) {
-                    iconWrapper.style.background = '#0284c7';
-                    iconWrapper.querySelector('i').style.color = 'white';
-                }
-            }
-        });
-    });
+function renderHomeQAPagination(totalPages) {
+    let paginationContainer = document.getElementById('home_qa_pagination');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'home_qa_pagination';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; gap: 8px; margin-top: 30px; width: 100%;';
+        
+        const faqContainer = document.getElementById('faq-list-container');
+        faqContainer.parentNode.insertBefore(paginationContainer, faqContainer.nextSibling);
+    }
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    if (currentHomeQAPage > 1) {
+        html += `<button class="btn btn-outline" style="padding: 8px 15px; border-radius: 8px;" onclick="changeHomeQAPage(${currentHomeQAPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentHomeQAPage) {
+            html += `<button class="btn btn-primary" style="padding: 8px 15px; border-radius: 8px; cursor: default;">${i}</button>`;
+        } else {
+            html += `<button class="btn btn-outline" style="padding: 8px 15px; border-radius: 8px;" onclick="changeHomeQAPage(${i})">${i}</button>`;
+        }
+    }
+
+    if (currentHomeQAPage < totalPages) {
+        html += `<button class="btn btn-outline" style="padding: 8px 15px; border-radius: 8px;" onclick="changeHomeQAPage(${currentHomeQAPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    }
+
+    paginationContainer.innerHTML = html;
+}
+
+function changeHomeQAPage(page) {
+    currentHomeQAPage = page;
+    renderHomeQA();
+    // Tự động cuộn êm mượt lên đầu phần hỏi đáp để xem
+    const section = document.getElementById('hoi-dap');
+    if (section) {
+        const y = section.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({top: y, behavior: 'smooth'});
+    }
 }
 
 document.addEventListener('DOMContentLoaded', fetchHomeQA);

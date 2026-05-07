@@ -56,6 +56,10 @@ function renderTable() {
         const statusBadge = doc.trang_thai == 1 ? 
             `<span class="badge" style="background-color: #dcfce7; color: #166534;">Hoạt động</span>` : 
             `<span class="badge" style="background-color: #fee2e2; color: #991b1b;">Đã khóa</span>`;
+            
+        const isLocked = doc.trang_thai == 0;
+        const lockIcon = isLocked ? '<i class="fa-solid fa-lock-open"></i>' : '<i class="fa-solid fa-lock"></i>';
+        const lockTitle = isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản';
 
         // Xử lý ảnh mặc định (Lấy tên viết tắt làm Avatar) và Bắt lỗi rách ảnh
         const defaultImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.ho_ten)}&background=random`;
@@ -84,7 +88,7 @@ function renderTable() {
             <td>${statusBadge}</td>
             <td>
                 <button class="action-btn edit" onclick="editDoctor(${doc.id})"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="action-btn delete" onclick="deleteDoctor(${doc.id})"><i class="fa-solid fa-trash"></i></button>
+                <button class="action-btn" onclick="toggleLockDoctor(${doc.id}, ${isLocked})" title="${lockTitle}" style="background: ${isLocked ? '#10b981' : '#f59e0b'}; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px;">${lockIcon}</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -151,28 +155,30 @@ function editDoctor(id) {
     modal.style.display = 'flex';
 }
 
-async function deleteDoctor(id) {
+async function toggleLockDoctor(id, isLocked) {
+    const actionText = isLocked ? "mở khóa" : "khóa";
     Swal.fire({
-        title: 'Bạn chắc chắn chứ?',
-        text: "Dữ liệu của Bác sĩ này sẽ bị xóa vĩnh viễn!",
+        title: `Xác nhận ${actionText}?`,
+        text: isLocked ? "Bác sĩ này sẽ có thể đăng nhập lại vào hệ thống." : "Tài khoản Bác sĩ này sẽ bị khóa và không thể đăng nhập!",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#ef4444',
+        confirmButtonColor: isLocked ? '#10b981' : '#f59e0b',
         cancelButtonColor: '#9ca3af',
-        confirmButtonText: 'Vâng, xóa đi!',
+        confirmButtonText: `Vâng, ${actionText}!`,
         cancelButtonText: 'Hủy bỏ'
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
+                // Vẫn dùng endpoint DELETE nhưng API Backend đã được sửa lại để thực hiện Khóa/Mở khóa
                 const res = await fetch('http://localhost:3000/api/doctors/' + id, { method: 'DELETE' });
                 const data = await res.json();
                 if(res.ok) {
-                    Swal.fire('Đã xóa!', 'Xóa Bác sĩ thành công.', 'success');
+                    Swal.fire('Thành công!', data.message, 'success');
                     fetchDoctors();
                 } else {
-                    Swal.fire('Lỗi!', data.message || "Lỗi khi xóa!", 'error');
+                    Swal.fire('Lỗi!', data.message || `Lỗi khi ${actionText}!`, 'error');
                 }
-            } catch(err) { console.error(err); Swal.fire('Lỗi!', "Không thể kết nối Backend", 'error'); }
+            } catch(err) { console.error(err); Swal.fire('Lỗi!', "Không thể kết nối tới Backend", 'error'); }
         }
     });
 }

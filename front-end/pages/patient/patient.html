@@ -529,18 +529,44 @@
                     <h1 style="font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 10px;">Hỏi đáp sức khỏe</h1>
                 </div>
                 <div class="qa-layout">
-                    <div class="qa-main-feed" style="position: relative; z-index: 1;">
+                    <div class="qa-main-feed">
+                        <!-- Thanh tìm kiếm -->
+                        <div class="qa-search-bar" style="display: flex; gap: 15px; margin-bottom: 20px;">
+                            <div style="flex: 1; position: relative;">
+                                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b;"></i>
+                                <input type="text" id="qa_search_keyword" class="form-control" placeholder="Tìm kiếm theo tiêu đề, nội dung hoặc ngày đăng (VD: 15/05/2026)..." style="padding-left: 40px; background: white;" oninput="filterQABySearch()">
+                            </div>
+                            <button class="btn btn-outline" onclick="resetQASearch()" style="background: white; padding: 10px 15px;" title="Xóa tìm kiếm"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                        <div class="qa-filters">
+                            <div class="qa-filter-pills" id="qa_filter_pills"></div>
+                            <select class="form-control qa-filter-select" onchange="filterQAByStatus(this.value)">
+                                <option value="all">Tất cả trạng thái</option>
+                                <option value="answered">Đã trả lời</option>
+                                <option value="pending">Chờ phản hồi</option>
+                            </select>
+                        </div>
                         <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; font-weight: 500;">Cộng đồng có <span id="qa_count">0</span> câu hỏi</p>
                         <div id="community_qa_list"></div>
+                        <div id="qa_pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 30px; margin-bottom: 30px;"></div>
                     </div>
-                    <div class="qa-sidebar" style="position: relative; z-index: 50;">
-                        <div class="qa-form-box" style="padding: 30px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; position: relative; z-index: 50; pointer-events: auto;">
-                            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 10px;">Đặt câu hỏi</h3>
+                    <div class="qa-sidebar" style="position: sticky; top: 100px; z-index: 50; pointer-events: auto;">
+                        <div class="qa-form-box">
+                            <h3 class="qa-form-header">
+                                <i class="fa-solid fa-pen-to-square" style="color: #0284c7;"></i> Đặt câu hỏi
+                            </h3>
+                            <p class="qa-form-desc">Bác sĩ sẽ giải đáp thắc mắc của bạn trong thời gian sớm nhất.</p>
                             <form id="qaForm" onsubmit="submitQuestion(event)">
-                                <div class="input-group mb-15"><label class="form-label">Chuyên khoa</label><select id="qa_chuyen_khoa" required class="form-control"><option value="">Chọn chuyên khoa</option></select></div>
-                                <div class="input-group mb-15"><label class="form-label">Tiêu đề</label><input type="text" id="qa_tieu_de" required class="form-control" style="pointer-events: auto; background: white;"></div>
-                                <div class="input-group mb-15"><label class="form-label">Chi tiết</label><textarea id="qa_noi_dung" rows="4" required class="form-control textarea-resize" style="pointer-events: auto; background: white;"></textarea></div>
-                                <button type="submit" class="btn btn-primary btn-full" style="border-radius: 8px;">Gửi câu hỏi</button>
+                                <div class="input-group mb-15"><label class="form-label qa-input-label">Chuyên khoa</label><select id="qa_chuyen_khoa" required class="form-control qa-input-field" style="pointer-events: auto; position: relative; z-index: 60;"><option value="">Chọn chuyên khoa</option></select></div>
+                                <div class="input-group mb-15"><label class="form-label qa-input-label">Tiêu đề</label><input type="text" id="qa_tieu_de" required class="form-control qa-input-field" placeholder="Nhập tiêu đề ngắn gọn..." style="pointer-events: auto; position: relative; z-index: 60;"></div>
+                                <div class="input-group mb-15"><label class="form-label qa-input-label">Chi tiết</label><textarea id="qa_noi_dung" rows="4" required class="form-control textarea-resize qa-input-field" placeholder="Mô tả chi tiết triệu chứng hoặc câu hỏi của bạn..." style="pointer-events: auto; position: relative; z-index: 60;"></textarea></div>
+                                <div class="qa-anonym-box">
+                                    <input type="checkbox" id="qa_an_danh" class="qa-anonym-checkbox">
+                                    <label for="qa_an_danh" class="qa-anonym-label">
+                                        <i class="fa-solid fa-user-secret"></i> Gửi câu hỏi dưới dạng Ẩn danh
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-full qa-submit-btn"><i class="fa-solid fa-paper-plane"></i> Gửi câu hỏi ngay</button>
                             </form>
                         </div>
                     </div>

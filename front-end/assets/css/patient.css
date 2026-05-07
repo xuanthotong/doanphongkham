@@ -88,10 +88,25 @@
 .qa-card-footer { border-top: 1px solid #f1f5f9; padding-top: 15px; font-size: 13px; color: #64748b; font-weight: 500; }
 
 .qa-form-box { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+.qa-form-header { font-size: 20px; font-weight: 800; margin-bottom: 10px; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+.qa-form-desc { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+.qa-input-label { font-size: 13px; color: #475569; }
+.qa-input-field { background: #f8fafc !important; border-radius: 8px; border: 1px solid #e2e8f0; pointer-events: auto !important; position: relative; z-index: 50; color: #000 !important; }
+.qa-anonym-box { margin-bottom: 20px; display: flex; align-items: center; gap: 8px; background: #f0fdf4; padding: 10px; border-radius: 8px; border: 1px solid #bbf7d0; }
+.qa-anonym-label { cursor: pointer; font-size: 13px; color: #166534; font-weight: 600; flex: 1; display: flex; align-items: center; gap: 6px; }
+.qa-anonym-checkbox { cursor: pointer; width: 16px; height: 16px; accent-color: #10b981; }
+.qa-submit-btn { border-radius: 8px; font-weight: 600; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.qa-filter-select { width: auto; cursor: pointer; background: white; border-radius: 20px; padding: 6px 16px; font-size: 14px; font-weight: 500; color: #475569; }
+
 .qa-commitment-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; }
 .checkbox-group { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 .custom-checkbox { width: 18px; height: 18px; cursor: pointer; }
 .checkbox-label { font-weight: 500; color: #0f172a; cursor: pointer; font-size: 14px; }
+
+/* Nút phân trang (Pagination) */
+.qa-page-btn { background: white; border: 1px solid #e2e8f0; color: #475569; width: 36px; height: 36px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.qa-page-btn:hover { background: #f1f5f9; }
+.qa-page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
 /* Responsive */
 @media (max-width: 992px) {

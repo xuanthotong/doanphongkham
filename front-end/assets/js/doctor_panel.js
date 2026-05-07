@@ -207,6 +207,9 @@ function replyQA(maCH) {
 // ==========================================
 // HÀM FETCH VÀ RENDER HỎI ĐÁP CỦA BÁC SĨ
 // ==========================================
+let currentQAPage = 1;
+const qaPerPage = 5;
+
 async function fetchDoctorQA() {
     try {
         // Lấy thông tin Bác sĩ đang đăng nhập
@@ -236,24 +239,51 @@ async function fetchDoctorQA() {
         const elQa = document.getElementById('stat_qa');
         if (elQa) elQa.innerText = pendingQA < 10 ? '0' + pendingQA : pendingQA;
 
-        const container = document.getElementById('doctorQaListContainer');
-        if (!container) return;
-        container.innerHTML = '';
+        renderDoctorQA(docSpecialtyId);
+    } catch (error) { console.error('Lỗi khi lấy hỏi đáp:', error); }
+}
 
-        if (currentQA.length === 0) {
-            if (!docSpecialtyId) {
-                container.innerHTML = '<p style="text-align: center; color: #EF4444; font-weight: bold;">Bạn chưa được phân chuyên khoa. Vui lòng liên hệ Admin.</p>';
-            } else {
-                container.innerHTML = '<p style="text-align: center; color: #64748B;">Chưa có câu hỏi nào thuộc chuyên khoa của bạn.</p>';
-            }
-            return;
+function renderDoctorQA(docSpecialtyId) {
+    const container = document.getElementById('doctorQaListContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (currentQA.length === 0) {
+        if (!docSpecialtyId) {
+            container.innerHTML = '<p style="text-align: center; color: #EF4444; font-weight: bold;">Bạn chưa được phân chuyên khoa. Vui lòng liên hệ Admin.</p>';
+        } else {
+            container.innerHTML = '<p style="text-align: center; color: #64748B;">Chưa có câu hỏi nào thuộc chuyên khoa của bạn.</p>';
         }
+        let paginationContainer = document.getElementById('doctor_qa_pagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
+        return;
+    }
 
-        let qaHTML = '';
-        currentQA.forEach(q => {
+    const totalPages = Math.ceil(currentQA.length / qaPerPage);
+    if (currentQAPage > totalPages) currentQAPage = totalPages;
+    if (currentQAPage < 1) currentQAPage = 1;
+
+    const startIndex = (currentQAPage - 1) * qaPerPage;
+    const endIndex = startIndex + qaPerPage;
+    const paginatedQA = currentQA.slice(startIndex, endIndex);
+
+    let qaHTML = '';
+    paginatedQA.forEach(q => {
             const date = new Date(q.ngay_tao || Date.now());
             const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
             
+            // Xử lý tên người hỏi, Avatar và Tiêu đề ẩn danh
+            let isAnDanh = false;
+            let displayTieuDe = q.tieu_de || 'Câu hỏi từ bệnh nhân';
+            
+            if (displayTieuDe.startsWith('[Ẩn danh]')) {
+                isAnDanh = true;
+                displayTieuDe = displayTieuDe.replace('[Ẩn danh] ', '').replace('[Ẩn danh]', '');
+            } else if (!q.nguoi_hoi || q.nguoi_hoi.trim() === '') {
+                isAnDanh = true;
+            }
+            const nguoiHoi = isAnDanh ? 'Ẩn danh' : q.nguoi_hoi;
+
             const isAnswered = q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== '');
             const nguoiDaTraLoi = q.ten_nguoi_tra_loi ? (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên' ? 'Admin' : `BS. ${q.ten_nguoi_tra_loi}`) : 'Bác sĩ';
             const btnHtml = isAnswered 
@@ -262,23 +292,72 @@ async function fetchDoctorQA() {
                        <span style="color: #10B981; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> ${nguoiDaTraLoi} đã trả lời:</span>
                        <button onclick="replyQA(${q.id})" style="background: none; border: none; color: #0284C7; cursor: pointer; font-size: 13px; font-weight: bold;"><i class="fa-solid fa-pen"></i> Sửa lại</button>
                      </div>
-                     <p style="margin: 0; color: #334155; font-size: 14px; margin-top: 5px;">${q.tra_loi}</p>
+                     <p style="margin: 0; color: #334155; font-size: 14px; margin-top: 5px; word-break: break-word; white-space: pre-wrap;">${q.tra_loi}</p>
                    </div>` 
                 : `<button class="btn btn-primary" onclick="replyQA(${q.id})"><i class="fa-solid fa-reply"></i> Trả lời bệnh nhân</button>`;
 
             qaHTML += `
-                <div class="qa-item">
+                <div class="qa-item" style="word-break: break-word;">
                     <div class="qa-header">
-                        <h4>${q.tieu_de || 'Câu hỏi từ bệnh nhân'} (Mã CH: #${q.id})</h4>
-                        <span class="qa-date">${dateStr} | Người hỏi: ${q.nguoi_hoi || 'Ẩn danh'}</span>
+                        <h4 style="word-break: break-word; line-height: 1.5; margin-bottom: 5px;">${displayTieuDe} (Mã CH: #${q.id})</h4>
+                        <span class="qa-date">${dateStr} | Người hỏi: ${nguoiHoi}</span>
                     </div>
-                    <div class="qa-content">${q.noi_dung}</div>
+                    <div class="qa-content" style="word-break: break-word; white-space: pre-wrap; line-height: 1.6;">${q.noi_dung}</div>
                     <div style="margin-top: 15px;">${btnHtml}</div>
                 </div>
             `;
         });
         container.innerHTML = qaHTML;
-    } catch (error) { console.error('Lỗi khi lấy hỏi đáp:', error); }
+    
+    renderDoctorQAPagination(totalPages);
+}
+
+function renderDoctorQAPagination(totalPages) {
+    let paginationContainer = document.getElementById('doctor_qa_pagination');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'doctor_qa_pagination';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; gap: 8px; margin-top: 20px; margin-bottom: 20px; width: 100%;';
+        
+        const qaContainer = document.getElementById('doctorQaListContainer');
+        qaContainer.parentNode.insertBefore(paginationContainer, qaContainer.nextSibling);
+    }
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    if (currentQAPage > 1) {
+        html += `<button style="background: white; border: 1px solid #e2e8f0; color: #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" onclick="changeDoctorQAPage(${currentQAPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentQAPage) {
+            html += `<button style="background: #0284c7; border: 1px solid #0284c7; color: white; padding: 6px 12px; border-radius: 6px; cursor: default; font-weight: bold;">${i}</button>`;
+        } else {
+            html += `<button style="background: white; border: 1px solid #e2e8f0; color: #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" onclick="changeDoctorQAPage(${i})">${i}</button>`;
+        }
+    }
+
+    if (currentQAPage < totalPages) {
+        html += `<button style="background: white; border: 1px solid #e2e8f0; color: #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" onclick="changeDoctorQAPage(${currentQAPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    }
+
+    paginationContainer.innerHTML = html;
+}
+
+function changeDoctorQAPage(page) {
+    currentQAPage = page;
+    const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
+    renderDoctorQA(userInfo.chuyen_khoa_id);
+    
+    const container = document.getElementById('doctorQaListContainer');
+    if (container) {
+        const y = container.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({top: y, behavior: 'smooth'});
+    }
 }
 
 // ==========================================

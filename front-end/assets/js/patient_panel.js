@@ -208,9 +208,10 @@ async function submitQuestion(e) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        // NẾU ẨN DANH => GỬI NULL, NẾU KHÔNG => GỬI ID THẬT
-                        benh_nhan_id: isAnDanh ? null : userInfo.id,
-                        tieu_de: tieuDe,
+                        // Giữ nguyên ID thật để tránh lỗi NOT NULL trong CSDL.
+                        // Đánh dấu ẩn danh bằng cách thêm tiền tố vào tiêu đề
+                        benh_nhan_id: userInfo.id,
+                        tieu_de: isAnDanh ? `[Ẩn danh] ${tieuDe}` : tieuDe,
                         noi_dung: noiDung,
                         chuyen_khoa_id: chuyenKhoa ? parseInt(chuyenKhoa) : null
                     })
@@ -237,6 +238,9 @@ async function submitQuestion(e) {
 window.allCommunityQA = []; // Biến lưu toàn bộ câu hỏi
 window.currentQASpecialty = 'all'; // Trạng thái lọc theo chuyên khoa
 window.currentQAStatus = 'all'; // Trạng thái lọc theo tình trạng
+window.currentQAKeyword = ''; // Trạng thái lọc theo từ khóa
+window.currentPage = 1; // Trang hiện tại
+window.itemsPerPage = 5; // Số lượng câu hỏi mỗi trang
 
 async function loadCommunityQA() {
     try {
@@ -259,7 +263,6 @@ function renderCommunityQA() {
     try {
         const list = document.getElementById('community_qa_list');
         if (!list) return;
-        list.innerHTML = '';
 
         // Áp dụng thuật toán Lọc dữ liệu (Filter) an toàn
         let filteredQuestions = window.allCommunityQA.filter(q => {
@@ -273,8 +276,20 @@ function renderCommunityQA() {
             const matchStatus = (window.currentQAStatus === 'all') || 
                                 (window.currentQAStatus === 'answered' && isAnswered) || 
                                 (window.currentQAStatus === 'pending' && !isAnswered);
-                                
-            return matchSpecialty && matchStatus;
+            
+            // 3. Lọc theo Từ khóa (Tìm trong tiêu đề, nội dung và ngày)
+            let matchKeyword = true;
+            if (window.currentQAKeyword) {
+                const title = (q.tieu_de || '').toLowerCase();
+                const content = (q.noi_dung || '').toLowerCase();
+                
+                const date = new Date(q.ngay_tao || Date.now());
+                const dateString = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+                
+                matchKeyword = title.includes(window.currentQAKeyword) || content.includes(window.currentQAKeyword) || dateString.includes(window.currentQAKeyword);
+            }
+            
+            return matchSpecialty && matchStatus && matchKeyword;
         });
 
         let countEl = document.getElementById('qa_count');
@@ -282,34 +297,69 @@ function renderCommunityQA() {
 
         if (filteredQuestions.length === 0) {
             list.innerHTML = '<p style="text-align: center; color: #64748B; padding: 20px 0;">Không có câu hỏi nào phù hợp với bộ lọc hiện tại.</p>';
+            const paginationContainer = document.getElementById('qa_pagination');
+            if (paginationContainer) paginationContainer.innerHTML = '';
             return;
         }
 
+        // Thuật toán Phân trang
+        const totalItems = filteredQuestions.length;
+        const totalPages = Math.ceil(totalItems / window.itemsPerPage);
+        
+        if (window.currentPage > totalPages) window.currentPage = totalPages;
+        if (window.currentPage < 1) window.currentPage = 1;
+
+        const startIndex = (window.currentPage - 1) * window.itemsPerPage;
+        const endIndex = startIndex + window.itemsPerPage;
+        const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+
         let qaHTML = '';
-        filteredQuestions.forEach(q => {
+        paginatedQuestions.forEach(q => {
             const date = new Date(q.ngay_tao || Date.now());
             const dateString = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
             
-            // Cập nhật để hiển thị chữ Ẩn danh thay vì "Bệnh nhân" trên giao diện cộng đồng
-            const tenNguoiHoi = q.nguoi_hoi ? q.nguoi_hoi : "Ẩn danh";
-            const chuCaiDau = tenNguoiHoi.charAt(0).toUpperCase();
+            // Kiểm tra xem câu hỏi có ẩn danh không (Dựa vào tiền tố trong tiêu đề)
+            let isAnDanh = false;
+            let displayTieuDe = q.tieu_de || 'Câu hỏi';
+            
+            if (displayTieuDe.startsWith('[Ẩn danh]')) {
+                isAnDanh = true;
+                displayTieuDe = displayTieuDe.replace('[Ẩn danh] ', '').replace('[Ẩn danh]', '');
+            } else if (!q.nguoi_hoi || q.nguoi_hoi.trim() === '') {
+                isAnDanh = true;
+            }
+
+            const tenNguoiHoi = isAnDanh ? "Ẩn danh" : q.nguoi_hoi;
+            const avatarContent = isAnDanh ? '<i class="fa-solid fa-user-secret" style="font-size: 15px;"></i>' : tenNguoiHoi.charAt(0).toUpperCase();
             
             const statusBadge = q.trang_thai || q.tra_loi 
                 ? `<span class="qa-badge" style="background:#dcfce7; color:#166534; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã trả lời</span>` 
                 : `<span class="qa-badge qa-pending" style="background:#fef3c7; color:#d97706; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Chờ phản hồi</span>`;
 
             const nguoiDaTraLoi = q.ten_nguoi_tra_loi ? (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên' ? 'Quản trị viên' : `BS. ${q.ten_nguoi_tra_loi}`) : 'Bác sĩ';
+            
+            // Tóm tắt nội dung tránh làm vỡ giao diện thẻ
+            const noiDungSummary = q.noi_dung ? q.noi_dung.replace(/\n/g, ' ') : '';
+            const traLoiSummary = q.tra_loi ? q.tra_loi.replace(/\n/g, ' ') : '';
+
             const answerHtml = q.tra_loi 
                 ? `<div style="margin-top: 15px; padding: 12px; background: #F0F9FF; border-left: 4px solid #0284C7; border-radius: 4px;">
-                     <strong style="color: #0284c7;">${nguoiDaTraLoi} trả lời:</strong> <p style="margin: 5px 0 0 0; color: #334155; font-size: 14px;">${q.tra_loi}</p>
+                     <strong style="color: #0284c7;">${nguoiDaTraLoi} trả lời:</strong> <p class="text-clamp-2" style="margin: 5px 0 0 0; color: #334155; font-size: 14px;">${traLoiSummary}</p>
                    </div>` 
                 : '';
 
+            // Mã hóa dữ liệu truyền vào hàm onClick để tránh lỗi vỡ chuỗi do dấu nháy kép / nháy đơn
+            const tieuDeEncoded = encodeURIComponent(displayTieuDe);
+            const noiDungEncoded = encodeURIComponent(q.noi_dung || '');
+            const traLoiEncoded = encodeURIComponent(q.tra_loi || '');
+            const nguoiTraLoiEncoded = encodeURIComponent(nguoiDaTraLoi);
+            const popupArgs = `decodeURIComponent('${tieuDeEncoded}'), decodeURIComponent('${noiDungEncoded}'), decodeURIComponent('${traLoiEncoded}'), decodeURIComponent('${nguoiTraLoiEncoded}')`;
+
             qaHTML += `
-                <div class="qa-card" style="animation: fadeIn 0.5s;">
+                <div class="qa-card" style="animation: fadeIn 0.5s; cursor: pointer; word-break: break-word;" onclick="openQADetailPopup(${popupArgs})" title="Nhấn để xem chi tiết">
                     <div class="qa-card-header" style="display:flex; justify-content:space-between; align-items:center;">
                         <div class="qa-user-info" style="display:flex; align-items:center; gap: 10px;">
-                            <div class="qa-avatar" style="background: #e2e8f0; color: #475569; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:bold;">${chuCaiDau}</div>
+                            <div class="qa-avatar" style="background: #e2e8f0; color: #475569; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-weight:bold;">${avatarContent}</div>
                             <div class="qa-meta" style="font-size: 13px; color: #64748B;">
                                 <span class="qa-name" style="font-weight:bold; color:#0F172A;">${tenNguoiHoi}</span> • 
                                 <span class="qa-date">${dateString}</span>
@@ -317,16 +367,91 @@ function renderCommunityQA() {
                         </div>
                         ${statusBadge}
                     </div>
-                    <h3 class="qa-title" style="margin-top: 15px; font-size: 16px; color: #0F172A;">${q.tieu_de || 'Câu hỏi'}</h3>
-                    <p class="qa-desc" style="color: #475569; font-size: 14px; margin-top: 5px;">${q.noi_dung || ''}</p>
+                    <h3 class="qa-title text-clamp-2" style="margin-top: 15px; font-size: 16px; color: #0F172A;">${displayTieuDe}</h3>
+                    <p class="qa-desc text-clamp-3" style="color: #475569; font-size: 14px; margin-top: 5px; margin-bottom: 0;">${noiDungSummary}</p>
                     ${answerHtml}
                 </div>
             `;
         });
         // Gán 1 lần duy nhất để chống lỗi vòng lặp
         list.innerHTML = qaHTML;
+
+        // Hiển thị nút phân trang
+        renderPagination(totalPages);
     } catch (error) {
         console.error('Lỗi khi lấy danh sách hỏi đáp:', error);
+    }
+}
+
+// ==================================================
+// HÀM MỞ POPUP CHI TIẾT CÂU HỎI TRONG GIAO DIỆN BỆNH NHÂN
+// ==================================================
+function openQADetailPopup(tieuDe, noiDung, traLoi, nguoiTraLoi) {
+    let answerHtml = '';
+    if (traLoi && traLoi.trim() !== '') {
+        answerHtml = `
+            <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin-top: 15px;">
+                <p style="margin: 0 0 10px 0; color: #166534; font-weight: 600;"><i class="fa-solid fa-user-doctor"></i> ${nguoiTraLoi} giải đáp:</p>
+                <p style="margin: 0;">${traLoi.replace(/\n/g, '<br>')}</p>
+            </div>
+        `;
+    }
+
+    Swal.fire({
+        title: tieuDe,
+        html: `
+            <div style="text-align: left; font-size: 15px; color: #334155; line-height: 1.6; word-break: break-word;">
+                <p style="margin-bottom: 15px;"><strong>Câu hỏi:</strong><br>${noiDung.replace(/\n/g, '<br>')}</p>
+                ${answerHtml}
+            </div>
+        `,
+        width: '600px',
+        confirmButtonText: 'Đóng',
+        confirmButtonColor: '#0284c7'
+    });
+}
+
+// ==================================================
+// HÀM HIỂN THỊ NÚT PHÂN TRANG (PAGINATION)
+// ==================================================
+function renderPagination(totalPages) {
+    const paginationContainer = document.getElementById('qa_pagination');
+    if (!paginationContainer) return;
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    
+    if (window.currentPage > 1) {
+        html += `<button class="qa-page-btn" onclick="changeQAPage(${window.currentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === window.currentPage) {
+            html += `<button class="qa-page-btn active" onclick="changeQAPage(${i})">${i}</button>`;
+        } else {
+            html += `<button class="qa-page-btn" onclick="changeQAPage(${i})">${i}</button>`;
+        }
+    }
+
+    if (window.currentPage < totalPages) {
+        html += `<button class="qa-page-btn" onclick="changeQAPage(${window.currentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    }
+
+    paginationContainer.innerHTML = html;
+}
+
+function changeQAPage(page) {
+    window.currentPage = page;
+    renderCommunityQA();
+    // Tự động cuộn lên đầu danh sách câu hỏi
+    const qaFeed = document.querySelector('.qa-main-feed');
+    if (qaFeed) {
+        const y = qaFeed.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({top: y, behavior: 'smooth'});
     }
 }
 
@@ -339,20 +464,40 @@ async function loadSpecialtiesForQA() {
         if (!res.ok) throw new Error('Lỗi khi tải chuyên khoa');
         const specialties = await res.json();
 
+        // Lấy danh sách bác sĩ để lọc
+        const resDoc = await fetch('http://localhost:3000/api/doctors');
+        let activeDoctorSpecialtyIds = new Set();
+        if (resDoc.ok) {
+            const doctors = await resDoc.json();
+            // Lưu ID của những chuyên khoa đang có Bác sĩ hoạt động (trang_thai = 1)
+            doctors.forEach(doc => {
+                if (doc.trang_thai == 1 && doc.chuyen_khoa_id) {
+                    activeDoctorSpecialtyIds.add(doc.chuyen_khoa_id);
+                }
+            });
+        }
+
+        // Lọc danh sách chuyên khoa (chỉ lấy những khoa hiện có bác sĩ)
+        const availableSpecialties = specialties.filter(sp => activeDoctorSpecialtyIds.has(sp.id));
+
         // 1. Đổ dữ liệu vào select box (Dropdown)
         const selectEl = document.getElementById('qa_chuyen_khoa');
         if (selectEl) {
             selectEl.innerHTML = '<option value="">Chọn chuyên khoa</option>';
-            specialties.forEach(sp => {
-                selectEl.innerHTML += `<option value="${sp.id}">${sp.ten_chuyen_khoa}</option>`;
-            });
+            if (availableSpecialties.length === 0) {
+                selectEl.innerHTML += '<option value="" disabled>Hiện chưa có bác sĩ nào tiếp nhận câu hỏi</option>';
+            } else {
+                availableSpecialties.forEach(sp => {
+                    selectEl.innerHTML += `<option value="${sp.id}">${sp.ten_chuyen_khoa}</option>`;
+                });
+            }
         }
 
         // 2. Đổ dữ liệu vào các pill lọc (Nút bấm)
         const pillsContainer = document.getElementById('qa_filter_pills');
         if (pillsContainer) {
             pillsContainer.innerHTML = `<button class="qa-pill active" onclick="filterQABySpecialty('all', this)">Tất cả</button>`;
-            specialties.forEach(sp => {
+            availableSpecialties.forEach(sp => {
                 pillsContainer.innerHTML += `<button class="qa-pill" onclick="filterQABySpecialty(${sp.id}, this)">${sp.ten_chuyen_khoa}</button>`;
             });
         }
@@ -366,13 +511,28 @@ function filterQABySpecialty(specialtyId, element) {
     document.querySelectorAll('#qa_filter_pills .qa-pill').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
     window.currentQASpecialty = specialtyId;
+    window.currentPage = 1;
     renderCommunityQA();
 }
 
 // HÀM KÍCH HOẠT KHI CHỌN DROPDOWN TRẠNG THÁI
 function filterQAByStatus(status) {
     window.currentQAStatus = status;
+    window.currentPage = 1;
     renderCommunityQA();
+}
+
+// HÀM KÍCH HOẠT KHI NHẬP TỪ KHÓA
+function filterQABySearch() {
+    window.currentQAKeyword = document.getElementById('qa_search_keyword').value.toLowerCase().trim();
+    window.currentPage = 1;
+    renderCommunityQA();
+}
+
+// HÀM RESET THANH TÌM KIẾM
+function resetQASearch() {
+    document.getElementById('qa_search_keyword').value = '';
+    filterQABySearch(); // Tự động gọi lại hàm trên để clear state và render lại
 }
 
 // ==================================================

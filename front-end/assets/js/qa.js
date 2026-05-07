@@ -1,5 +1,7 @@
 let questions = []; 
 const qaTbody = document.getElementById('qaTableBody');
+let currentAdminQAPage = 1;
+const adminQAItemsPerPage = 20;
 
 // HÀM LẤY CÂU HỎI TỪ CƠ SỞ DỮ LIỆU
 async function fetchQuestions() {
@@ -18,16 +20,38 @@ function renderQATable() {
     
     if (questions.length === 0) {
         qaTbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có câu hỏi nào từ người dùng.</td></tr>`;
+        let paginationContainer = document.getElementById('admin_qa_pagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    questions.forEach((q) => {
+    const totalPages = Math.ceil(questions.length / adminQAItemsPerPage);
+    if (currentAdminQAPage > totalPages) currentAdminQAPage = totalPages;
+    if (currentAdminQAPage < 1) currentAdminQAPage = 1;
+
+    const startIndex = (currentAdminQAPage - 1) * adminQAItemsPerPage;
+    const endIndex = startIndex + adminQAItemsPerPage;
+    const paginatedQA = questions.slice(startIndex, endIndex);
+
+    paginatedQA.forEach((q) => {
         const statusBadge = q.trang_thai == 1 || q.tra_loi
             ? `<span class="badge" style="background-color: #dcfce7; color: #166534;">Đã trả lời</span>` 
             : `<span class="badge" style="background-color: #fef08a; color: #854d0e;">Chưa trả lời</span>`;
 
         const date = new Date(q.ngay_tao || Date.now());
         const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+
+        // Xử lý tiêu đề và ẩn danh
+        let isAnDanh = false;
+        let displayTieuDe = q.tieu_de || '';
+        
+        if (displayTieuDe.startsWith('[Ẩn danh]')) {
+            isAnDanh = true;
+            displayTieuDe = displayTieuDe.replace('[Ẩn danh] ', '').replace('[Ẩn danh]', '');
+        } else if (!q.nguoi_hoi || q.nguoi_hoi.trim() === '') {
+            isAnDanh = true;
+        }
+        const nguoiHoi = isAnDanh ? 'Ẩn danh' : (q.nguoi_hoi || 'Ẩn danh');
 
         // XỬ LÝ LOGIC HIỂN THỊ NGƯỜI TRẢ LỜI Ở ĐÂY
         let nguoiTraLoi = 'Chưa có';
@@ -48,14 +72,14 @@ function renderQATable() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="font-weight: bold; color: var(--primary-color);">#${q.id}</td>
-            <td style="font-weight: 600;">${q.nguoi_hoi || 'Ẩn danh'}</td>
+            <td style="font-weight: 600;">${nguoiHoi}</td>
             <td><span class="badge" style="background:#e0f2fe; color:#0369a1; white-space:nowrap;">${q.ten_chuyen_khoa || 'Chung'}</span></td>
-            <td style="white-space: normal; max-width: 150px; font-weight: 500;">${q.tieu_de}</td>
-            <td style="white-space: normal; max-width: 250px; color: #4b5563;">${q.noi_dung}</td>
+            <td style="white-space: normal; max-width: 150px; font-weight: 500;"><div style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;" title="${displayTieuDe.replace(/"/g, '&quot;')}">${displayTieuDe}</div></td>
+            <td style="white-space: normal; max-width: 250px; color: #4b5563;"><div style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;" title="${(q.noi_dung || '').replace(/"/g, '&quot;')}">${q.noi_dung}</div></td>
             
             <td>${nguoiTraLoi}</td>
             
-            <td style="white-space: normal; max-width: 250px; color: #10b981; font-weight: 500;">${q.tra_loi || ''}</td>
+            <td style="white-space: normal; max-width: 250px; color: #10b981; font-weight: 500;"><div style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;" title="${(q.tra_loi || '').replace(/"/g, '&quot;')}">${q.tra_loi || ''}</div></td>
             <td>${dateStr}</td>
             <td>${statusBadge}</td>
             <td>
@@ -65,6 +89,51 @@ function renderQATable() {
         `;
         qaTbody.appendChild(tr);
     });
+    
+    renderAdminQAPagination(totalPages);
+}
+
+function renderAdminQAPagination(totalPages) {
+    let paginationContainer = document.getElementById('admin_qa_pagination');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'admin_qa_pagination';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; gap: 8px; margin-top: 20px; width: 100%;';
+        
+        const table = qaTbody.closest('table');
+        if (table && table.parentNode) {
+            table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+        }
+    }
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    if (currentAdminQAPage > 1) {
+        html += `<button onclick="changeAdminQAPage(${currentAdminQAPage - 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&laquo;</button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentAdminQAPage) {
+            html += `<button style="padding: 6px 12px; border: 1px solid #0284c7; background: #0284c7; color: white; border-radius: 6px; font-weight: bold; cursor: default;">${i}</button>`;
+        } else {
+            html += `<button onclick="changeAdminQAPage(${i})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#334155'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; color: #334155; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;">${i}</button>`;
+        }
+    }
+
+    if (currentAdminQAPage < totalPages) {
+        html += `<button onclick="changeAdminQAPage(${currentAdminQAPage + 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&raquo;</button>`;
+    }
+
+    paginationContainer.innerHTML = html;
+}
+
+function changeAdminQAPage(page) {
+    currentAdminQAPage = page;
+    renderQATable();
 }
 
 async function replyQA(id) {
