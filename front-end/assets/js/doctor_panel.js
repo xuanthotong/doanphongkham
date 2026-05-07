@@ -369,7 +369,12 @@ function openShiftModal(shiftId = null) {
         return;
     }
 
-    let defaultDate = new Date().toISOString().split('T')[0];
+    // Ép kiểu về đúng múi giờ Local (Việt Nam) để tránh lỗi lúc 12h đêm
+    const nowInit = new Date();
+    const offsetInit = nowInit.getTimezoneOffset() * 60000;
+    const localTodayStr = new Date(nowInit.getTime() - offsetInit).toISOString().split('T')[0];
+
+    let defaultDate = localTodayStr;
     let defaultStart = "08:00";
     let defaultEnd = "11:30";
     let defaultMax = 20;
@@ -395,7 +400,7 @@ function openShiftModal(shiftId = null) {
         html: `
             <div style="text-align: left; margin-top: 15px;">
                 <label style="font-weight: 700; font-size: 14px; color: #475569; display: block; margin-bottom: 5px;">Ngày làm việc (*)</label>
-                <input type="date" id="shift_date" class="swal2-input" value="${defaultDate}" min="${new Date().toISOString().split('T')[0]}" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0 0 20px 0; cursor: pointer;">
+                <input type="date" id="shift_date" class="swal2-input" value="${defaultDate}" min="${localTodayStr}" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0 0 20px 0; cursor: pointer;">
                 
                 <div style="display: flex; gap: 20px; margin-bottom: 20px;">
                     <div style="flex: 1;">
@@ -423,6 +428,22 @@ function openShiftModal(shiftId = null) {
             if (!start || !end) { Swal.showValidationMessage('Vui lòng chọn thời gian bắt đầu và kết thúc!'); return false; }
             if (start >= end) { Swal.showValidationMessage('Thời gian kết thúc phải lớn hơn thời gian bắt đầu!'); return false; }
             if (!max || max <= 0) { Swal.showValidationMessage('Số lượng bệnh nhân phải lớn hơn 0!'); return false; }
+
+            // BỔ SUNG: Chặn đăng ký ca làm việc ở quá khứ hoặc khung giờ đã qua trong ngày hôm nay
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            const todayStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+            const currentTimeStr = now.toTimeString().substring(0, 5); // Lấy chuẩn định dạng "HH:MM"
+
+            if (date < todayStr) {
+                Swal.showValidationMessage('Ngày làm việc đã qua (trong quá khứ). Vui lòng chọn từ hôm nay trở đi!');
+                return false;
+            }
+
+            if (date === todayStr && start <= currentTimeStr) {
+                Swal.showValidationMessage('Thời gian bắt đầu đã qua so với hiện tại. Vui lòng chọn giờ hợp lệ!');
+                return false;
+            }
 
             // Gom data đúng với CSDL
             return { 
