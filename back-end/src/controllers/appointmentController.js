@@ -394,9 +394,9 @@ const createAppointment = async (req, res) => {
             let payosQrCode = null;
             if (ptttoan === 'momo') {
                 const crypto = require('crypto');
-                const clientId = "b536ddff-4e27-4381-974b-111a259eaacf";
-                const apiKey = "a658fb17-588d-4414-8970-af7b705137d3";
-                const checksumKey = "7bfaf9c39c83794c2a3b3988a6fcf32d874d5fb9b99779a03a3107b9db29d6ab";
+                const clientId = process.env.PAYOS_CLIENT_ID;
+                const apiKey = process.env.PAYOS_API_KEY;
+                const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
                 const orderCode = appointmentId; 
                 const amount = parseInt(phi_kham) < 2000 ? 2000 : parseInt(phi_kham);
                 
