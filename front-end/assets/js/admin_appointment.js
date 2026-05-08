@@ -1,5 +1,7 @@
 const appointmentTbody = document.getElementById('appointmentTableBody');
 let allAdminAppointments = [];
+let currentAdminAppointmentPage = 1;
+const adminAppointmentItemsPerPage = 20;
 
 async function fetchAdminAppointments() {
     if (!appointmentTbody) return;
@@ -19,6 +21,11 @@ function renderAppointmentTable() {
     const searchInput = document.getElementById('searchAdminAppointment');
     const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
+    if (window.lastAdminAppointmentKeyword !== keyword) {
+        currentAdminAppointmentPage = 1;
+        window.lastAdminAppointmentKeyword = keyword;
+    }
+
     let filteredList = allAdminAppointments;
 
     if (keyword) {
@@ -32,10 +39,20 @@ function renderAppointmentTable() {
 
     if (filteredList.length === 0) {
         appointmentTbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy lịch hẹn phù hợp.</td></tr>`;
+        let paginationContainer = document.getElementById('admin_appointment_pagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    filteredList.forEach(app => {
+    const totalPages = Math.ceil(filteredList.length / adminAppointmentItemsPerPage);
+    if (currentAdminAppointmentPage > totalPages) currentAdminAppointmentPage = totalPages;
+    if (currentAdminAppointmentPage < 1) currentAdminAppointmentPage = 1;
+
+    const startIndex = (currentAdminAppointmentPage - 1) * adminAppointmentItemsPerPage;
+    const endIndex = startIndex + adminAppointmentItemsPerPage;
+    const paginatedAppointments = filteredList.slice(startIndex, endIndex);
+
+    paginatedAppointments.forEach(app => {
         let statusHtml = '';
         const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
         
@@ -75,6 +92,51 @@ function renderAppointmentTable() {
         `;
         appointmentTbody.appendChild(tr);
     });
+
+    renderAdminAppointmentPagination(totalPages);
+}
+
+function renderAdminAppointmentPagination(totalPages) {
+    let paginationContainer = document.getElementById('admin_appointment_pagination');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'admin_appointment_pagination';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; gap: 8px; margin-top: 20px; width: 100%;';
+        
+        const table = appointmentTbody.closest('table');
+        if (table && table.parentNode) {
+            table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+        }
+    }
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    if (currentAdminAppointmentPage > 1) {
+        html += `<button onclick="changeAdminAppointmentPage(${currentAdminAppointmentPage - 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&laquo;</button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentAdminAppointmentPage) {
+            html += `<button style="padding: 6px 12px; border: 1px solid #0284c7; background: #0284c7; color: white; border-radius: 6px; font-weight: bold; cursor: default;">${i}</button>`;
+        } else {
+            html += `<button onclick="changeAdminAppointmentPage(${i})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#334155'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; color: #334155; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;">${i}</button>`;
+        }
+    }
+
+    if (currentAdminAppointmentPage < totalPages) {
+        html += `<button onclick="changeAdminAppointmentPage(${currentAdminAppointmentPage + 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&raquo;</button>`;
+    }
+
+    paginationContainer.innerHTML = html;
+}
+
+function changeAdminAppointmentPage(page) {
+    currentAdminAppointmentPage = page;
+    renderAppointmentTable();
 }
 
 function editAdminAppointmentNote(id) {

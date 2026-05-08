@@ -1,5 +1,7 @@
 const accountTbody = document.getElementById('accountTableBody');
 let allAccounts = []; // Lưu lại danh sách tài khoản dùng cho chức năng Sửa
+let currentAccountPage = 1;
+const accountItemsPerPage = 20;
 
 async function fetchAccounts() {
     // Nếu trang hiện tại không có bảng Tài khoản thì bỏ qua, tránh báo lỗi
@@ -8,22 +10,32 @@ async function fetchAccounts() {
     try {
         const response = await fetch('http://localhost:3000/api/accounts');
         allAccounts = await response.json();
-        renderAccountTable(allAccounts);
+        renderAccountTable();
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu tài khoản:', error);
     }
 }
 
-function renderAccountTable(accounts) {
+function renderAccountTable() {
     if (!accountTbody) return;
     accountTbody.innerHTML = '';
     
-    if (accounts.length === 0) {
+    if (allAccounts.length === 0) {
         accountTbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có dữ liệu tài khoản.</td></tr>`;
+        let paginationContainer = document.getElementById('admin_account_pagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    accounts.forEach((acc) => {
+    const totalPages = Math.ceil(allAccounts.length / accountItemsPerPage);
+    if (currentAccountPage > totalPages) currentAccountPage = totalPages;
+    if (currentAccountPage < 1) currentAccountPage = 1;
+
+    const startIndex = (currentAccountPage - 1) * accountItemsPerPage;
+    const endIndex = startIndex + accountItemsPerPage;
+    const paginatedAccounts = allAccounts.slice(startIndex, endIndex);
+
+    paginatedAccounts.forEach((acc) => {
         const genderText = acc.gioi_tinh == 1 ? "Nam" : (acc.gioi_tinh == 0 ? "Nữ" : "Chưa cập nhật");
         const statusBadge = acc.trang_thai == 1 ? 
             `<span class="badge" style="background-color: #dcfce7; color: #166534;">Hoạt động</span>` : 
@@ -72,6 +84,51 @@ function renderAccountTable(accounts) {
         `;
         accountTbody.appendChild(tr);
     });
+    
+    renderAccountPagination(totalPages);
+}
+
+function renderAccountPagination(totalPages) {
+    let paginationContainer = document.getElementById('admin_account_pagination');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'admin_account_pagination';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; gap: 8px; margin-top: 20px; width: 100%;';
+        
+        const table = accountTbody.closest('table');
+        if (table && table.parentNode) {
+            table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+        }
+    }
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    if (currentAccountPage > 1) {
+        html += `<button onclick="changeAccountPage(${currentAccountPage - 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&laquo;</button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentAccountPage) {
+            html += `<button style="padding: 6px 12px; border: 1px solid #0284c7; background: #0284c7; color: white; border-radius: 6px; font-weight: bold; cursor: default;">${i}</button>`;
+        } else {
+            html += `<button onclick="changeAccountPage(${i})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#334155'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; color: #334155; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;">${i}</button>`;
+        }
+    }
+
+    if (currentAccountPage < totalPages) {
+        html += `<button onclick="changeAccountPage(${currentAccountPage + 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&raquo;</button>`;
+    }
+
+    paginationContainer.innerHTML = html;
+}
+
+function changeAccountPage(page) {
+    currentAccountPage = page;
+    renderAccountTable();
 }
 
 // ==========================================

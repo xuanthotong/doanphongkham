@@ -76,6 +76,8 @@ function formatCurrency(amount) {
 // =========================================================================================
 const shiftTbody = document.getElementById('shiftAdminTableBody');
 let allAdminShifts = [];
+let currentAdminShiftPage = 1;
+const adminShiftItemsPerPage = 20;
 
 async function fetchAdminShifts() {
     if (!shiftTbody) return;
@@ -95,6 +97,11 @@ function renderAdminShiftTable() {
     const searchInput = document.getElementById('searchAdminShift');
     const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
+    if (window.lastAdminShiftKeyword !== keyword) {
+        currentAdminShiftPage = 1;
+        window.lastAdminShiftKeyword = keyword;
+    }
+
     let filteredShifts = allAdminShifts;
     if (keyword) {
         filteredShifts = filteredShifts.filter(shift => 
@@ -105,15 +112,43 @@ function renderAdminShiftTable() {
 
     if (filteredShifts.length === 0) {
         shiftTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy ca làm việc phù hợp.</td></tr>`;
+        let paginationContainer = document.getElementById('admin_shift_pagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    filteredShifts.forEach(shift => {
-        const d = new Date(shift.ngay_lam_viec);
+    const totalPages = Math.ceil(filteredShifts.length / adminShiftItemsPerPage);
+    if (currentAdminShiftPage > totalPages) currentAdminShiftPage = totalPages;
+    if (currentAdminShiftPage < 1) currentAdminShiftPage = 1;
+
+    const startIndex = (currentAdminShiftPage - 1) * adminShiftItemsPerPage;
+    const endIndex = startIndex + adminShiftItemsPerPage;
+    const paginatedShifts = filteredShifts.slice(startIndex, endIndex);
+
+    // Lấy giờ hiện tại chuẩn theo múi giờ local (Việt Nam)
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+    const currentTimeStr = now.toTimeString().substring(0, 5); // "HH:MM"
+
+    paginatedShifts.forEach(shift => {
+        const shiftDateStr = shift.ngay_lam_viec.split('T')[0];
+        const d = new Date(shiftDateStr);
         const ngayLamStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         
+        // Lấy giờ kết thúc của ca làm việc
+        const timeParts = shift.khung_gio.split(' - ');
+        const endTime = timeParts.length === 2 ? timeParts[1] : '23:59';
+
+        // Kiểm tra xem ca làm việc đã đi qua thời điểm hiện tại chưa
+        let isExpired = false;
+        if (shiftDateStr < localDateStr) isExpired = true;
+        else if (shiftDateStr === localDateStr && currentTimeStr > endTime) isExpired = true;
+
         let statusHtml = '';
-        if (shift.trang_thai === 'Stopped') {
+        if (isExpired) {
+            statusHtml = `<span class="badge" style="background:#fee2e2; color:#991b1b;"><i class="fa-solid fa-lock"></i> Đã đóng</span>`;
+        } else if (shift.trang_thai === 'Stopped') {
             statusHtml = `<span class="badge" style="background:#fee2e2; color:#991b1b;">Đã dừng</span>`;
         } else if (shift.so_luong_hien_tai >= shift.so_luong_toi_da) {
             statusHtml = `<span class="badge" style="background:#fef3c7; color:#d97706;">Đã kín</span>`;
@@ -136,6 +171,51 @@ function renderAdminShiftTable() {
         `;
         shiftTbody.appendChild(tr);
     });
+    
+    renderAdminShiftPagination(totalPages);
+}
+
+function renderAdminShiftPagination(totalPages) {
+    let paginationContainer = document.getElementById('admin_shift_pagination');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'admin_shift_pagination';
+        paginationContainer.style.cssText = 'display: flex; justify-content: center; gap: 8px; margin-top: 20px; width: 100%;';
+        
+        const table = shiftTbody.closest('table');
+        if (table && table.parentNode) {
+            table.parentNode.insertBefore(paginationContainer, table.nextSibling);
+        }
+    }
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    if (currentAdminShiftPage > 1) {
+        html += `<button onclick="changeAdminShiftPage(${currentAdminShiftPage - 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&laquo;</button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentAdminShiftPage) {
+            html += `<button style="padding: 6px 12px; border: 1px solid #0284c7; background: #0284c7; color: white; border-radius: 6px; font-weight: bold; cursor: default;">${i}</button>`;
+        } else {
+            html += `<button onclick="changeAdminShiftPage(${i})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#334155'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; color: #334155; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;">${i}</button>`;
+        }
+    }
+
+    if (currentAdminShiftPage < totalPages) {
+        html += `<button onclick="changeAdminShiftPage(${currentAdminShiftPage + 1})" onmouseover="this.style.background='#10b981'; this.style.color='white'; this.style.borderColor='#10b981';" onmouseout="this.style.background='white'; this.style.color='#475569'; this.style.borderColor='#e2e8f0';" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; color: #475569; font-weight: bold; transition: 0.2s;">&raquo;</button>`;
+    }
+
+    paginationContainer.innerHTML = html;
+}
+
+function changeAdminShiftPage(page) {
+    currentAdminShiftPage = page;
+    renderAdminShiftTable();
 }
 
 function deleteAdminShift(id) {
