@@ -16,7 +16,19 @@ function switchTab(event, tabId) {
         targetTab.style.display = 'block';
         targetTab.classList.add('active');
     }
-    if (tabId === 'tab-trang-chu') window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Luôn ẩn hết sub-view (chi tiết bài viết, tất cả BS, tất cả bài viết...)
+    // và khôi phục nội dung chính khi chuyển bất kỳ tab nào
+    const mainHome = document.getElementById('main-home-content');
+    if (mainHome) mainHome.style.display = (tabId === 'tab-trang-chu') ? 'block' : 'none';
+
+    const subViews = ['post-detail-view', 'all-posts-view', 'all-doctors-view'];
+    subViews.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    // Luôn cuộn lên đầu trang khi chuyển tab
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function scrollToSection(sectionId, event) {
