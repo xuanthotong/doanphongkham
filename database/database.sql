@@ -111,3 +111,12 @@ CREATE TABLE ThanhToan (
     ngay_tao DATETIME DEFAULT GETDATE(),
     ngay_thanh_toan DATETIME NULL               
 );
+CREATE TABLE ChatBot (
+    id              INT IDENTITY(1,1) PRIMARY KEY, 
+    phien_id        VARCHAR(50)       NOT NULL,       
+    tai_khoan_id    INT               NULL,           
+    nguoi_gui       VARCHAR(50)       NOT NULL,       
+    noi_dung        NVARCHAR(MAX)     NOT NULL,       
+    ngay_tao        DATETIME          DEFAULT GETDATE(), 
+    CONSTRAINT FK_ChatBot_TaiKhoan FOREIGN KEY (tai_khoan_id) REFERENCES TaiKhoan(id)
+);
