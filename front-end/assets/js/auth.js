@@ -7,7 +7,7 @@ async function handleLogin(event) {
     const mat_khau = document.getElementById('login_password').value;
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/login', {
+        const response = await fetch('https://doanphongkham.onrender.com/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ten_dang_nhap, mat_khau })
@@ -60,7 +60,7 @@ async function handleRegister(event) {
     const so_dien_thoai = document.getElementById('reg_phone').value;
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/register', {
+        const response = await fetch('https://doanphongkham.onrender.com/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ten_dang_nhap, mat_khau, email, ho_ten, so_dien_thoai })
@@ -138,7 +138,7 @@ function handleForgotPassword(event) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch('http://localhost:3000/api/password/reset', {
+                const res = await fetch('https://doanphongkham.onrender.com/api/password/reset', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(result.value)

@@ -3,7 +3,7 @@ let homeCategoriesList = []; // Lưu trữ danh sách danh mục toàn cục
 
 async function initHomePosts() {
     try {
-        const res = await fetch('http://localhost:3000/api/categories');
+        const res = await fetch('https://doanphongkham.onrender.com/api/categories');
         homeCategoriesList = await res.json();
     } catch (error) {
         console.error('Lỗi khi lấy danh sách danh mục:', error);
@@ -13,7 +13,7 @@ async function initHomePosts() {
 
 async function fetchHomePosts() {
     try {
-        const response = await fetch('http://localhost:3000/api/posts');
+        const response = await fetch('https://doanphongkham.onrender.com/api/posts');
         homePostsList = await response.json();
         renderHomePosts(homePostsList);
     } catch (error) {

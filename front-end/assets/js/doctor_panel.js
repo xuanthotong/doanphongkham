@@ -73,7 +73,7 @@ function openMedicalRecord(maLK, tenBN) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/appointments/${maLK}/status`, {
+                const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${maLK}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ trang_thai: 'Done', ghi_chu_cua_bac_si: result.value.ghi_chu })
@@ -95,7 +95,7 @@ function approveAppointment(maLK) {
     .then(async (result) => { 
         if(result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/appointments/${maLK}/status`, {
+                const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${maLK}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ trang_thai: 'Approved' })
@@ -115,7 +115,7 @@ function cancelAppointment(maLK) {
     .then(async (result) => { 
         if(result.isConfirmed && result.value) {
             try {
-                const res = await fetch(`http://localhost:3000/api/appointments/${maLK}/status`, {
+                const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${maLK}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ trang_thai: 'Cancelled', ghi_chu_cua_bac_si: result.value })
@@ -154,7 +154,7 @@ function editMedicalRecord(maLK) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/appointments/${maLK}/note`, {
+                const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${maLK}/note`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ghi_chu_cua_bac_si: result.value.ghi_chu })
@@ -185,7 +185,7 @@ function replyQA(maCH) {
         if (result.isConfirmed && result.value) {
             try {
                 const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
-                const res = await fetch(`http://localhost:3000/api/questions/${maCH}/reply`, {
+                const res = await fetch(`https://doanphongkham.onrender.com/api/questions/${maCH}/reply`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -217,7 +217,7 @@ async function fetchDoctorQA() {
         const docSpecialtyId = userInfo.chuyen_khoa_id;
 
         // Thêm timestamp để xóa Cache trình duyệt
-        const res = await fetch(`http://localhost:3000/api/questions?t=${new Date().getTime()}`);
+        const res = await fetch(`https://doanphongkham.onrender.com/api/questions?t=${new Date().getTime()}`);
         const allQA = await res.json();
         
         if (allQA.length > 0 && allQA[0].chuyen_khoa_id === undefined) {
@@ -456,7 +456,7 @@ function openShiftModal(shiftId = null) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const url = isEditing ? `http://localhost:3000/api/doctors/shifts/${shiftId}` : 'http://localhost:3000/api/doctors/shifts';
+                const url = isEditing ? `https://doanphongkham.onrender.com/api/doctors/shifts/${shiftId}` : 'https://doanphongkham.onrender.com/api/doctors/shifts';
                 const method = isEditing ? 'PUT' : 'POST';
                 const res = await fetch(url, {
                     method: method,
@@ -492,7 +492,7 @@ function stopShift(shiftId) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/doctors/shifts/${shiftId}/stop`, { method: 'PUT' });
+                const res = await fetch(`https://doanphongkham.onrender.com/api/doctors/shifts/${shiftId}/stop`, { method: 'PUT' });
                 if (res.ok) {
                     Swal.fire('Đã dừng!', 'Ca làm việc đã ngừng nhận bệnh nhân.', 'success');
                     fetchShifts();
@@ -516,7 +516,7 @@ function resumeShift(shiftId) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/doctors/shifts/${shiftId}/resume`, { method: 'PUT' });
+                const res = await fetch(`https://doanphongkham.onrender.com/api/doctors/shifts/${shiftId}/resume`, { method: 'PUT' });
                 if (res.ok) {
                     Swal.fire('Thành công!', 'Ca làm việc đã được mở lại và nhận bệnh nhân.', 'success');
                     fetchShifts();
@@ -532,7 +532,7 @@ function resumeShift(shiftId) {
 async function fetchShifts() {
     if (!currentDoctorId) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/doctors/shifts/${currentDoctorId}?t=${new Date().getTime()}`);
+        const res = await fetch(`https://doanphongkham.onrender.com/api/doctors/shifts/${currentDoctorId}?t=${new Date().getTime()}`);
         currentShifts = await res.json();
         
         const tbody = document.getElementById('shiftTableBody');
@@ -616,7 +616,7 @@ async function fetchShifts() {
 async function fetchAppointments() {
     if (!currentDoctorId) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/appointments/doctor/${currentDoctorId}?t=${new Date().getTime()}`);
+        const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/doctor/${currentDoctorId}?t=${new Date().getTime()}`);
         currentAppointments = await res.json();
         
         // Đếm dữ liệu theo trạng thái
@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     avatarImg.src = userInfo.anh_dai_dien;
                 } else {
                 // Nếu chỉ là tên file (VD: 'bs_thieu.jpg'), thì mới ghép với URL server
-                    avatarImg.src = `http://localhost:3000/uploads/${userInfo.anh_dai_dien}`;
+                    avatarImg.src = `https://doanphongkham.onrender.com/uploads/${userInfo.anh_dai_dien}`;
                 }
                 // Nếu ảnh server bị lỗi, tự đổi sang ảnh chữ cái
                 avatarImg.onerror = function() {

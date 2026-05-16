@@ -170,7 +170,7 @@ async function toggleLockDoctor(id, isLocked) {
         if (result.isConfirmed) {
             try {
                 // Vẫn dùng endpoint DELETE nhưng API Backend đã được sửa lại để thực hiện Khóa/Mở khóa
-                const res = await fetch('http://localhost:3000/api/doctors/' + id, { method: 'DELETE' });
+                const res = await fetch('https://doanphongkham.onrender.com/api/doctors/' + id, { method: 'DELETE' });
                 const data = await res.json();
                 if(res.ok) {
                     Swal.fire('Thành công!', data.message, 'success');
@@ -188,7 +188,7 @@ async function toggleLockDoctor(id, isLocked) {
 // =======================================================
 async function fetchDoctors() {
     try {
-        const response = await fetch('http://localhost:3000/api/doctors');
+        const response = await fetch('https://doanphongkham.onrender.com/api/doctors');
         doctors = await response.json(); // Cập nhật mảng ảo bằng dữ liệu thật
         renderTable();
     } catch (error) { console.error('Lỗi khi lấy dữ liệu bác sĩ:', error); }
@@ -200,7 +200,7 @@ async function fetchDoctors() {
 async function fetchSpecialtiesForDropdown() {
     if (!chuyenKhoaSelect) return;
     try {
-        const response = await fetch('http://localhost:3000/api/specialties');
+        const response = await fetch('https://doanphongkham.onrender.com/api/specialties');
         const specialties = await response.json();
         
         chuyenKhoaSelect.innerHTML = '<option value="" disabled selected>-- Chọn chuyên khoa --</option>';
@@ -257,7 +257,7 @@ form.addEventListener('submit', function(e) {
 
             try {
                 // GỌI API SỬA (PUT) VÀO CƠ SỞ DỮ LIỆU
-                const res = await fetch('http://localhost:3000/api/doctors/' + idValue, {
+                const res = await fetch('https://doanphongkham.onrender.com/api/doctors/' + idValue, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newDoc)
@@ -274,7 +274,7 @@ form.addEventListener('submit', function(e) {
         } else {
             try {
                 // GỌI API THÊM MỚI (POST) VÀO CƠ SỞ DỮ LIỆU
-                const res = await fetch('http://localhost:3000/api/doctors', {
+                const res = await fetch('https://doanphongkham.onrender.com/api/doctors', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newDoc)

@@ -116,7 +116,7 @@ async function deletePost(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch('http://localhost:3000/api/posts/' + id, { method: 'DELETE' });
+                const res = await fetch('https://doanphongkham.onrender.com/api/posts/' + id, { method: 'DELETE' });
                 if(res.ok) {
                     Swal.fire('Đã xóa!', 'Xóa bài viết thành công.', 'success');
                     fetchPosts();
@@ -134,7 +134,7 @@ async function deletePost(id) {
 
 async function fetchPosts() {
     try {
-        const response = await fetch('http://localhost:3000/api/posts');
+        const response = await fetch('https://doanphongkham.onrender.com/api/posts');
         posts = await response.json();
         renderPostTable();
     } catch (error) { console.error('Lỗi khi lấy dữ liệu bài viết:', error); }
@@ -168,7 +168,7 @@ if (postForm) {
                 }
                 
                 try {
-                    const res = await fetch('http://localhost:3000/api/posts/' + idValue, {
+                    const res = await fetch('https://doanphongkham.onrender.com/api/posts/' + idValue, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newPost)
@@ -182,7 +182,7 @@ if (postForm) {
                 } catch(err) { Swal.fire('Lỗi!', "Lỗi kết nối", 'error'); }
             } else {
                 try {
-                    const res = await fetch('http://localhost:3000/api/posts', {
+                    const res = await fetch('https://doanphongkham.onrender.com/api/posts', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newPost)
@@ -215,7 +215,7 @@ if (postForm) {
 async function fetchCategoriesForDropdown() {
     const danhMucSelect = document.getElementById('p_danh_muc');
     try {
-        const response = await fetch('http://localhost:3000/api/categories');
+        const response = await fetch('https://doanphongkham.onrender.com/api/categories');
         categoriesList = await response.json();
         
         if (danhMucSelect) {

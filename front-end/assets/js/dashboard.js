@@ -82,7 +82,7 @@ const adminShiftItemsPerPage = 20;
 async function fetchAdminShifts() {
     if (!shiftTbody) return;
     try {
-        const response = await fetch('http://localhost:3000/api/doctors/shifts/admin/all');
+        const response = await fetch('https://doanphongkham.onrender.com/api/doctors/shifts/admin/all');
         allAdminShifts = await response.json();
         renderAdminShiftTable();
     } catch (error) {
@@ -231,7 +231,7 @@ function deleteAdminShift(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`http://localhost:3000/api/doctors/shifts/${id}`, { method: 'DELETE' });
+                const response = await fetch(`https://doanphongkham.onrender.com/api/doctors/shifts/${id}`, { method: 'DELETE' });
                 const data = await response.json();
                 if (response.ok) { 
                     Swal.fire('Đã xóa!', data.message, 'success'); 

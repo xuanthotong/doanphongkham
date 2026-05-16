@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (userInfo.anh_dai_dien.startsWith('data:image') || userInfo.anh_dai_dien.startsWith('http')) {
                     avatarImg.src = userInfo.anh_dai_dien;
                 } else {
-                    avatarImg.src = `http://localhost:3000/uploads/${userInfo.anh_dai_dien}`;
+                    avatarImg.src = `https://doanphongkham.onrender.com/uploads/${userInfo.anh_dai_dien}`;
                 }
                 avatarImg.onerror = function() { this.src = fallbackAvatar; };
             } else {
@@ -216,7 +216,7 @@ async function submitQuestion(e) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch('http://localhost:3000/api/questions', {
+                const response = await fetch('https://doanphongkham.onrender.com/api/questions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -257,7 +257,7 @@ window.itemsPerPage = 5; // Số lượng câu hỏi mỗi trang
 async function loadCommunityQA() {
     try {
         // Thêm timestamp để chống trình duyệt lưu Cache cũ
-        const res = await fetch(`http://localhost:3000/api/questions?t=${new Date().getTime()}`);
+        const res = await fetch(`https://doanphongkham.onrender.com/api/questions?t=${new Date().getTime()}`);
         window.allCommunityQA = await res.json();
         
         // Kiểm tra xem Backend có trả về chuyen_khoa_id không
@@ -472,12 +472,12 @@ function changeQAPage(page) {
 // ==================================================
 async function loadSpecialtiesForQA() {
     try {
-        const res = await fetch('http://localhost:3000/api/specialties');
+        const res = await fetch('https://doanphongkham.onrender.com/api/specialties');
         if (!res.ok) throw new Error('Lỗi khi tải chuyên khoa');
         const specialties = await res.json();
 
         // Lấy danh sách bác sĩ để lọc
-        const resDoc = await fetch('http://localhost:3000/api/doctors');
+        const resDoc = await fetch('https://doanphongkham.onrender.com/api/doctors');
         let activeDoctorSpecialtyIds = new Set();
         if (resDoc.ok) {
             const doctors = await resDoc.json();
@@ -588,7 +588,7 @@ async function updatePatientProfile(event) {
 
     try {
         // Gọi API PUT để cập nhật bảng HoSoNguoiDung
-        const response = await fetch(`http://localhost:3000/api/accounts/profile/${userInfo.id}`, {
+        const response = await fetch(`https://doanphongkham.onrender.com/api/accounts/profile/${userInfo.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ dia_chi, gioi_tinh })
@@ -651,7 +651,7 @@ async function fetchMedicalHistory() {
 
     try {
         // Thêm ?t=... để bắt buộc Server phải trả về dữ liệu mới nhất
-        const res = await fetch(`http://localhost:3000/api/appointments/patient/${userInfo.id}?t=${new Date().getTime()}`);
+        const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/patient/${userInfo.id}?t=${new Date().getTime()}`);
         if (!res.ok) throw new Error('Failed to fetch');
         const history = await res.json();
         
@@ -864,14 +864,14 @@ async function submitRating() {
         let res;
         if (currentReviewId) {
             // Gọi API Sửa Đánh Giá
-            res = await fetch(`http://localhost:3000/api/reviews/${currentReviewId}`, { 
+            res = await fetch(`https://doanphongkham.onrender.com/api/reviews/${currentReviewId}`, { 
                 method: 'PUT', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ so_sao: currentRatingScore, noi_dung: nhan_xet }) 
             });
         } else {
             // Gọi API Thêm Đánh Giá Mới
-            res = await fetch(`http://localhost:3000/api/appointments/${currentRatingAppId}/rate`, { 
+            res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${currentRatingAppId}/rate`, { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ diem_danh_gia: currentRatingScore, nhan_xet }) 

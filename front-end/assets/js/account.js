@@ -8,7 +8,7 @@ async function fetchAccounts() {
     if (!accountTbody) return;
     
     try {
-        const response = await fetch('http://localhost:3000/api/accounts');
+        const response = await fetch('https://doanphongkham.onrender.com/api/accounts');
         allAccounts = await response.json();
         renderAccountTable();
     } catch (error) {
@@ -147,7 +147,7 @@ async function deleteAccount(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`http://localhost:3000/api/accounts/${id}`, {
+                const response = await fetch(`https://doanphongkham.onrender.com/api/accounts/${id}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -221,7 +221,7 @@ if (accountForm) {
         };
 
         try {
-            const res = await fetch(`http://localhost:3000/api/accounts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch(`https://doanphongkham.onrender.com/api/accounts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await res.json();
             
             if (res.ok) { Swal.fire('Thành công!', 'Cập nhật tài khoản thành công', 'success'); closeAccountModal(); fetchAccounts(); } 

@@ -6,7 +6,7 @@ const reviewsPerPage = 5;      // Số nhận xét hiển thị mỗi trang (Ch�
 
 async function fetchHomeDoctors() {
     try {
-        const response = await fetch('http://localhost:3000/api/doctors');
+        const response = await fetch('https://doanphongkham.onrender.com/api/doctors');
         homeDoctorsList = await response.json(); // Lưu vào biến toàn cục
         renderHomeDoctors(homeDoctorsList);
     } catch (error) {
@@ -124,7 +124,7 @@ async function showDoctorDetails(id) {
     if (reviewsContainer) {
         reviewsContainer.innerHTML = '<p style="color: #64748b; font-size: 14px; font-style: italic; text-align: center;">Đang tải đánh giá...</p>';
         try {
-            const res = await fetch(`http://localhost:3000/api/doctors/${id}/reviews`);
+            const res = await fetch(`https://doanphongkham.onrender.com/api/doctors/${id}/reviews`);
             currentDoctorReviews = await res.json();
             currentReviewPage = 1;
             renderDoctorReviews();

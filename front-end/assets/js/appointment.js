@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load Chuyên khoa cho Bước 1
     try {
-        const resCK = await fetch('http://localhost:3000/api/specialties');
+        const resCK = await fetch('https://doanphongkham.onrender.com/api/specialties');
         const specialties = await resCK.json();
         const selectCK = document.getElementById('select_chuyen_khoa');
         if (selectCK) {
@@ -26,11 +26,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Tải toàn bộ Bác sĩ và Ca làm việc
-        const resDoc = await fetch('http://localhost:3000/api/doctors');
+        const resDoc = await fetch('https://doanphongkham.onrender.com/api/doctors');
         allDoctors = await resDoc.json();
         
         try {
-            const resShift = await fetch('http://localhost:3000/api/doctors/shifts');
+            const resShift = await fetch('https://doanphongkham.onrender.com/api/doctors/shifts');
             if (resShift.ok) {
                 allShifts = await resShift.json();
             } else {
@@ -95,7 +95,7 @@ function filterDoctorsBySpecialty() {
             if (doc.anh_dai_dien.startsWith('data:image') || doc.anh_dai_dien.startsWith('http')) {
                 avatar = doc.anh_dai_dien;
             } else {
-                avatar = `http://localhost:3000/uploads/${doc.anh_dai_dien}`;
+                avatar = `https://doanphongkham.onrender.com/uploads/${doc.anh_dai_dien}`;
             }
         }
 
@@ -170,7 +170,7 @@ async function loadTimeSlots() {
 
     // Gọi API lấy danh sách các giờ đã được đặt của bác sĩ này trong ngày hôm đó
     try {
-        const res = await fetch(`http://localhost:3000/api/appointments/booked?bac_si_id=${bookingData.bac_si_id}&ngay=${dateVal}`);
+        const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/booked?bac_si_id=${bookingData.bac_si_id}&ngay=${dateVal}`);
         
         let bookedSlots = [];
         if (res.ok) {
@@ -351,7 +351,7 @@ function startPaymentCountdown(durationInSeconds) {
             clearInterval(paymentCountdownInterval);
             clearInterval(pollingInterval);
             if (currentPendingAppointmentId) {
-                await fetch(`http://localhost:3000/api/appointments/${currentPendingAppointmentId}/unpaid`, { method: 'DELETE' });
+                await fetch(`https://doanphongkham.onrender.com/api/appointments/${currentPendingAppointmentId}/unpaid`, { method: 'DELETE' });
                 currentPendingAppointmentId = null;
             }
             Swal.fire({
@@ -372,7 +372,7 @@ async function cancelUnpaidAndGoBack() {
     
     if (currentPendingAppointmentId) {
         try {
-            await fetch(`http://localhost:3000/api/appointments/${currentPendingAppointmentId}/unpaid`, { method: 'DELETE' });
+            await fetch(`https://doanphongkham.onrender.com/api/appointments/${currentPendingAppointmentId}/unpaid`, { method: 'DELETE' });
             currentPendingAppointmentId = null;
         } catch (error) {
             console.error('Lỗi hủy lịch:', error);
@@ -411,7 +411,7 @@ async function submitBooking() {
     });
 
     try {
-        const res = await fetch('http://localhost:3000/api/appointments', {
+        const res = await fetch('https://doanphongkham.onrender.com/api/appointments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -502,7 +502,7 @@ async function submitBooking() {
 // HÀM CALL API CHECK TRẠNG THÁI (ĐƯỢC GỌI BỞI VÒNG LẶP)
 async function checkPaymentStatus(appointmentId) {
     try {
-        const res = await fetch(`http://localhost:3000/api/appointments/${appointmentId}/payment-status`);
+        const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${appointmentId}/payment-status`);
         if (res.ok) {
             const data = await res.json();
             if (data.paid === true) {

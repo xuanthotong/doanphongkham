@@ -4,7 +4,7 @@ const homeQAItemsPerPage = 4;
 
 async function fetchHomeQA() {
     try {
-        const response = await fetch('http://localhost:3000/api/questions');
+        const response = await fetch('https://doanphongkham.onrender.com/api/questions');
         const questions = await response.json();
         // LỌC: Chỉ lấy những câu hỏi đã được trả lời để hiển thị ở trang chủ
         homeQAData = questions.filter(q => q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== ''));

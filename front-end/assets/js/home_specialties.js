@@ -3,7 +3,7 @@ let windowSpecialtiesData = [];
 
 async function fetchHomeSpecialties() {
     try {
-        const response = await fetch('http://localhost:3000/api/specialties');
+        const response = await fetch('https://doanphongkham.onrender.com/api/specialties');
         const specialties = await response.json();
         windowSpecialtiesData = specialties; // Lưu lại dữ liệu
         renderHomeSpecialties(specialties);

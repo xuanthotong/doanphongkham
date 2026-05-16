@@ -5,7 +5,7 @@
 (function() {
     'use strict';
 
-    const API_BASE = 'http://localhost:3000/api/chatbot';
+    const API_BASE = 'https://doanphongkham.onrender.com/api/chatbot';
 
     // Tạo phiên chat duy nhất cho mỗi tab trình duyệt
     let PHIEN_ID = sessionStorage.getItem('chatbot_phien_id');

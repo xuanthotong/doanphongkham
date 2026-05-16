@@ -7,7 +7,7 @@ const categoryModalTitle = document.getElementById('categoryModalTitle');
 async function fetchAdminCategories() {
     if (!categoryTbody) return;
     try {
-        const res = await fetch('http://localhost:3000/api/categories');
+        const res = await fetch('https://doanphongkham.onrender.com/api/categories');
         if (!res.ok) {
             console.error('Lỗi API Danh mục:', res.status);
             categoryTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #ef4444; padding: 20px;">Lỗi kết nối API Danh mục (Mã lỗi ${res.status}). Vui lòng kiểm tra lại server.js!</td></tr>`;
@@ -66,7 +66,7 @@ function editCategory(id) {
 async function deleteCategory(id) {
     if (!confirm("Bạn có chắc chắn muốn xóa Danh mục này? Các bài viết thuộc danh mục này có thể bị ảnh hưởng!")) return;
     try {
-        const res = await fetch('http://localhost:3000/api/categories/' + id, { method: 'DELETE' });
+        const res = await fetch('https://doanphongkham.onrender.com/api/categories/' + id, { method: 'DELETE' });
         const data = await res.json();
         if (res.ok) { alert('Xóa danh mục thành công!'); fetchAdminCategories(); } 
         else { alert(data.message || 'Lỗi khi xóa!'); }
@@ -79,7 +79,7 @@ categoryForm.addEventListener('submit', async (e) => {
     const payload = { ten_danh_muc: document.getElementById('c_ten_danh_muc').value };
 
     try {
-        const url = id ? `http://localhost:3000/api/categories/${id}` : 'http://localhost:3000/api/categories';
+        const url = id ? `https://doanphongkham.onrender.com/api/categories/${id}` : 'https://doanphongkham.onrender.com/api/categories';
         const method = id ? 'PUT' : 'POST';
         const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         

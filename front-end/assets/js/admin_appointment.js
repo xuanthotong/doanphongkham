@@ -6,7 +6,7 @@ const adminAppointmentItemsPerPage = 20;
 async function fetchAdminAppointments() {
     if (!appointmentTbody) return;
     try {
-        const response = await fetch('http://localhost:3000/api/appointments');
+        const response = await fetch('https://doanphongkham.onrender.com/api/appointments');
         allAdminAppointments = await response.json();
         renderAppointmentTable();
     } catch (error) {
@@ -158,7 +158,7 @@ function editAdminAppointmentNote(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/appointments/${id}/note`, {
+                const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${id}/note`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ghi_chu_cua_bac_si: result.value })
@@ -180,7 +180,7 @@ function deleteAdminAppointment(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`http://localhost:3000/api/appointments/${id}`, { method: 'DELETE' });
+                const response = await fetch(`https://doanphongkham.onrender.com/api/appointments/${id}`, { method: 'DELETE' });
                 const data = await response.json();
                 if (response.ok) { Swal.fire('Thành công!', data.message || 'Hủy lịch hẹn thành công!', 'success'); fetchAdminAppointments(); } 
                 else { Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra khi hủy lịch hẹn!', 'error'); }

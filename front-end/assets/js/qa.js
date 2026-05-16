@@ -6,7 +6,7 @@ const adminQAItemsPerPage = 20;
 // HÀM LẤY CÂU HỎI TỪ CƠ SỞ DỮ LIỆU
 async function fetchQuestions() {
     try {
-        const response = await fetch('http://localhost:3000/api/questions');
+        const response = await fetch('https://doanphongkham.onrender.com/api/questions');
         questions = await response.json();
         renderQATable();
     } catch (error) {
@@ -158,7 +158,7 @@ async function replyQA(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/questions/${id}/reply`, {
+                const res = await fetch(`https://doanphongkham.onrender.com/api/questions/${id}/reply`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     // ĐÃ SỬA: Gửi kèm ID người trả lời và Vai trò lên Backend
@@ -190,7 +190,7 @@ async function deleteQA(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`http://localhost:3000/api/questions/${id}`, { method: 'DELETE' });
+                const res = await fetch(`https://doanphongkham.onrender.com/api/questions/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     Swal.fire('Đã xóa!', 'Xóa câu hỏi thành công.', 'success');
                     fetchQuestions();

@@ -7,7 +7,7 @@ const specialtyModalTitle = document.getElementById('specialtyModalTitle');
 async function fetchAdminSpecialties() {
     if (!specialtyTbody) return;
     try {
-        const res = await fetch('http://localhost:3000/api/specialties');
+        const res = await fetch('https://doanphongkham.onrender.com/api/specialties');
         specialtiesList = await res.json();
         renderSpecialtyTable();
     } catch (error) {
@@ -77,7 +77,7 @@ async function deleteSpecialty(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch('http://localhost:3000/api/specialties/' + id, { method: 'DELETE' });
+                const res = await fetch('https://doanphongkham.onrender.com/api/specialties/' + id, { method: 'DELETE' });
                 const data = await res.json();
                 if (res.ok) {
                     Swal.fire('Đã xóa!', 'Xóa chuyên khoa thành công!', 'success');
@@ -102,7 +102,7 @@ specialtyForm.addEventListener('submit', async (e) => {
     };
 
     try {
-        const url = id ? `http://localhost:3000/api/specialties/${id}` : 'http://localhost:3000/api/specialties';
+        const url = id ? `https://doanphongkham.onrender.com/api/specialties/${id}` : 'https://doanphongkham.onrender.com/api/specialties';
         const method = id ? 'PUT' : 'POST';
         const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json();
