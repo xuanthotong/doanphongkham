@@ -14,6 +14,11 @@
 .nav-icon-caret { color: var(--primary); margin-left: 5px; }
 .nav-highlight { color: var(--primary) !important; font-weight: 700 !important; }
 
+.mobile-menu-btn { display: none; background: none; border: none; font-size: 28px; color: #1e293b; cursor: pointer; }
+.mobile-drawer { display: none; }
+.close-menu-btn { display: none; position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 32px; color: #1e293b; cursor: pointer; z-index: 1001; }
+.nav-wrapper { display: flex; align-items: center; gap: 30px; }
+
 /* Tabs */
 .tab-content { display: none !important; }
 .tab-content.active { display: block !important; animation: fadeIn 0.4s ease; }
@@ -111,5 +116,118 @@
 /* Responsive */
 @media (max-width: 992px) {
     .qa-layout { grid-template-columns: 1fr; }
-    .qa-sidebar { order: -1; }
+    .qa-sidebar { order: -1; margin-bottom: 20px; position: static !important; }
+}
+
+/* ==============================================================
+   RESPONSIVE CHUẨN (BỆNH NHÂN)
+============================================================== */
+@media (max-width: 768px) {
+    .patient-nav { position: sticky; top: 0; z-index: 1000; }
+    .patient-nav .container { flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
+    .nav-logo-img { height: 40px; margin-left: 0; }
+    
+    .mobile-menu-btn { display: block; }
+    .close-menu-btn { display: block; }
+    
+    /* ẨN TOÀN BỘ CÁC MENU TRÊN MÁY TÍNH ĐỂ TRÁNH LỘN XỘN */
+    .nav-links, .user-menu, .nav-wrapper { display: none !important; }
+    
+    /* HIỂN THỊ MENU CLONE RIÊNG DÀNH CHO ĐIỆN THOẠI */
+    .mobile-drawer { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: #ffffff; flex-direction: column; align-items: flex-start; padding: 60px 20px 20px; box-shadow: -5px 0 20px rgba(0,0,0,0.1); transition: right 0.3s ease; z-index: 1000; overflow-y: auto; gap: 15px; display: flex; }
+    .mobile-drawer.active { right: 0; }
+    .close-menu-btn { display: block; position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 32px; color: #1e293b; cursor: pointer; z-index: 1001; }
+    
+    .mobile-nav-links { display: flex; flex-direction: column; width: 100%; align-items: stretch; gap: 5px; padding: 0; list-style: none; margin: 0; }
+    .mobile-nav-links li { width: 100%; border-bottom: none; display: block; }
+    .mobile-nav-links a { display: block; width: 100%; padding: 12px 15px; border-radius: 8px; font-size: 16px; border-bottom: none; background: transparent; text-decoration: none; color: #64748b; font-weight: 600; transition: 0.2s;}
+    .mobile-nav-links a:hover, .mobile-nav-links a.active { background: #10B981; color: white !important; }
+    
+    /* BÊ NGUYÊN CẤU TRÚC TỪ MÁY TÍNH VÀO MOBILE, ÉP 1 DÒNG VÀ ĐẶT NGAY DƯỚI HỎI ĐÁP */
+    .mobile-user-btn { 
+        width: 100% !important; display: flex !important; flex-wrap: wrap !important; 
+        align-items: center !important; justify-content: flex-start !important; gap: 10px !important; 
+        margin-top: 0 !important; margin-bottom: 10px !important; background: transparent !important; 
+        border: none !important; padding: 5px 0 0 !important; border-radius: 0 !important; 
+        cursor: pointer !important; transition: 0.2s !important; 
+    }
+    
+    /* Giao diện khung chứa Ảnh và Tên (Ép ngang tuyệt đối) */
+    .mobile-user-btn > div:not(.dropdown-menu), .mobile-user-btn > a:not(.dropdown-menu) {
+        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; 
+        align-items: center !important; gap: 10px !important; width: 100% !important; pointer-events: none !important;
+    }
+    .mobile-user-btn .dropdown-menu a { pointer-events: auto !important; }
+    
+    .mobile-user-btn img { 
+        width: 40px !important; height: 40px !important; border-radius: 50% !important; 
+        object-fit: cover !important; border: 2px solid #0284c7 !important; margin: 0 !important; 
+        flex-shrink: 0 !important; display: block !important; 
+    }
+    .mobile-user-btn span, .mobile-user-btn p, .mobile-user-btn h4 { 
+        font-weight: 700 !important; color: #0284c7 !important; font-size: 16px !important; 
+        margin: 0 !important; white-space: nowrap !important; overflow: hidden !important; 
+        text-overflow: ellipsis !important; flex: 1 !important; text-align: left !important; 
+    }
+    
+    /* Giao diện Dropdown Menu (Xổ xuống y hệt máy tính) */
+    .mobile-user-btn .dropdown-menu { 
+        display: none; width: 100%; background: #f8fafc; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); 
+        list-style: none; padding: 5px 0; margin-top: 10px; border-radius: 8px; border: 1px solid #e2e8f0; 
+    }
+    .mobile-user-btn.active .dropdown-menu { display: block !important; animation: fadeIn 0.3s ease; }
+    .mobile-user-btn .dropdown-menu li { width: 100%; border-bottom: none !important; display: block !important; }
+    .mobile-user-btn .dropdown-menu li a { 
+        display: block !important; width: 100% !important; padding: 12px 15px !important; font-size: 15px !important; 
+        color: #475569 !important; text-decoration: none !important; transition: 0.2s !important; 
+        font-weight: 600 !important; text-align: left !important; 
+    }
+    .mobile-user-btn .dropdown-menu li a:hover { background: #10B981 !important; color: white !important; }
+
+    .form-grid { grid-template-columns: 1fr; }
+    .patient-card { padding: 20px; margin: 15px 0; width: 100%; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+    
+    .section-header-flex { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+    .section-header-text h2 { font-size: 24px; line-height: 1.3; margin-bottom: 5px; }
+    
+    .qa-filters { flex-direction: column; align-items: stretch; gap: 10px; }
+    .qa-filter-pills { overflow-x: visible; flex-wrap: wrap; }
+    .qa-pill { white-space: normal; flex: auto; text-align: center; }
+    .qa-filter-select { width: 100%; border-radius: 8px; height: 40px; }
+    
+    .qa-card { border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0; }
+    .qa-card-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .qa-form-box { border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0; }
+    
+    .stepper-container { flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .step-line { display: none; }
+    
+    .confirm-cards-grid, .datetime-grid { grid-template-columns: 1fr; gap: 15px; }
+    .time-slots-grid { grid-template-columns: repeat(3, 1fr); }
+    
+    .form-control, .swal2-input, .swal2-textarea { border-radius: 8px !important; }
+    .btn-save, .btn-full { border-radius: 8px; height: 45px; font-size: 15px; }
+    .payment-methods-grid { grid-template-columns: 1fr; gap: 10px; }
+    .payment-card-content { border-radius: 12px; padding: 15px; }
+
+    /* ==============================================================
+       SỬA LỖI GIAO DIỆN HỒ SƠ & LỊCH SỬ KHÁM BỊ HẸP TRÊN MOBILE
+    ============================================================== */
+    /* 1. Form Hồ sơ cá nhân (Chuyển thành cột dọc hoàn toàn) */
+    .form-grid { display: flex !important; flex-direction: column !important; gap: 15px !important; width: 100% !important; }
+    .form-control { min-height: 48px !important; font-size: 15px !important; padding: 12px 15px !important; width: 100% !important; box-sizing: border-box !important; max-width: 100% !important; }
+    .form-label { font-size: 14px !important; margin-bottom: 6px !important; display: block; }
+    
+    /* 2. Lịch sử khám (Tách tên BS, Trạng thái, Ngày giờ xếp dọc) */
+    #lich_su_kham_list > div { flex-direction: column !important; align-items: flex-start !important; padding: 15px !important; width: 100% !important; box-sizing: border-box !important; }
+    #lich_su_kham_list > div > div:nth-child(2) { width: 100% !important; }
+    #lich_su_kham_list > div > div:nth-child(2) > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+    #lich_su_kham_list > div > div:nth-child(2) > div:nth-child(2) { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+    #lich_su_kham_list > div > div:nth-child(2) > div:nth-child(2) span { margin: 0 !important; display: block !important; }
+    
+    /* 3. Hồ sơ sức khỏe / Đơn thuốc (Xếp dọc tránh bị tràn nội dung) */
+    #ho_so_suc_khoe_list > div > div:first-child { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+    #ho_so_suc_khoe_list > div > div:nth-child(2) > div:first-child { flex-direction: column !important; gap: 15px !important; }
+    #ho_so_suc_khoe_list > div > div:nth-child(2) > div:first-child > div { width: 100% !important; }
+    .rated-badge { display: block !important; margin-bottom: 10px !important; margin-right: 0 !important; }
 }

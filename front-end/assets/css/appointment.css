@@ -133,7 +133,13 @@
 }
 
 @media (max-width: 768px) {
-    .profile-dashboard-grid { grid-template-columns: 1fr; }
+    /* ĐẢO NGƯỢC VỊ TRÍ TRÊN MOBILE: LỊCH SỬ KHÁM LÊN TRÊN, THÔNG TIN CÁ NHÂN XUỐNG DƯỚI */
+    .profile-dashboard-grid { 
+        display: flex !important; 
+        flex-direction: column-reverse !important; 
+        gap: 30px !important; 
+    }
+    .profile-dashboard-grid > div { width: 100% !important; max-width: 100% !important; }
 }
 /* =========================================
    BƯỚC 5: THANH TOÁN

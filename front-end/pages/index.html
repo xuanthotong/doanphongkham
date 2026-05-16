@@ -29,22 +29,28 @@
             <a href="#" onclick="returnToHome(event)" class="logo">
                 <img src="../assets/images/logo.png" alt="Logo"> 
             </a>
+            <button class="mobile-menu-btn" onclick="document.querySelector('.nav-wrapper').classList.add('active')">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="nav-wrapper">
+                <button class="close-menu-btn" onclick="document.querySelector('.nav-wrapper').classList.remove('active')"><i class="fa-solid fa-xmark"></i></button>
             <ul class="nav-links">
-                <li><a href="#" onclick="returnToHome(event)">Trang chủ</a></li>
-                <li class="dropdown-container">
-                    <a href="#dich-vu" onclick="scrollToSection('dich-vu', event)">Dịch vụ <i class="fa-solid fa-chevron-down" style="font-size: 12px;"></i></a>
+                <li><a href="#" onclick="returnToHome(event); document.querySelector('.nav-wrapper').classList.remove('active')">Trang chủ</a></li>
+                <li class="dropdown-container" onclick="this.classList.toggle('active')">
+                    <a href="#dich-vu" onclick="scrollToSection('dich-vu', event); document.querySelector('.nav-wrapper').classList.remove('active')">Dịch vụ <i class="fa-solid fa-chevron-down" style="font-size: 12px;"></i></a>
                     <ul class="dropdown-menu" id="specialty-dropdown">
                         <!-- Danh sách chuyên khoa sẽ được JS tự động đổ vào đây -->
                     </ul>
                 </li>
-                <li><a href="#bac-si" onclick="scrollToSection('bac-si', event)">Bác sĩ</a></li>
-                <li><a href="#bai-viet" onclick="scrollToSection('bai-viet', event)">Bài viết</a></li>
-                <li><a href="#hoi-dap" onclick="scrollToSection('hoi-dap', event)">Hỏi đáp</a></li>
+                <li><a href="#bac-si" onclick="scrollToSection('bac-si', event); document.querySelector('.nav-wrapper').classList.remove('active')">Bác sĩ</a></li>
+                <li><a href="#bai-viet" onclick="scrollToSection('bai-viet', event); document.querySelector('.nav-wrapper').classList.remove('active')">Bài viết</a></li>
+                <li><a href="#hoi-dap" onclick="scrollToSection('hoi-dap', event); document.querySelector('.nav-wrapper').classList.remove('active')">Hỏi đáp</a></li>
             </ul>
             <div class="auth-buttons">
-                 <a href="#" class="btn btn-primary" onclick="requireLoginToBook(event)"><i class="fa-regular fa-calendar"></i> Đặt lịch khám</a>
-                <a href="#" class="btn btn-outline" onclick="openModal('loginModal', event)"><i class="fa-regular fa-user"></i> Đăng nhập</a>
+                 <a href="#" class="btn btn-primary" onclick="requireLoginToBook(event); document.querySelector('.nav-wrapper').classList.remove('active')"><i class="fa-regular fa-calendar"></i> Đặt lịch khám</a>
+                <a href="#" class="btn btn-outline" onclick="openModal('loginModal', event); document.querySelector('.nav-wrapper').classList.remove('active')"><i class="fa-regular fa-user"></i> Đăng nhập</a>
             </div> 
+            </div>
         </div>
     </nav>
 

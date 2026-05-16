@@ -821,3 +821,71 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '../login.html'; 
     }
 });
+
+/* =========================================================================================
+   KHỞI TẠO MENU MOBILE CHUẨN (GIỮ NGUYÊN 100% GIAO DIỆN MÁY TÍNH)
+========================================================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    const navbarContainer = document.querySelector('.navbar .container');
+    const navLinks = document.querySelector('.nav-links');
+    const userMenu = document.querySelector('.user-dropdown-btn');
+    
+    if (navbarContainer && navLinks) {
+        let mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        
+        // 1. TẠO NÚT 3 GẠCH (Chỉ hiện trên điện thoại qua CSS)
+        if (!mobileMenuBtn) {
+            mobileMenuBtn = document.createElement('button');
+            mobileMenuBtn.className = 'mobile-menu-btn';
+            mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+            navbarContainer.appendChild(mobileMenuBtn);
+        }
+        
+        // 2. TẠO MENU CLONE RIÊNG CHO ĐIỆN THOẠI (Không đụng chạm code Máy tính)
+        let mobileDrawer = document.querySelector('.mobile-drawer');
+        if (!mobileDrawer) {
+            mobileDrawer = document.createElement('div');
+            mobileDrawer.className = 'mobile-drawer';
+            
+            const btnClose = document.createElement('button');
+            btnClose.className = 'close-menu-btn';
+            btnClose.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            mobileDrawer.appendChild(btnClose);
+            
+            // Nhân bản (Clone) Menu và Avatar để nhét vào Drawer
+            const clonedNav = navLinks.cloneNode(true);
+            clonedNav.className = 'mobile-nav-links';
+            mobileDrawer.appendChild(clonedNav);
+            
+            if (userMenu) {
+                const clonedUser = userMenu.cloneNode(true);
+                clonedUser.className = 'mobile-user-btn';
+                clonedUser.removeAttribute('id'); // Tránh trùng lặp ID
+                // Gắn lại sự kiện Đăng xuất cho Avatar trên điện thoại
+                clonedUser.addEventListener('click', confirmLogout);
+                mobileDrawer.appendChild(clonedUser);
+            }
+            
+            document.body.appendChild(mobileDrawer);
+        }
+        
+        // 3. GẮN SỰ KIỆN BẤM MỞ / ĐÓNG MENU TRÊN ĐIỆN THOẠI
+        const closeBtnElem = document.querySelector('.mobile-drawer .close-menu-btn');
+        mobileMenuBtn.addEventListener('click', () => { document.querySelector('.mobile-drawer').classList.add('active'); });
+        if (closeBtnElem) closeBtnElem.addEventListener('click', () => { document.querySelector('.mobile-drawer').classList.remove('active'); });
+        
+        // 4. TỰ ĐỘNG ĐÓNG MENU VÀ CHUYỂN TAB KHI BẤM CHỌN
+        document.querySelectorAll('.mobile-nav-links a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                document.querySelector('.mobile-drawer').classList.remove('active');
+                const onclickAttr = link.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes("switchTab")) {
+                    const match = onclickAttr.match(/'([^']+)'/);
+                    if (match && match[1]) {
+                        switchTab(e, match[1]);
+                    }
+                }
+            });
+        });
+    }
+});

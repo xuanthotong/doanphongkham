@@ -32,6 +32,12 @@ function switchTab(tabName, clickedElement) {
     allSections.forEach(section => section.style.display = 'none');
 
     document.getElementById('section-' + tabName).style.display = 'block';
+
+    // Đóng sidebar trên mobile sau khi chọn chức năng
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar && sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+    }
 }
 
 // Đóng Modal dùng chung
@@ -249,3 +255,62 @@ function deleteAdminShift(id) {
 
 // Gọi API ngay khi tải trang
 fetchAdminShifts();
+
+// =========================================================================================
+// KHỞI TẠO MENU MOBILE (RESPONSIVE DRAWER)
+// =========================================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.querySelector('.sidebar');
+    const topbar = document.querySelector('.topbar');
+    
+    // 1. Tìm nút mở menu (3 gạch), nếu chưa có thì hệ thống tự động tạo mới
+    let mobileMenuBtn = document.querySelector('.topbar .mobile-menu-btn');
+    if (!mobileMenuBtn && topbar) {
+        mobileMenuBtn = document.createElement('button');
+        mobileMenuBtn.className = 'mobile-menu-btn';
+        mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+        
+        // Tạo thẻ bọc để gom nút 3 gạch và các phần tử bên trái lại (tránh bị vỡ layout)
+        let leftContainer = document.createElement('div');
+        leftContainer.style.display = 'flex';
+        leftContainer.style.alignItems = 'center';
+        leftContainer.style.gap = '15px';
+        
+        leftContainer.appendChild(mobileMenuBtn);
+        
+        // Nếu topbar có logo hoặc tiêu đề bên trái (không phải user-profile), đưa vào leftContainer
+        if (topbar.firstElementChild && !topbar.firstElementChild.classList.contains('user-profile')) {
+            leftContainer.appendChild(topbar.firstElementChild);
+        }
+        topbar.insertBefore(leftContainer, topbar.firstChild);
+    }
+    
+    // 2. Tìm nút đóng menu (dấu X), nếu chưa có thì tự động tạo mới
+    let closeMenuBtn = document.querySelector('.close-menu-btn');
+    if (!closeMenuBtn && sidebar) {
+        closeMenuBtn = document.createElement('button');
+        closeMenuBtn.className = 'close-menu-btn';
+        closeMenuBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        // Chèn vào đầu sidebar
+        sidebar.insertBefore(closeMenuBtn, sidebar.firstChild);
+    }
+
+    // 3. Thêm sự kiện Click để Bật / Tắt Menu
+    if (mobileMenuBtn && sidebar) {
+        // Loại bỏ các event cũ (nếu có)
+        const newBtn = mobileMenuBtn.cloneNode(true);
+        mobileMenuBtn.parentNode.replaceChild(newBtn, mobileMenuBtn);
+        mobileMenuBtn = newBtn;
+
+        mobileMenuBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('active'); // Mobile: Vuốt từ trái sang
+            } else {
+                sidebar.classList.toggle('collapsed'); // Máy tính: Thu gọn Sidebar
+            }
+        });
+    }
+    if (closeMenuBtn && sidebar) {
+        closeMenuBtn.addEventListener('click', () => sidebar.classList.remove('active'));
+    }
+});

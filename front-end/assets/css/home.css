@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
     --primary: #0284C7; /* Xanh nước biển */
@@ -17,7 +17,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
@@ -58,6 +58,10 @@ body {
 .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
 .logo img { height: 80px; width: auto; object-fit: contain; }
 .logo span { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+
+.mobile-menu-btn { display: none; background: none; border: none; font-size: 28px; color: var(--text-dark); cursor: pointer; }
+.close-menu-btn { display: none; position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 32px; color: var(--text-dark); cursor: pointer; z-index: 1001; }
+.nav-wrapper { display: flex; align-items: center; gap: 30px; }
 
 /* ==============================================================
    MENU BO TRÒN: ĐỔI MÀU XANH LÁ ĐẬM KHI DI CHUỘT Y HỆT NÚT ĐĂNG NHẬP 
@@ -349,3 +353,52 @@ footer { background-color: var(--footer-bg); color: white; padding: 60px 0 20px;
         .dropdown-container:hover .dropdown-menu { display: block; }
         .dropdown-menu li a { color: #374151 !important; padding: 10px 20px !important; display: block; font-weight: 500 !important; border-bottom: none !important; }
         .dropdown-menu li a:hover { background-color: #f0f9ff; color: #0284c7 !important; }
+
+/* ==============================================================
+   RESPONSIVE CHUẨN (GIỮ NGUYÊN THIẾT KẾ MÁY TÍNH, CHỈ THU GỌN VỪA MÀN HÌNH)
+============================================================== */
+@media (max-width: 768px) {
+    .top-bar { display: none; }
+    
+    .navbar .container { flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
+    .logo img { height: 45px; }
+    
+    .mobile-menu-btn { display: block; }
+    .close-menu-btn { display: block; }
+    
+    .nav-wrapper { position: fixed; top: 0; right: -100%; width: 280px; height: 100vh; background: #ffffff; flex-direction: column; align-items: flex-start; padding: 60px 20px 20px; box-shadow: -5px 0 20px rgba(0,0,0,0.1); transition: right 0.3s ease; z-index: 1000; overflow-y: auto; gap: 15px; }
+    .nav-wrapper.active { right: 0; }
+    
+    .nav-links { flex-direction: column; width: 100%; gap: 5px; align-items: stretch; border-bottom: none; display: flex; padding: 0; }
+    .nav-links li { width: 100%; margin: 0; border-bottom: none; }
+    .nav-links li a { display: block; width: 100%; padding: 12px 15px; border-radius: 8px; font-size: 16px; background: transparent; }
+    .nav-links li a:hover, .nav-links li a.active { background: var(--green-hover); color: white !important; }
+    
+    .navbar .auth-buttons { flex-direction: column; width: 100%; gap: 10px; margin-top: 10px; display: flex; }
+    .navbar .auth-buttons .btn { width: 100%; justify-content: center; padding: 12px; border-radius: 8px; }
+    
+    .dropdown-menu { position: static; box-shadow: none; display: none; margin-top: 5px; padding-left: 15px; }
+    .dropdown-container.active .dropdown-menu { display: block; }
+    
+    .hero { padding: 40px 0; }
+    .hero .container { flex-direction: column; gap: 30px; text-align: center; }
+    .hero h1 { font-size: 32px; letter-spacing: -0.5px; }
+    .hero p { margin: 0 auto 20px auto; }
+    .hero-content .auth-buttons { justify-content: center; flex-direction: column; gap: 10px; }
+    .hero-content .auth-buttons .btn { width: 100%; border-radius: 8px; }
+    .hero-image { height: 250px; width: 100%; }
+    
+    .services-grid, .doctors-grid, .articles-grid, .stats-grid, .footer-grid { grid-template-columns: 1fr !important; gap: 20px; }
+    .stat-item { margin-bottom: 15px; }
+    #faq-list-container { grid-template-columns: 1fr !important; }
+    
+    .modal-overlay { align-items: center; justify-content: center; }
+    .modal-overlay .auth-card { width: 92% !important; max-width: 450px !important; margin: auto; border-radius: 24px !important; padding: 30px 24px !important; max-height: 90vh; overflow-y: auto; animation: popIn 0.3s ease forwards; transform: none; }
+    .modal-overlay .auth-card::before { display: none; }
+    .auth-card .title { font-size: 24px; }
+    .auth-card .input-field { height: 45px; border-radius: 12px; }
+    .auth-card .auth-btn { height: 45px; border-radius: 25px; font-size: 16px; box-shadow: none; }
+    
+    .footer-col { text-align: center; }
+    .footer-bottom { flex-direction: column; text-align: center; gap: 15px; }
+}

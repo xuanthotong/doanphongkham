@@ -894,3 +894,158 @@ async function submitRating() {
         }
     } catch (error) { console.error(error); }
 }
+
+/* =========================================================================================
+   KHỞI TẠO MENU MOBILE CHUẨN (GIỮ NGUYÊN 100% GIAO DIỆN MÁY TÍNH) - BỆNH NHÂN
+========================================================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    const navbarContainer = document.querySelector('.patient-nav .container') || document.querySelector('.navbar .container');
+    const navLinks = document.querySelector('.nav-links');
+    
+    // Tìm thẻ bọc Avatar và Tên bệnh nhân (Hỗ trợ quét đa dạng các class)
+    let userMenu = document.querySelector('.user-menu') || document.querySelector('.user-dropdown-btn') || document.querySelector('.user-profile') || document.querySelector('.auth-buttons');
+    if (!userMenu) {
+        const avatarImg = document.getElementById('nav_patient_img');
+        if (avatarImg) userMenu = avatarImg.parentElement; // Lấy thẻ bọc trực tiếp của ảnh
+    }
+    
+    if (navbarContainer && navLinks) {
+        let mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        
+        // 1. TẠO NÚT 3 GẠCH (Chỉ hiện trên điện thoại qua CSS)
+        if (!mobileMenuBtn) {
+            mobileMenuBtn = document.createElement('button');
+            mobileMenuBtn.className = 'mobile-menu-btn';
+            mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+            navbarContainer.appendChild(mobileMenuBtn);
+        }
+        
+        // 2. TẠO MENU CLONE RIÊNG CHO ĐIỆN THOẠI (Không đụng chạm code Máy tính)
+        let mobileDrawer = document.querySelector('.mobile-drawer');
+        if (!mobileDrawer) {
+            mobileDrawer = document.createElement('div');
+            mobileDrawer.className = 'mobile-drawer';
+            
+            const btnClose = document.createElement('button');
+            btnClose.className = 'close-menu-btn';
+            btnClose.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            mobileDrawer.appendChild(btnClose);
+            
+            // Nhân bản (Clone) Menu và Avatar để nhét vào Drawer
+            const clonedNav = navLinks.cloneNode(true);
+            clonedNav.className = 'mobile-nav-links';
+            mobileDrawer.appendChild(clonedNav);
+            
+            if (userMenu) {
+                const clonedUser = userMenu.cloneNode(true);
+                clonedUser.className = 'mobile-user-btn';
+                clonedUser.removeAttribute('id'); // Tránh trùng lặp ID
+                
+                // Bê nguyên xi menu xổ xuống của máy tính, thêm sự kiện click để mở/đóng
+                clonedUser.addEventListener('click', function(e) {
+                    // Nếu bấm vào nút bên trong (VD: Đăng xuất) thì không toggle nữa
+                    if(e.target.tagName.toLowerCase() !== 'a' && e.target.closest('a') === null) {
+                        e.preventDefault();
+                        this.classList.toggle('active');
+                    }
+                });
+                
+                // Tự động đóng Ngăn kéo khi bấm Đăng xuất hoặc các mục trong Dropdown
+                clonedUser.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        document.querySelector('.mobile-drawer').classList.remove('active');
+                    });
+                });
+                
+                mobileDrawer.appendChild(clonedUser);
+            }
+            
+            document.body.appendChild(mobileDrawer);
+        }
+        
+        // 3. GẮN SỰ KIỆN BẤM MỞ / ĐÓNG MENU TRÊN ĐIỆN THOẠI
+        const closeBtnElem = document.querySelector('.mobile-drawer .close-menu-btn');
+        mobileMenuBtn.addEventListener('click', () => { document.querySelector('.mobile-drawer').classList.add('active'); });
+        if (closeBtnElem) closeBtnElem.addEventListener('click', () => { document.querySelector('.mobile-drawer').classList.remove('active'); });
+        
+        // 4. TỰ ĐỘNG ĐÓNG MENU VÀ CHUYỂN TAB KHI BẤM CHỌN
+        document.querySelectorAll('.mobile-nav-links a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                document.querySelector('.mobile-drawer').classList.remove('active');
+                const onclickAttr = link.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes("switchTab")) {
+                    const match = onclickAttr.match(/'([^']+)'/);
+                    if (match && match[1]) {
+                        switchTab(e, match[1]);
+                    }
+                }
+            });
+        });
+    }
+});
+
+/* =========================================================================================
+   BẢO VỆ GIAO DIỆN HỒ SƠ BỆNH NHÂN TRÊN MOBILE (ÉP 1 CỘT - ĐẢO VỊ TRÍ)
+========================================================================================= */
+function enforceMobileProfileLayout() {
+    const ptTen = document.getElementById('pt_ten');
+    const lichSuKham = document.getElementById('lich_su_kham_list');
+    
+    if (ptTen && lichSuKham) {
+        let col1 = ptTen;
+        let col2 = lichSuKham;
+        
+        let parent = col1.parentElement;
+        while (parent && !parent.contains(col2) && parent !== document.body) {
+            col1 = parent;
+            parent = parent.parentElement;
+        }
+        
+        if (parent && parent !== document.body) {
+            let actualCol2 = col2;
+            while (actualCol2.parentElement && actualCol2.parentElement !== parent) {
+                actualCol2 = actualCol2.parentElement;
+            }
+
+            if (window.innerWidth <= 768) {
+                // TRÊN ĐIỆN THOẠI: Ép thành 1 cột dọc và đảo vị trí
+                parent.style.setProperty('display', 'flex', 'important');
+                parent.style.setProperty('flex-direction', 'column-reverse', 'important');
+                parent.style.setProperty('gap', '30px', 'important');
+                parent.style.setProperty('width', '100%', 'important');
+                
+                col1.style.setProperty('width', '100%', 'important');
+                col1.style.setProperty('max-width', '100%', 'important');
+                col1.style.setProperty('flex', 'none', 'important');
+                
+                actualCol2.style.setProperty('width', '100%', 'important');
+                actualCol2.style.setProperty('max-width', '100%', 'important');
+                actualCol2.style.setProperty('flex', 'none', 'important');
+                
+                lichSuKham.style.setProperty('width', '100%', 'important');
+                lichSuKham.style.setProperty('display', 'block', 'important');
+            } else {
+                // TRÊN MÁY TÍNH: Xóa bỏ mọi sự can thiệp của JavaScript, trả lại giao diện 50/50 nguyên gốc
+                parent.style.display = '';
+                parent.style.flexDirection = '';
+                parent.style.gap = '';
+                parent.style.width = '';
+                
+                col1.style.width = '';
+                col1.style.maxWidth = '';
+                col1.style.flex = '';
+                
+                actualCol2.style.width = '';
+                actualCol2.style.maxWidth = '';
+                actualCol2.style.flex = '';
+                
+                lichSuKham.style.width = '';
+                lichSuKham.style.display = '';
+            }
+        }
+    }
+}
+
+// Chạy hàm ngay khi vừa tải trang và khi người dùng xoay ngang/dọc điện thoại
+document.addEventListener('DOMContentLoaded', () => { setTimeout(enforceMobileProfileLayout, 500); });
+window.addEventListener('resize', enforceMobileProfileLayout);

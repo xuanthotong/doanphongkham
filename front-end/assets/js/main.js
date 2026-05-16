@@ -97,4 +97,7 @@ function startHeroSlideInterval() {
     heroSlideInterval = setInterval(() => { moveSlide(1); }, 6000); // 6 giây đổi 1 lần
 }
 
-document.addEventListener('DOMContentLoaded', initHeroSlider);
+document.addEventListener('DOMContentLoaded', () => {
+    initHeroSlider();
+    initAIChatbox();
+});
