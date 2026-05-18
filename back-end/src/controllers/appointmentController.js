@@ -1,14 +1,8 @@
 const { sql, connectDB } = require('../config/db');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Cấu hình Email gửi đi 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'ttmedicalcontact@gmail.com', 
-        pass: 'ipzbnuabolatbqio' 
-    }
-});
+// Cấu hình Resend (Dùng HTTPS API - Không bị Render block như SMTP)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Lấy TẤT CẢ lịch hẹn cho Admin
 const getAllAppointments = async (req, res) => {
@@ -102,7 +96,7 @@ const updateAppointmentStatus = async (req, res) => {
         const { id } = req.params;
         const { trang_thai, ghi_chu_cua_bac_si } = req.body;
         const pool = await connectDB();
-        
+
         // Lấy trạng thái cũ để kiểm tra
         const oldStatusQuery = await pool.request().input('id', sql.Int, id).query('SELECT trang_thai, lich_lam_viec_id FROM LichKham WHERE id = @id');
         if (oldStatusQuery.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy lịch hẹn!' });
@@ -124,15 +118,15 @@ const updateAppointmentStatus = async (req, res) => {
         const request = pool.request()
             .input('id', sql.Int, id)
             .input('trang_thai', sql.VarChar, trang_thai);
-            
+
         if (ghi_chu_cua_bac_si) {
             query += `, ghi_chu_cua_bac_si = @ghi_chu_cua_bac_si`;
             request.input('ghi_chu_cua_bac_si', sql.NVarChar, ghi_chu_cua_bac_si);
         }
-        
+
         query += ` WHERE id = @id`;
         await request.query(query);
-        
+
         // NẾU HỦY LỊCH VÀ TRƯỚC ĐÓ CHƯA HỦY
         if (trang_thai === 'Cancelled' && oldStatus !== 'Cancelled') {
             // Hoàn lại 1 chỗ trống cho ca làm việc để bệnh nhân khác có thể đặt
@@ -152,38 +146,38 @@ const updateAppointmentStatus = async (req, res) => {
                 LEFT JOIN HoSoNguoiDung bs_nd ON bs_tk.id = bs_nd.tai_khoan_id
                 WHERE lk.id = @id
             `);
-            
+
             if (infoQuery.recordset.length > 0) {
                 const info = infoQuery.recordset[0];
                 const d = new Date(info.ngay_lam_viec);
                 const ngay_kham_str = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-                
+
                 if (info.email_benh_nhan) {
-                    const mailOptions = {
-                        from: '"TT Medical" <tongthobro456@gmail.com>',
-                        to: info.email_benh_nhan,
-                        subject: `[TT Medical] Thông báo HỦY lịch khám - Lịch khám #${info.id}`,
-                        html: `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
-                                <div style="background-color: #EF4444; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-                                    <h2>Thông Báo Hủy Lịch Khám</h2>
-                                </div>
-                                <div style="padding: 20px; line-height: 1.6; color: #334155;">
-                                    <p>Xin chào <strong>${info.ten_benh_nhan}</strong>,</p>
-                                    <p>Chúng tôi rất tiếc phải thông báo rằng lịch khám của bạn đã bị <strong style="color: #EF4444;">HỦY</strong> bởi bác sĩ. Dưới đây là thông tin chi tiết:</p>
-                                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ phụ trách:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${info.ten_bac_si}</td></tr>
-                                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày hẹn ban đầu:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${ngay_kham_str}</td></tr>
-                                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ hẹn:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${info.gio_kham || 'Chưa cập nhật'}</td></tr>
-                                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Lý do hủy:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #EF4444;">${ghi_chu_cua_bac_si || 'Không có lý do cụ thể'}</td></tr>
-                                    </table>
-                                    <p style="margin-top: 20px;">Thành thật xin lỗi quý khách vì sự bất tiện này. Vui lòng truy cập lại hệ thống để đặt một lịch khám khác.</p>
-                                    <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
-                                </div>
+                    const cancelHtml = `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
+                            <div style="background-color: #EF4444; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                                <h2>Thông Báo Hủy Lịch Khám</h2>
                             </div>
-                        `
-                    };
-                    transporter.sendMail(mailOptions).catch(err => console.error('Lỗi gửi email hủy lịch:', err));
+                            <div style="padding: 20px; line-height: 1.6; color: #334155;">
+                                <p>Xin chào <strong>${info.ten_benh_nhan}</strong>,</p>
+                                <p>Chúng tôi rất tiếc phải thông báo rằng lịch khám của bạn đã bị <strong style="color: #EF4444;">HỦY</strong> bởi bác sĩ. Dưới đây là thông tin chi tiết:</p>
+                                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ phụ trách:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${info.ten_bac_si}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày hẹn ban đầu:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${ngay_kham_str}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ hẹn:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${info.gio_kham || 'Chưa cập nhật'}</td></tr>
+                                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Lý do hủy:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #EF4444;">${ghi_chu_cua_bac_si || 'Không có lý do cụ thể'}</td></tr>
+                                </table>
+                                <p style="margin-top: 20px;">Thành thật xin lỗi quý khách vì sự bất tiện này. Vui lòng truy cập lại hệ thống để đặt một lịch khám khác.</p>
+                                <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
+                            </div>
+                        </div>
+                    `;
+                    resend.emails.send({
+                        from: 'TT Medical <onboarding@resend.dev>',
+                        to: [info.email_benh_nhan],
+                        subject: `[TT Medical] Thông báo HỦY lịch khám - Lịch khám #${info.id}`,
+                        html: cancelHtml
+                    }).catch(err => console.error('Lỗi gửi email hủy lịch:', err));
                 }
             }
         }
@@ -222,7 +216,7 @@ const createAppointment1 = async (req, res) => {
     try {
         const { lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung } = req.body;
         const pool = await connectDB();
-        
+
         await pool.request()
             .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
             .input('benh_nhan_id', sql.Int, benh_nhan_id)
@@ -231,7 +225,7 @@ const createAppointment1 = async (req, res) => {
                 INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao)
                 VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, 'Pending', GETDATE())
             `);
-            
+
         await pool.request()
             .input('lich_lam_viec_id', sql.Int, lich_lam_viec_id)
             .query(`
@@ -252,16 +246,16 @@ const deleteAppointment = async (req, res) => {
     try {
         const { id } = req.params;
         const pool = await connectDB();
-        
+
         const appInfo = await pool.request().input('id', sql.Int, id).query('SELECT lich_lam_viec_id, trang_thai FROM LichKham WHERE id = @id');
         if (appInfo.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy lịch hẹn!' });
-        
+
         const { lich_lam_viec_id, trang_thai } = appInfo.recordset[0];
-        
+
         if (trang_thai.trim().toLowerCase() === 'done') {
             return res.status(400).json({ message: 'Không thể hủy lịch đã khám xong! Dữ liệu này cần được giữ lại làm hồ sơ bệnh án và bảo vệ đánh giá của bệnh nhân.' });
         }
-        
+
         // KIỂM TRA LOGIC THANH TOÁN (Tránh mất tiền của khách hàng)
         const paymentCheck = await pool.request().input('id', sql.Int, id).query('SELECT phuong_thuc_thanh_toan, trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @id');
         if (paymentCheck.recordset.length > 0) {
@@ -271,14 +265,14 @@ const deleteAppointment = async (req, res) => {
                 return res.status(400).json({ message: 'Lịch khám này đã được thanh toán Online. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
             }
         }
-        
+
         if (trang_thai.trim().toLowerCase() !== 'cancelled') {
             await pool.request().input('lich_lam_viec_id', sql.Int, lich_lam_viec_id).query('UPDATE LichLamViec SET so_luong_hien_tai = CASE WHEN so_luong_hien_tai > 0 THEN so_luong_hien_tai - 1 ELSE 0 END WHERE id = @lich_lam_viec_id');
         }
-        
+
         // Thực hiện Xóa mềm (Soft Delete) - Cập nhật trạng thái thành Cancelled
         await pool.request().input('id', sql.Int, id).query("UPDATE LichKham SET trang_thai = 'Cancelled' WHERE id = @id");
-        
+
         res.json({ message: 'Hủy lịch hẹn thành công!' });
     } catch (error) {
         console.error('Lỗi hủy lịch hẹn:', error);
@@ -291,7 +285,7 @@ const getBookedSlots = async (req, res) => {
     try {
         const { bac_si_id, ngay } = req.query;
         const pool = await connectDB();
-        
+
         const result = await pool.request()
             .input('bac_si_id', sql.Int, bac_si_id)
             .input('ngay_lam_viec', sql.Date, ngay)
@@ -306,7 +300,7 @@ const getBookedSlots = async (req, res) => {
                 AND lk.gio_kham IS NOT NULL
                 AND (tt.phuong_thuc_thanh_toan = 'cash' OR tt.trang_thai_thanh_toan = 1 OR tt.id IS NULL)
             `);
-            
+
         const bookedSlots = result.recordset.map(record => record.gio_kham);
         res.json(bookedSlots);
     } catch (error) {
@@ -325,9 +319,9 @@ const createAppointment = async (req, res) => {
 
         // Xử lý logic phương thức thanh toán
         const ptttoan = phuong_thuc_thanh_toan || 'cash';
-        
+
         // BAN ĐẦU LUÔN LÀ 0 (Chưa thanh toán). Chuyển khoản thì đợi Webhook, Tiền mặt thì thu tại quầy.
-        const trang_thai_tt = 0; 
+        const trang_thai_tt = 0;
 
         // Khởi tạo Transaction
         const transaction = new sql.Transaction(pool);
@@ -346,7 +340,7 @@ const createAppointment = async (req, res) => {
                     LEFT JOIN TaiKhoan tk ON llv.bac_si_id = tk.id
                     WHERE llv.bac_si_id = @bac_si_id AND CAST(llv.ngay_lam_viec AS DATE) = CAST(@ngay_lam_viec AS DATE)
                 `);
-                
+
             if (shiftQuery.recordset.length === 0) {
                 await transaction.rollback();
                 return res.status(400).json({ message: 'Bác sĩ không có ca làm việc ngày này!' });
@@ -370,7 +364,7 @@ const createAppointment = async (req, res) => {
                 `);
 
             const appointmentId = result.recordset[0].id;
-            
+
             // NẾU LÀ TIỀN MẶT -> Tăng số lượng ca làm việc luôn
             // NẾU CHUYỂN KHOẢN -> Không tăng, đợi Webhook báo thành công mới tăng.
             if (ptttoan === 'cash') {
@@ -397,21 +391,21 @@ const createAppointment = async (req, res) => {
                 const clientId = process.env.PAYOS_CLIENT_ID;
                 const apiKey = process.env.PAYOS_API_KEY;
                 const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
-                const orderCode = appointmentId; 
+                const orderCode = appointmentId;
                 const amount = parseInt(phi_kham) < 2000 ? 2000 : parseInt(phi_kham);
-                
+
                 // Lọc bỏ dấu tiếng Việt và ký tự đặc biệt để nội dung thanh toán không bị lỗi font
                 const removeAccents = (str) => {
                     return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^a-zA-Z0-9 ]/g, '');
                 };
                 const patientNameNoAccent = removeAccents(ho_ten).toUpperCase();
                 let description = `TTMED ${appointmentId} BN ${patientNameNoAccent}`;
-                
+
                 // PayOS giới hạn nội dung chuyển khoản tối đa chỉ được 25 ký tự
                 if (description.length > 25) description = description.substring(0, 25).trim();
 
-                const cancelUrl = "http://localhost:5500/pages/patient/patient.html";
-                const returnUrl = "http://localhost:5500/pages/patient/patient.html";
+                const cancelUrl = process.env.FRONTEND_URL;
+                const returnUrl = process.env.FRONTEND_URL;
 
                 const signData = `amount=${amount}&cancelUrl=${cancelUrl}&description=${description}&orderCode=${orderCode}&returnUrl=${returnUrl}`;
                 const signature = crypto.createHmac('sha256', checksumKey).update(signData).digest('hex');
@@ -424,7 +418,7 @@ const createAppointment = async (req, res) => {
                     body: JSON.stringify(body)
                 });
                 const payosData = await payosRes.json();
-                
+
                 if (payosData.code === '00') {
                     payosQrCode = payosData.data.qrCode;
                 } else {
@@ -503,40 +497,41 @@ const rateAppointment = async (req, res) => {
 const sendConfirmationEmail = (email, ho_ten, ten_bac_si, appointmentId, ngay_lam_viec, khung_gio, mo_ta_trieu_chung, tong_tien, isTransferPaid) => {
     const dateObj = new Date(ngay_lam_viec);
     const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
-    
-    const textTrangThaiThanhToan = isTransferPaid ? 
-        `<span style="color: #10B981;">Đã thanh toán (Online)</span>` : 
+
+    const textTrangThaiThanhToan = isTransferPaid ?
+        `<span style="color: #10B981;">Đã thanh toán (Online)</span>` :
         `<span style="color: #F59E0B;">Chưa thanh toán (Thu tại quầy)</span>`;
 
-    const mailOptions = {
-        from: '"TT Medical" <tongthobro456@gmail.com>',
-        to: email,
-        subject: `[TT Medical] Xác nhận đặt lịch thành công - Lịch khám #${appointmentId}`,
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
-                <div style="background-color: #0284C7; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-                    <h2>Xác Nhận Đặt Lịch Khám</h2>
-                </div>
-                <div style="padding: 20px; line-height: 1.6; color: #334155;">
-                    <p>Xin chào <strong>${ho_ten}</strong>,</p>
-                    <p>Lịch khám bệnh của bạn đã được ghi nhận trên hệ thống. Dưới đây là thông tin chi tiết:</p>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${ten_bac_si}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Mã lịch khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#${appointmentId}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${formattedDate}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${khung_gio}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Triệu chứng:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${mo_ta_trieu_chung}</td></tr>
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Tổng tiền: </strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${tong_tien} VND</td></tr>    
-                        <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Trạng thái: </strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${textTrangThaiThanhToan}</td></tr>
-                    </table>
-                    <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
-                    <p style="margin-top: 20px;">Vui lòng có mặt trước 15 phút tại bệnh viện để làm thủ tục check-in.</p>
-                    <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
-                </div>
+    const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <div style="background-color: #0284C7; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h2>Xác Nhận Đặt Lịch Khám</h2>
             </div>
-        `
-    };
-    transporter.sendMail(mailOptions).catch(err => console.error('Lỗi gửi email:', err));
+            <div style="padding: 20px; line-height: 1.6; color: #334155;">
+                <p>Xin chào <strong>${ho_ten}</strong>,</p>
+                <p>Lịch khám bệnh của bạn đã được ghi nhận trên hệ thống. Dưới đây là thông tin chi tiết:</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${ten_bac_si}</td></tr>
+                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Mã lịch khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#${appointmentId}</td></tr>
+                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${formattedDate}</td></tr>
+                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${khung_gio}</td></tr>
+                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Triệu chứng:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${mo_ta_trieu_chung}</td></tr>
+                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Tổng tiền: </strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${tong_tien} VND</td></tr>
+                    <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Trạng thái: </strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold;">${textTrangThaiThanhToan}</td></tr>
+                </table>
+                <p>Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!</p>
+                <p style="margin-top: 20px;">Vui lòng có mặt trước 15 phút tại bệnh viện để làm thủ tục check-in.</p>
+                <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
+            </div>
+        </div>
+    `;
+
+    resend.emails.send({
+        from: 'TT Medical <onboarding@resend.dev>',
+        to: [email],
+        subject: `[TT Medical] Xác nhận đặt lịch thành công - Lịch khám #${appointmentId}`,
+        html: htmlContent
+    }).catch(err => console.error('Lỗi gửi email xác nhận:', err));
 }
 
 // WEBHOOK CASSO XỬ LÝ THANH TOÁN TỰ ĐỘNG
@@ -551,11 +546,11 @@ const cassoWebhook = async (req, res) => {
         let transactions = [];
 
         if (Array.isArray(rawData)) {
-            transactions = rawData; 
+            transactions = rawData;
         } else if (rawData && Array.isArray(rawData.records)) {
-            transactions = rawData.records; 
+            transactions = rawData.records;
         } else if (rawData && typeof rawData === 'object') {
-            transactions = [rawData]; 
+            transactions = [rawData];
         }
 
         if (transactions.length === 0) {
@@ -579,7 +574,7 @@ const cassoWebhook = async (req, res) => {
             }
 
             const match = description.match(/TTMED\s*(\d+)/);
-            
+
             if (match) {
                 const appointmentId = parseInt(match[1]);
                 console.log(`✅ Tìm thấy Mã lịch khám: #${appointmentId}`);
@@ -606,7 +601,7 @@ const cassoWebhook = async (req, res) => {
                     // Ép kiểu float an toàn để so sánh
                     if (amountPaid >= parseFloat(info.so_tien)) {
                         console.log("✅ Đủ tiền! Tiến hành cập nhật Database...");
-                        
+
                         await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
                             UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = GETDATE() WHERE lich_kham_id = @lich_kham_id;
                             UPDATE LichKham SET trang_thai = 'Approved' WHERE id = @lich_kham_id;
@@ -642,7 +637,7 @@ const cassoWebhook = async (req, res) => {
 // WEBHOOK PAYOS XỬ LÝ THANH TOÁN MOMO TỰ ĐỘNG
 const payosWebhook = async (req, res) => {
     try {
-        const { data, success } = req.body; 
+        const { data, success } = req.body;
         if (!success || !data) return res.status(200).json({ success: true });
 
         const appointmentId = data.orderCode;
@@ -668,7 +663,7 @@ const payosWebhook = async (req, res) => {
         if (checkThanhToan.recordset.length > 0) {
             const info = checkThanhToan.recordset[0];
             const soTienCanThu = parseFloat(info.so_tien);
-            
+
             if (amountPaid >= soTienCanThu || amountPaid >= 2000) {
                 await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
                     UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = GETDATE() WHERE lich_kham_id = @lich_kham_id;
@@ -698,9 +693,9 @@ const checkPaymentStatus = async (req, res) => {
         const result = await pool.request().input('lich_kham_id', sql.Int, id).query(`
             SELECT trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @lich_kham_id
         `);
-        
+
         if (result.recordset.length === 0) return res.status(404).json({ paid: false });
-        
+
         res.json({ paid: result.recordset[0].trang_thai_thanh_toan === 1 || result.recordset[0].trang_thai_thanh_toan === true });
     } catch (error) {
         res.status(500).json({ paid: false });
@@ -712,7 +707,7 @@ const deleteUnpaidAppointment = async (req, res) => {
     try {
         const { id } = req.params;
         const pool = await connectDB();
-        
+
         const check = await pool.request().input('id', sql.Int, id).query(`
             SELECT tt.trang_thai_thanh_toan 
             FROM LichKham lk 
@@ -735,4 +730,4 @@ const deleteUnpaidAppointment = async (req, res) => {
     }
 };
 
-module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1,  createAppointment, getBookedSlots, rateAppointment, cassoWebhook, payosWebhook, checkPaymentStatus, deleteUnpaidAppointment };
+module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1, createAppointment, getBookedSlots, rateAppointment, cassoWebhook, payosWebhook, checkPaymentStatus, deleteUnpaidAppointment };
