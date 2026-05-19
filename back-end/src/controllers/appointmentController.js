@@ -550,36 +550,47 @@ const sendConfirmationEmail = (email, ho_ten, ten_bac_si, appointmentId, ngay_la
     );
 }
 
-// WEBHOOK CASSO XỬ LÝ THANH TOÁN TỰ ĐỘNG
+// WEBHOOK XỬ LÝ THANH TOÁN TỰ ĐỘNG (Tương thích Casso + SePay)
 const cassoWebhook = async (req, res) => {
     try {
-        // --- THÊM 2 DÒNG NÀY ĐỂ BẮT LỖI ---
-        console.log("=== CÓ TIỀN VỀ! DỮ LIỆU PAYOS GỬI CHO BẠN LÀ: ===");
+        console.log("=== CÓ TIỀN VỀ! DỮ LIỆU WEBHOOK GỬI CHO BẠN LÀ: ===");
         console.log(JSON.stringify(req.body, null, 2));
 
-        // Lấy cục data từ request body
-        let rawData = req.body.data;
         let transactions = [];
 
-        if (Array.isArray(rawData)) {
-            transactions = rawData;
-        } else if (rawData && Array.isArray(rawData.records)) {
-            transactions = rawData.records;
-        } else if (rawData && typeof rawData === 'object') {
-            transactions = [rawData];
+        // === TƯƠNG THÍCH CẢ CASSO VÀ SEPAY ===
+        if (req.body.transferType) {
+            // FORMAT SEPAY: Dữ liệu giao dịch nằm trực tiếp trong req.body
+            // Chỉ xử lý tiền VÀO (transferType = "in")
+            if (req.body.transferType === 'in') {
+                transactions = [{
+                    description: req.body.content || '',
+                    amount: req.body.transferAmount || 0
+                }];
+            }
+        } else {
+            // FORMAT CASSO: Dữ liệu nằm trong req.body.data (mảng hoặc object)
+            let rawData = req.body.data;
+            if (Array.isArray(rawData)) {
+                transactions = rawData;
+            } else if (rawData && Array.isArray(rawData.records)) {
+                transactions = rawData.records;
+            } else if (rawData && typeof rawData === 'object') {
+                transactions = [rawData];
+            }
         }
 
         if (transactions.length === 0) {
-            console.log("❌ LỖI: Không tìm thấy giao dịch nào trong payload của Casso.");
-            return res.status(200).send('OK');
+            console.log("❌ Không tìm thấy giao dịch hợp lệ trong payload.");
+            return res.status(200).json({ success: true });
         }
 
         const pool = await connectDB();
 
         for (const transaction of transactions) {
-            // Tương thích mọi định dạng: Tìm description hoặc remark
-            const description = (transaction.description || transaction.remark || '').toUpperCase();
-            const amountPaid = parseFloat(transaction.amount || 0);
+            // Tương thích mọi định dạng: Casso (description), SePay (content)
+            const description = (transaction.description || transaction.content || transaction.remark || '').toUpperCase();
+            const amountPaid = parseFloat(transaction.amount || transaction.transferAmount || 0);
 
             console.log(`\n➡️ Đang xử lý giao dịch: +${amountPaid} VNĐ`);
             console.log(`➡️ Nội dung: "${description}"`);
@@ -643,9 +654,9 @@ const cassoWebhook = async (req, res) => {
             }
         }
         console.log("================================================\n");
-        res.status(200).json({ error: 0, message: "success" });
+        res.status(200).json({ success: true });
     } catch (error) {
-        console.error("❌ Casso Webhook Error:", error);
+        console.error("❌ Webhook Error:", error);
         res.status(500).send('Server Error');
     }
 };
