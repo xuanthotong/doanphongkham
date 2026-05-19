@@ -1,8 +1,26 @@
 const { sql, connectDB } = require('../config/db');
-const { Resend } = require('resend');
+const { BrevoClient } = require('@getbrevo/brevo');
 
-// Cấu hình Resend (Dùng HTTPS API - Không bị Render block như SMTP)
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Hàm gửi email qua Brevo API (HTTPS - Không bị Render block, gửi được mọi email)
+async function sendEmailBrevo(toEmail, subject, htmlContent) {
+    if (!process.env.BREVO_API_KEY) {
+        console.error('⚠️ BREVO_API_KEY chưa được cấu hình!');
+        return;
+    }
+    try {
+        const client = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+
+        await client.transactionalEmails.sendTransacEmail({
+            sender: { name: 'TT Medical', email: 'ttmedicalcontact@gmail.com' },
+            to: [{ email: toEmail }],
+            subject,
+            htmlContent
+        });
+        console.log(`✅ Email Brevo gửi thành công đến: ${toEmail}`);
+    } catch (err) {
+        console.error('❌ Lỗi gửi email Brevo:', err?.body || err?.response?.body || err.message);
+    }
+}
 
 // Lấy TẤT CẢ lịch hẹn cho Admin
 const getAllAppointments = async (req, res) => {
@@ -172,12 +190,11 @@ const updateAppointmentStatus = async (req, res) => {
                             </div>
                         </div>
                     `;
-                    resend.emails.send({
-                        from: 'TT Medical <onboarding@resend.dev>',
-                        to: [info.email_benh_nhan],
-                        subject: `[TT Medical] Thông báo HỦY lịch khám - Lịch khám #${info.id}`,
-                        html: cancelHtml
-                    }).catch(err => console.error('Lỗi gửi email hủy lịch:', err));
+                    sendEmailBrevo(
+                        info.email_benh_nhan,
+                        `[TT Medical] Thông báo HỦY lịch khám - Lịch khám #${info.id}`,
+                        cancelHtml
+                    );
                 }
             }
         }
@@ -526,12 +543,11 @@ const sendConfirmationEmail = (email, ho_ten, ten_bac_si, appointmentId, ngay_la
         </div>
     `;
 
-    resend.emails.send({
-        from: 'TT Medical <onboarding@resend.dev>',
-        to: [email],
-        subject: `[TT Medical] Xác nhận đặt lịch thành công - Lịch khám #${appointmentId}`,
-        html: htmlContent
-    }).catch(err => console.error('Lỗi gửi email xác nhận:', err));
+    sendEmailBrevo(
+        email,
+        `[TT Medical] Xác nhận đặt lịch thành công - Lịch khám #${appointmentId}`,
+        htmlContent
+    );
 }
 
 // WEBHOOK CASSO XỬ LÝ THANH TOÁN TỰ ĐỘNG
