@@ -25,7 +25,18 @@ function switchTab(event, tabId) {
 // 2. CHUYỂN SUB-TABS (LỌC LỊCH KHÁM)
 function filterAppointments(event, status) {
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    
+    // Nếu bấm trực tiếp từ thanh Tab
+    if (event && event.target && (event.target.classList.contains('filter-btn') || event.target.closest('.filter-btn'))) {
+        const targetBtn = event.target.classList.contains('filter-btn') ? event.target : event.target.closest('.filter-btn');
+        targetBtn.classList.add('active');
+    } else {
+        // Nếu bấm từ 4 thẻ thống kê trên cùng (Tự động active Tab tương ứng)
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        if (status === 'all' && filterBtns[0]) filterBtns[0].classList.add('active');
+        if (status === 'pending_all' && filterBtns[1]) filterBtns[1].classList.add('active');
+        if (status === 'done' && filterBtns[2]) filterBtns[2].classList.add('active');
+    }
     
     window.currentAppStatus = status; // Lưu lại trạng thái tab hiện tại
     
@@ -54,21 +65,183 @@ function confirmLogout(event) {
 
 // 4. NGHIỆP VỤ: KHÁM BỆNH & KÊ ĐƠN
 function openMedicalRecord(maLK, tenBN) {
+    let currentPrescriptions = [];
+    
+    // Mảng dữ liệu thuốc phổ biến (Có thể tùy chỉnh thêm)
+    const thuocPhoBien = [
+        "Paracetamol 500mg", "Amoxicillin 500mg", "Ibuprofen 400mg",
+        "Omeprazole 20mg", "Cetirizine 10mg", "Loratadine 10mg",
+        "Vitamin C 500mg", "Oresol", "Smecta", "Alpha Choay",
+        "Panadol Extra", "Augmentin 1g", "Erythromycin 500mg",
+        "Azithromycin 500mg", "Metformin 500mg", "Cefuroxime 500mg",
+        "Men tiêu hóa Enterogermina", "Nước muối sinh lý NaCl 0.9%"
+    ];
+    let datalistHtml = thuocPhoBien.map(t => `<option value="${t}">`).join('');
+
+    // Mảng dữ liệu liều dùng phổ biến để bác sĩ chọn nhanh
+    const lieuDungPhoBien = [
+        "1 viên/lần, ngày 2 lần sau ăn",
+        "1 viên/lần, ngày 3 lần sau ăn",
+        "2 viên/lần, ngày 2 lần sau ăn",
+        "1 gói/lần, ngày 2 lần",
+        "1 ống/lần, ngày 1 lần",
+        "Sáng 1 viên, Tối 1 viên",
+        "Sáng 1 viên",
+        "Uống 1 viên khi đau hoặc sốt",
+        "Bôi ngoài da ngày 2 lần"
+    ];
+    let lieuDungHtml = lieuDungPhoBien.map(l => `<option value="${l}">`).join('');
+
     Swal.fire({
-        title: `Khám bệnh: ${tenBN} (${maLK})`,
+        title: `Khám bệnh: ${tenBN} (#LK${maLK})`,
         html: `
-            <div style="text-align: left; margin-top: 15px;">
-                <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px;">Kê đơn thuốc / Ghi chú</label>
-                    <textarea id="don_thuoc" class="swal2-textarea" placeholder="Chẩn đoán: Viêm họng cấp\n1. Paracetamol 500mg - 10 viên..." style="width: 90%; margin: 0; height: 100px;"></textarea>
+            <div style="text-align: left; margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 20px;">
+                <!-- Khu vực 1: Chẩn đoán -->
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <label style="font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px; font-size: 15px;"><i class="fa-solid fa-stethoscope" style="color: #0ea5e9;"></i> Chẩn đoán bệnh (*):</label>
+                    <textarea id="chan_doan" class="swal2-textarea" placeholder="Nhập chẩn đoán lâm sàng..." style="width: 100%; margin: 0; height: 80px; box-sizing: border-box; font-size: 14px; padding: 12px; border-radius: 8px; border-color: #cbd5e1;"></textarea>
                 </div>
+                
+                <!-- Khu vực 2: Kê đơn thuốc -->
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <label style="font-weight: 700; color: #0f172a; display: block; margin-bottom: 12px; font-size: 15px;"><i class="fa-solid fa-pills" style="color: #10b981;"></i> Kê đơn thuốc:</label>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                        <input list="thuoc_list" id="ten_thuoc" class="swal2-input" placeholder="Gõ tên thuốc (có gợi ý)..." style="flex: 2; margin: 0; height: 42px; font-size: 14px; border-radius: 8px; border-color: #cbd5e1;">
+                        <datalist id="thuoc_list">
+                            ${datalistHtml}
+                        </datalist>
+                        <input list="lieu_list" id="lieu_dung" class="swal2-input" placeholder="Chọn hoặc nhập liều dùng..." style="flex: 1; margin: 0; height: 42px; font-size: 14px; border-radius: 8px; border-color: #cbd5e1;">
+                        <datalist id="lieu_list">
+                            ${lieuDungHtml}
+                        </datalist>
+                        <button type="button" id="btn_add_thuoc" style="background: #0ea5e9; color: white; border: none; height: 42px; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; white-space: nowrap;"><i class="fa-solid fa-plus"></i> Thêm</button>
+                    </div>
+                    
+                    <div style="max-height: 160px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead style="background: #f1f5f9; position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Tên thuốc</th>
+                                    <th style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Liều dùng</th>
+                                    <th style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: center; width: 50px; color: #475569;"><i class="fa-solid fa-gear"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ds_thuoc_body">
+                                <tr><td colspan="3" style="text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">Chưa có thuốc nào trong đơn</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vùng chứa HTML để xuất ảnh (Ẩn khỏi viewport người dùng) -->
+                <div id="prescription_capture_area" style="position: absolute; left: -9999px; top: -9999px; width: 800px; background: white; padding: 40px; color: #000; font-family: 'Times New Roman', serif;"></div>
+            </div>
+            
+            <!-- Nút xuất ảnh Đơn thuốc -->
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" id="btn_export_img" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-file-arrow-down"></i> Lưu đơn thuốc (Ảnh JPG)</button>
             </div>
         `,
-        width: '600px', showCancelButton: true, confirmButtonText: 'Hoàn tất khám', cancelButtonText: 'Hủy', confirmButtonColor: '#10B981',
+        width: '750px', 
+        showCancelButton: true, 
+        confirmButtonText: '<i class="fa-solid fa-check"></i> Hoàn tất khám', 
+        cancelButtonText: 'Hủy', 
+        confirmButtonColor: '#0284C7',
+        didOpen: () => {
+            const btnAdd = document.getElementById('btn_add_thuoc');
+            const btnExport = document.getElementById('btn_export_img');
+            const tbody = document.getElementById('ds_thuoc_body');
+            const inputTen = document.getElementById('ten_thuoc');
+            const inputLieu = document.getElementById('lieu_dung');
+            
+            // Hàm render danh sách thuốc ra bảng
+            const renderThuoc = () => {
+                if (currentPrescriptions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">Chưa có thuốc nào trong đơn</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = currentPrescriptions.map((t, idx) => `
+                    <tr style="transition: 0.2s; cursor: default;">
+                        <td style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #0f172a;">${t.ten}</td>
+                        <td style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; color: #334155;">${t.lieu}</td>
+                        <td style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                            <button type="button" style="background: #fee2e2; border: none; color: #ef4444; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; transition: 0.2s;" onclick="window.removeThuoc(${idx})" onmouseover="this.style.background='#fca5a5'" onmouseout="this.style.background='#fee2e2'"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            };
+
+            // Xóa thuốc khỏi đơn
+            window.removeThuoc = (index) => {
+                currentPrescriptions.splice(index, 1);
+                renderThuoc();
+            };
+
+            // Thêm thuốc mới (Cộng dồn nếu trùng)
+            btnAdd.addEventListener('click', () => {
+                const ten = inputTen.value.trim();
+                const lieu = inputLieu.value.trim();
+                if (!ten || !lieu) {
+                    Swal.showValidationMessage('Vui lòng nhập đủ Tên thuốc và Liều dùng!');
+                    setTimeout(() => Swal.resetValidationMessage(), 2000);
+                    return;
+                }
+                
+                // KIỂM TRA TRÙNG LẶP: Tự động nối thêm liều dùng nếu thuốc đã tồn tại
+                const existingIndex = currentPrescriptions.findIndex(t => t.ten.toLowerCase() === ten.toLowerCase());
+                if (existingIndex !== -1) {
+                    currentPrescriptions[existingIndex].lieu += ` + ${lieu}`;
+                } else {
+                    currentPrescriptions.push({ ten, lieu });
+                }
+                
+                inputTen.value = '';
+                inputLieu.value = '';
+                inputTen.focus();
+                renderThuoc();
+            });
+
+            // XUẤT ẢNH JPG DÙNG HTML2CANVAS
+            btnExport.addEventListener('click', () => {
+                const chanDoan = document.getElementById('chan_doan').value.trim();
+                if (!chanDoan && currentPrescriptions.length === 0) {
+                    Swal.showValidationMessage('Vui lòng nhập chẩn đoán hoặc kê đơn trước khi xuất!');
+                    setTimeout(() => Swal.resetValidationMessage(), 2500);
+                    return;
+                }
+
+                // Tải linh động thư viện HTML2Canvas nếu chưa có
+                if (typeof html2canvas === 'undefined') {
+                    Swal.showLoading();
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    script.onload = () => {
+                        Swal.hideLoading();
+                        exportPrescriptionImage(tenBN, maLK, chanDoan, currentPrescriptions);
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    exportPrescriptionImage(tenBN, maLK, chanDoan, currentPrescriptions);
+                }
+            });
+        },
         preConfirm: () => {
-            const donThuoc = document.getElementById('don_thuoc').value;
-            if (!donThuoc) Swal.showValidationMessage('Vui lòng nhập chẩn đoán/đơn thuốc!');
-            return { ghi_chu: donThuoc };
+            const chanDoan = document.getElementById('chan_doan').value.trim();
+            if (!chanDoan) {
+                Swal.showValidationMessage('Vui lòng nhập Chẩn đoán bệnh!');
+                return false;
+            }
+            
+            // Nối chẩn đoán và thuốc thành 1 chuỗi để lưu vào Database
+            let ghiChu = `Chẩn đoán: ${chanDoan}`;
+            if (currentPrescriptions.length > 0) {
+                ghiChu += `\n\nĐơn thuốc:\n`;
+                currentPrescriptions.forEach((t, i) => {
+                    ghiChu += `${i + 1}. ${t.ten} - HDSD: ${t.lieu}\n`;
+                });
+            }
+            
+            return { ghi_chu: ghiChu };
         }
     }).then(async (result) => {
         if (result.isConfirmed) {
@@ -87,6 +260,75 @@ function openMedicalRecord(maLK, tenBN) {
             } catch(e) { console.error(e); }
         }
     });
+}
+
+// HÀM XUẤT ẢNH ĐƠN THUỐC
+function exportPrescriptionImage(tenBenhNhan, maLK, chanDoan, danhSachThuoc) {
+    const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
+    const tenBacSi = userInfo.ho_ten || userInfo.ten_dang_nhap || 'Bác sĩ';
+    
+    let now = new Date();
+    let ngayIn = `Ngày ${now.getDate().toString().padStart(2, '0')} tháng ${(now.getMonth()+1).toString().padStart(2, '0')} năm ${now.getFullYear()}`;
+
+    let htmlThuoc = '';
+    if (danhSachThuoc.length > 0) {
+        danhSachThuoc.forEach((t, i) => {
+            htmlThuoc += `
+                <div style="margin-bottom: 15px;">
+                    <strong style="font-size: 18px; color: #000;">${i + 1}. ${t.ten}</strong><br>
+                    <span style="font-size: 16px; margin-left: 20px; font-style: italic; color: #333;">Cách dùng: ${t.lieu}</span>
+                </div>
+            `;
+        });
+    } else {
+        htmlThuoc = '<p style="font-style: italic; font-size: 16px; color: #555;">(Bác sĩ không kê thuốc)</p>';
+    }
+
+    // Đổ dữ liệu vào vùng ẩn để chụp ảnh
+    const captureArea = document.getElementById('prescription_capture_area');
+    captureArea.innerHTML = `
+        <div style="border-bottom: 3px solid #0284c7; padding-bottom: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="margin: 0 0 5px 0; color: #0284c7; font-size: 32px; text-transform: uppercase; font-family: sans-serif; font-weight: 800;">TT MEDICAL</h2>
+                <p style="margin: 0; font-size: 16px; color: #555; font-family: sans-serif;">Phòng Khám Đa Khoa Chất Lượng Cao</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #555; font-family: sans-serif;">Hotline: 1900 6868</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin: 0; font-size: 16px; font-weight: bold; color: #000;">Mã phiếu: LK${maLK}</p>
+            </div>
+        </div>
+        <div style="text-align: center; margin: 35px 0;">
+            <h1 style="margin: 0; font-size: 36px; text-transform: uppercase; color: #000; letter-spacing: 2px;">ĐƠN THUỐC</h1>
+        </div>
+        <div style="margin-bottom: 30px; font-size: 18px; line-height: 1.8; color: #000;">
+            <p style="margin: 5px 0;"><strong>Họ và tên bệnh nhân:</strong> <span style="text-transform: uppercase;">${tenBenhNhan}</span></p>
+            <p style="margin: 5px 0;"><strong>Chẩn đoán lâm sàng:</strong> ${chanDoan || '(Chưa chẩn đoán)'}</p>
+        </div>
+        <div style="margin-top: 30px; min-height: 380px;">
+            <h3 style="margin-bottom: 20px; font-size: 20px; border-bottom: 2px dotted #000; display: inline-block; color: #000; padding-bottom: 5px;">Chỉ định dùng thuốc:</h3>
+            ${htmlThuoc}
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 50px; text-align: center;">
+            <div>
+                <p style="margin: 5px 0; font-size: 16px; font-style: italic;">Hà Nội, ${ngayIn}</p>
+                <p style="margin: 5px 0; font-size: 18px; font-weight: bold;">Bác sĩ điều trị</p>
+                <div style="height: 120px;"></div>
+                <p style="margin: 5px 0; font-size: 18px; font-weight: bold;">BS. ${tenBacSi}</p>
+            </div>
+        </div>
+    `;
+
+    captureArea.style.left = '0';
+    captureArea.style.top = '0';
+    captureArea.style.zIndex = '-1';
+
+    html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
+        captureArea.style.left = '-9999px'; captureArea.style.top = '-9999px';
+        const link = document.createElement('a');
+        link.download = `Don_Thuoc_LK${maLK}_${tenBenhNhan.replace(/\s+/g, '_')}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+    }).catch(err => { console.error('Lỗi khi tạo ảnh:', err); });
 }
 
 // 5. NGHIỆP VỤ: DUYỆT & HỦY LỊCH
@@ -237,7 +479,15 @@ async function fetchDoctorQA() {
         // Cập nhật số lượng câu hỏi mới trên thống kê
         const pendingQA = currentQA.filter(q => !(q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== ''))).length;
         const elQa = document.getElementById('stat_qa');
-        if (elQa) elQa.innerText = pendingQA < 10 ? '0' + pendingQA : pendingQA;
+        if (elQa) {
+            elQa.innerText = pendingQA < 10 ? '0' + pendingQA : pendingQA;
+            const cardQa = elQa.closest('.stat-card');
+            if (cardQa) {
+                cardQa.onclick = (e) => {
+                    switchTab(e, 'tab-hoi-dap');
+                };
+            }
+        }
 
         renderDoctorQA(docSpecialtyId);
     } catch (error) { console.error('Lỗi khi lấy hỏi đáp:', error); }
@@ -397,27 +647,33 @@ function openShiftModal(shiftId = null) {
     Swal.fire({
         title: isEditing ? 'Sửa ca làm việc' : 'Đăng ký ca làm việc',
         width: '500px',
+        customClass: {
+            popup: 'saas-modal',
+            container: 'saas-backdrop',
+            confirmButton: 'saas-btn-primary',
+            cancelButton: 'saas-btn-outline'
+        },
         html: `
             <div style="text-align: left; margin-top: 15px;">
-                <label style="font-weight: 700; font-size: 14px; color: #475569; display: block; margin-bottom: 5px;">Ngày làm việc (*)</label>
-                <input type="date" id="shift_date" class="swal2-input" value="${defaultDate}" min="${localTodayStr}" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0 0 20px 0; cursor: pointer;">
+                <label class="saas-label"><i class="fa-regular fa-calendar" style="color: #0ea5e9; margin-right: 5px;"></i> Ngày làm việc (*)</label>
+                <input type="date" id="shift_date" class="saas-input" value="${defaultDate}" min="${localTodayStr}" style="cursor: pointer;">
                 
-                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 20px;">
                     <div style="flex: 1;">
-                        <label style="font-weight: 700; font-size: 14px; color: #475569; display: block; margin-bottom: 5px;">Từ giờ (*)</label>
-                        <input type="time" id="shift_start" class="swal2-input" value="${defaultStart}" step="1800" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; cursor: pointer;">
+                        <label class="saas-label"><i class="fa-regular fa-clock" style="color: #10b981; margin-right: 5px;"></i> Từ giờ (*)</label>
+                        <input type="time" id="shift_start" class="saas-input" value="${defaultStart}" step="1800" style="cursor: pointer;">
                     </div>
                     <div style="flex: 1;">
-                        <label style="font-weight: 700; font-size: 14px; color: #475569; display: block; margin-bottom: 5px;">Đến giờ (*)</label>
-                        <input type="time" id="shift_end" class="swal2-input" value="${defaultEnd}" step="1800" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0; cursor: pointer;">
+                        <label class="saas-label"><i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b; margin-right: 5px;"></i> Đến giờ (*)</label>
+                        <input type="time" id="shift_end" class="saas-input" value="${defaultEnd}" step="1800" style="cursor: pointer;">
                     </div>
                 </div>
 
-                <label style="font-weight: 700; font-size: 14px; color: #475569; display: block; margin-bottom: 5px;">Số lượng Bệnh nhân tối đa nhận (*)</label>
-                <input type="number" id="shift_max" class="swal2-input" value="${defaultMax}" min="1" max="50" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0;">
+                <label class="saas-label" style="margin-top: 5px;"><i class="fa-solid fa-users" style="color: #8b5cf6; margin-right: 5px;"></i> Số lượng Bệnh nhân tối đa (*)</label>
+                <input type="number" id="shift_max" class="saas-input" value="${defaultMax}" min="1" max="50">
             </div>
         `,
-        showCancelButton: true, confirmButtonText: isEditing ? 'Lưu thay đổi' : 'Đăng ký ca', confirmButtonColor: '#0284C7', cancelButtonText: 'Hủy',
+        showCancelButton: true, confirmButtonText: isEditing ? '<i class="fa-solid fa-check"></i> Lưu thay đổi' : '<i class="fa-solid fa-plus"></i> Đăng ký ca', confirmButtonColor: '#0ea5e9', cancelButtonText: 'Hủy',
         preConfirm: () => {
             const date = document.getElementById('shift_date').value;
             const start = document.getElementById('shift_start').value;
@@ -624,31 +880,72 @@ async function fetchAppointments() {
         const approvedCount = currentAppointments.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'approved').length;
         const doneCount = currentAppointments.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'done').length;
         
+        // Gộp chung 2 loại chờ khám (Tại quầy + Đã TT Online) vào 1 biến
+        const totalPending = pendingCount + approvedCount;
+        
         // Đếm số ca khám trong ngày hôm nay
-        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+        const displayDateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+
         const todayCount = currentAppointments.filter(app => {
             if (!app.ngay_lam_viec) return false;
-            return new Date(app.ngay_lam_viec).toISOString().split('T')[0] === todayStr;
+            return app.ngay_lam_viec.split('T')[0] === localDateStr;
         }).length;
 
+        // ĐỒNG BỘ THANH LỌC LỊCH KHÁM (CHỈ GIỮ LẠI 3 NÚT)
         const filterBtns = document.querySelectorAll('.filter-btn');
         if (filterBtns.length >= 3) {
-            filterBtns[1].innerText = `Chờ duyệt (${pendingCount})`;
-            filterBtns[2].innerText = `Đã duyệt (${approvedCount})`;
-            if (filterBtns.length > 3) filterBtns[3].innerText = `Đã khám (${doneCount})`;
+            filterBtns[0].innerHTML = `Tất cả (${currentAppointments.length})`;
+            filterBtns[1].innerHTML = `Chờ khám (${totalPending})`;
+            filterBtns[2].innerHTML = `Đã khám (${doneCount})`;
+            if (filterBtns.length > 3) filterBtns[3].style.display = 'none'; // Ẩn tab thứ 4 (nếu HTML dư)
+            
+            // Gắn sự kiện để truyền đúng biến trạng thái lọc
+            filterBtns[0].onclick = (e) => filterAppointments(e, 'all');
+            filterBtns[1].onclick = (e) => filterAppointments(e, 'pending_all');
+            filterBtns[2].onclick = (e) => filterAppointments(e, 'done');
         }
         
         // ==========================================
-        // ĐỒNG BỘ LÊN BẢNG THỐNG KÊ (DƯỚI NAVBAR)
+        // ĐỒNG BỘ 4 Ô THỐNG KÊ (CHO PHÉP BẤM ĐỂ LỌC)
         // ==========================================
-        const elPending = document.getElementById('stat_pending');
-        if (elPending) elPending.innerText = pendingCount < 10 ? '0' + pendingCount : pendingCount;
+        const updateStatCard = (id, count, filterVal, titleToReplace, newTitle) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerText = count < 10 ? '0' + count : count;
+                const card = el.closest('.stat-card');
+                if (card) {
+                    // Gắn sự kiện nhảy sang Tab lịch khám và cuộn xuống
+                    card.onclick = (e) => {
+                        switchTab(e, 'tab-lich-kham');
+                        filterAppointments(null, filterVal);
+                    };
+                    // Đổi tên nhãn tự động
+                    if (titleToReplace && newTitle) {
+                        const titleEl = card.querySelector('h3, p');
+                        if (titleEl && titleEl.innerText.toLowerCase().includes(titleToReplace.toLowerCase())) titleEl.innerText = newTitle;
+                    }
+                }
+            }
+        };
+
+        updateStatCard('stat_pending', totalPending, 'pending_all', 'duyệt', 'Chờ khám');
+        updateStatCard('stat_done', doneCount, 'done');
+        updateStatCard('stat_today', todayCount, 'today');
         
-        const elDone = document.getElementById('stat_done');
-        if (elDone) elDone.innerText = doneCount < 10 ? '0' + doneCount : doneCount;
-        
-        const elToday = document.getElementById('stat_today');
-        if (elToday) elToday.innerText = todayCount < 10 ? '0' + todayCount : todayCount;
+        // Bổ sung ngày thực tế vào thẻ Khám hôm nay tự động
+        const statTodayEl = document.getElementById('stat_today');
+        if (statTodayEl) {
+            const cardToday = statTodayEl.closest('.stat-card');
+            if (cardToday) {
+                const labels = cardToday.querySelectorAll('h3, p');
+                labels.forEach(label => {
+                    if (label.innerText.toLowerCase().includes('hôm nay')) label.innerText = `Khám hôm nay - ${displayDateStr}`;
+                });
+            }
+        }
 
         renderAppointments('all');
     } catch (error) {
@@ -672,12 +969,49 @@ function renderAppointments(filterStatus) {
     let filteredList = [...currentAppointments];
     
     // 1. Lọc theo Tab Trạng thái
-    if (filterStatus !== 'all') {
+    if (filterStatus === 'pending_all') {
+        filteredList = currentAppointments.filter(app => {
+            const st = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
+            return st === 'pending' || st === 'approved';
+        });
+    } else if (filterStatus === 'today') {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+        
+        filteredList = currentAppointments.filter(app => {
+            if (!app.ngay_lam_viec) return false;
+            return app.ngay_lam_viec.split('T')[0] === localDateStr;
+        });
+    } else if (filterStatus !== 'all') {
         filteredList = currentAppointments.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === filterStatus.toLowerCase());
-    } else {
-        // Thuật toán: Sắp xếp các lịch hẹn đăng ký mới nhất lên đầu tiên khi ở tab "Tất cả"
-        filteredList.sort((a, b) => new Date(b.ngay_tao) - new Date(a.ngay_tao));
     }
+
+    // THUẬT TOÁN SẮP XẾP ƯU TIÊN (CÔNG BẰNG & CHUẨN LUỒNG Y TẾ)
+    const statusPriority = { 'pending': 1, 'approved': 1, 'done': 2, 'cancelled': 3 };
+
+    filteredList.sort((a, b) => {
+        const statusA = a.trang_thai ? a.trang_thai.trim().toLowerCase() : '';
+        const statusB = b.trang_thai ? b.trang_thai.trim().toLowerCase() : '';
+        const pA = statusPriority[statusA] || 4;
+        const pB = statusPriority[statusB] || 4;
+
+        // 1. Trạng thái: Chờ khám (1) -> Đã khám (2) -> Đã hủy (3)
+        if (pA !== pB) return pA - pB;
+
+        // 2. Ngày khám: Sớm nhất lên trước
+        const dateA = new Date(a.ngay_lam_viec || 0).getTime();
+        const dateB = new Date(b.ngay_lam_viec || 0).getTime();
+        if (dateA !== dateB) return dateA - dateB;
+
+        // 3. Giờ khám: Sớm nhất lên trước (Đảm bảo người đến sớm khám sớm)
+        const timeA = a.gio_kham || a.khung_gio || "23:59";
+        const timeB = b.gio_kham || b.khung_gio || "23:59";
+        if (timeA < timeB) return -1;
+        if (timeA > timeB) return 1;
+
+        return 0;
+    });
 
     // 2. Thuật toán lọc theo Từ khóa (Tên bệnh nhân, Mã lịch khám, SĐT)
     if (keyword) {
@@ -700,14 +1034,13 @@ function renderAppointments(filterStatus) {
         
         const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
         if (status === 'pending') {
-            statusHtml = `<span class="badge badge-pending" style="background:#fef3c7; color:#d97706; padding: 4px 8px; border-radius: 12px; font-size: 12px;"><span class="dot" style="background:#f59e0b; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px;"></span>Chờ duyệt</span>`;
+            statusHtml = `<span class="badge badge-pending" style="background:#fef3c7; color:#d97706; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;"><span class="dot" style="background:#f59e0b; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;"></span>Chờ khám</span>`;
             actionHtml = `
-                <button class="action-btn btn-success" onclick="approveAppointment('${app.id}')" title="Duyệt" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-check"></i></button>
-                <button class="action-btn btn-danger" onclick="cancelAppointment('${app.id}')" title="Hủy" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                <button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${app.ten_benh_nhan}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>
             `;
         } else if (status === 'approved') {
-            statusHtml = `<span class="badge badge-approved" style="background:#dcfce7; color:#166534; padding: 4px 8px; border-radius: 12px; font-size: 12px;"><span class="dot" style="background:#22c55e; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px;"></span>Đã duyệt</span>`;
-            actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${app.ten_benh_nhan}')" style="background:#0284c7; color:white; border:none; padding: 5px 15px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-stethoscope"></i> Khám bệnh</button>`;
+            statusHtml = `<span class="badge badge-approved" style="background:#dcfce7; color:#166534; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;"><i class="fa-solid fa-circle-check" style="font-size: 14px; margin-right: 2px;"></i> Chờ khám</span>`;
+            actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${app.ten_benh_nhan}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
         } else if (status === 'cancelled') {
             statusHtml = `<span class="badge" style="background:#fee2e2; color:#991b1b; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã hủy</span>`;
             actionHtml = `<span style="font-size: 12px; color: #ef4444;"><i class="fa-solid fa-xmark"></i> Lịch đã bị hủy</span>`;

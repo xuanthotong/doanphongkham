@@ -1,7 +1,7 @@
 const appointmentTbody = document.getElementById('appointmentTableBody');
 let allAdminAppointments = [];
 let currentAdminAppointmentPage = 1;
-const adminAppointmentItemsPerPage = 20;
+const adminAppointmentItemsPerPage = 10;
 
 async function fetchAdminAppointments() {
     if (!appointmentTbody) return;

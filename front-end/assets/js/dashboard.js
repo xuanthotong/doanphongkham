@@ -1,38 +1,14 @@
-/* =========================================================================================
-   GHI CHÚ QUAN TRỌNG VỀ LUỒNG DỮ LIỆU (DATA FLOW) CỦA HỆ THỐNG TT MEDICAL:
-   
-   1. DATABASE LÀ TRUNG TÂM (Single Source of Truth):
-      Toàn bộ dữ liệu hiển thị trên Trang Admin này đều được kéo (GET) từ CSDL SQL.
-      
-   2. TÁC ĐỘNG TỪ ADMIN ĐẾN TRANG CHỦ (USER INTERFACE):
-      Bất kỳ thao tác nào của Admin trên trang này (Thêm Bác sĩ, Đăng Bài viết, Khóa Tài khoản, 
-      Duyệt Lịch hẹn, Trả lời Câu hỏi...) đều sẽ gọi API (POST/PUT/DELETE) để cập nhật thẳng 
-      vào CSDL SQL. 
-      -> HỆ QUẢ: Người dùng (Bệnh nhân) khi truy cập Trang chủ sẽ ngay lập tức nhìn thấy 
-      những thay đổi này (Ví dụ: Thấy bài viết mới, thấy lịch hẹn đã được duyệt, không thể 
-      đăng nhập nếu bị khóa...).
-
-   3. TÁC ĐỘNG TỪ TRANG CHỦ ĐẾN ADMIN:
-      Ngược lại, khi Người dùng (Bệnh nhân) thao tác trên Trang chủ (Đăng ký tài khoản mới, 
-      Đặt lịch khám, Gửi câu hỏi...), dữ liệu cũng sẽ được đẩy vào CSDL. 
-      -> HỆ QUẢ: Admin khi mở trang Dashboard này lên sẽ lập tức thấy tài khoản mới, 
-      lịch hẹn mới cần duyệt ở trạng thái "Pending", và câu hỏi mới cần trả lời.
-
-   * LƯU Ý KHI CODE BACKEND (NODE.JS): Mọi hàm fetch() ở các file js con (doctor.js, account.js...) 
-   phải được trỏ đúng vào các Endpoint API tương ứng để vòng lặp dữ liệu này hoạt động.
-========================================================================================= */
-
 // Chuyển Tab Menu
 function switchTab(tabName, clickedElement) {
     const menuItems = document.querySelectorAll('.menu-item');
     menuItems.forEach(item => item.classList.remove('active'));
     clickedElement.classList.add('active');
-
+    
     const allSections = document.querySelectorAll('.content');
     allSections.forEach(section => section.style.display = 'none');
 
     document.getElementById('section-' + tabName).style.display = 'block';
-
+    
     // Đóng sidebar trên mobile sau khi chọn chức năng
     const sidebar = document.querySelector('.sidebar');
     if (sidebar && sidebar.classList.contains('active')) {
@@ -40,9 +16,21 @@ function switchTab(tabName, clickedElement) {
     }
 }
 
+// Đóng mở Menu Nhóm
+function toggleMenu(element, submenuId) {
+    element.classList.toggle('active');
+    const submenu = document.getElementById(submenuId);
+    if (submenu.classList.contains('open')) {
+        submenu.classList.remove('open');
+    } else {
+        submenu.classList.add('open');
+    }
+}
+
 // Đóng Modal dùng chung
-function closeModal(modalId) { 
-    document.getElementById(modalId).style.display = 'none'; 
+function closeModal(modalId = 'doctorModal') { 
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(m => m.style.display = 'none');
 }
 
 // Tắt Modal khi bấm ra ngoài vùng tối
@@ -74,7 +62,7 @@ function confirmLogout() {
 
 // Format Tiền tệ dùng chung
 function formatCurrency(amount) {
-    return Number(amount).toLocaleString('en-US') + ' VNĐ';
+    return Number(amount).toLocaleString('vi-VN') + ' VNĐ';
 }
 
 // =========================================================================================
@@ -126,16 +114,15 @@ function renderAdminShiftTable() {
     const totalPages = Math.ceil(filteredShifts.length / adminShiftItemsPerPage);
     if (currentAdminShiftPage > totalPages) currentAdminShiftPage = totalPages;
     if (currentAdminShiftPage < 1) currentAdminShiftPage = 1;
-
     const startIndex = (currentAdminShiftPage - 1) * adminShiftItemsPerPage;
     const endIndex = startIndex + adminShiftItemsPerPage;
     const paginatedShifts = filteredShifts.slice(startIndex, endIndex);
-
+    
     // Lấy giờ hiện tại chuẩn theo múi giờ local (Việt Nam)
     const now = new Date();
     const offset = now.getTimezoneOffset() * 60000;
     const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
-    const currentTimeStr = now.toTimeString().substring(0, 5); // "HH:MM"
+    const currentTimeStr = now.toTimeString().substring(0, 5);
 
     paginatedShifts.forEach(shift => {
         const shiftDateStr = shift.ngay_lam_viec.split('T')[0];
@@ -246,31 +233,30 @@ function deleteAdminShift(id) {
                     Swal.fire('Hệ thống từ chối!', data.message, 'error'); 
                 }
             } catch (error) { 
-                console.error('Lỗi API Xóa:', error); 
-                Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error'); 
+                console.error('Lỗi API Xóa:', error);
+                Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error');
             }
         }
     });
 }
 
-// Gọi API ngay khi tải trang
-fetchAdminShifts();
-
 // =========================================================================================
-// KHỞI TẠO MENU MOBILE (RESPONSIVE DRAWER)
+// KHỞI TẠO MENU MOBILE VÀ CHART.JS
 // =========================================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. GỌI API CA LÀM VIỆC
+    fetchAdminShifts();
+
+    // 2. LOGIC MENU MOBILE
     const sidebar = document.querySelector('.sidebar');
     const topbar = document.querySelector('.topbar');
     
-    // 1. Tìm nút mở menu (3 gạch), nếu chưa có thì hệ thống tự động tạo mới
     let mobileMenuBtn = document.querySelector('.topbar .mobile-menu-btn');
     if (!mobileMenuBtn && topbar) {
         mobileMenuBtn = document.createElement('button');
         mobileMenuBtn.className = 'mobile-menu-btn';
         mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
         
-        // Tạo thẻ bọc để gom nút 3 gạch và các phần tử bên trái lại (tránh bị vỡ layout)
         let leftContainer = document.createElement('div');
         leftContainer.style.display = 'flex';
         leftContainer.style.alignItems = 'center';
@@ -278,39 +264,188 @@ document.addEventListener('DOMContentLoaded', () => {
         
         leftContainer.appendChild(mobileMenuBtn);
         
-        // Nếu topbar có logo hoặc tiêu đề bên trái (không phải user-profile), đưa vào leftContainer
         if (topbar.firstElementChild && !topbar.firstElementChild.classList.contains('user-profile')) {
             leftContainer.appendChild(topbar.firstElementChild);
         }
         topbar.insertBefore(leftContainer, topbar.firstChild);
     }
     
-    // 2. Tìm nút đóng menu (dấu X), nếu chưa có thì tự động tạo mới
     let closeMenuBtn = document.querySelector('.close-menu-btn');
     if (!closeMenuBtn && sidebar) {
         closeMenuBtn = document.createElement('button');
         closeMenuBtn.className = 'close-menu-btn';
         closeMenuBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-        // Chèn vào đầu sidebar
         sidebar.insertBefore(closeMenuBtn, sidebar.firstChild);
     }
 
-    // 3. Thêm sự kiện Click để Bật / Tắt Menu
     if (mobileMenuBtn && sidebar) {
-        // Loại bỏ các event cũ (nếu có)
         const newBtn = mobileMenuBtn.cloneNode(true);
         mobileMenuBtn.parentNode.replaceChild(newBtn, mobileMenuBtn);
         mobileMenuBtn = newBtn;
 
         mobileMenuBtn.addEventListener('click', () => {
             if (window.innerWidth <= 768) {
-                sidebar.classList.add('active'); // Mobile: Vuốt từ trái sang
+                sidebar.classList.add('active');
             } else {
-                sidebar.classList.toggle('collapsed'); // Máy tính: Thu gọn Sidebar
+                sidebar.classList.toggle('collapsed');
             }
         });
     }
     if (closeMenuBtn && sidebar) {
         closeMenuBtn.addEventListener('click', () => sidebar.classList.remove('active'));
+    }
+
+    // 1. VẼ BIỂU ĐỒ TRÒN (HIỂN THỊ PHẦN TRĂM)
+    const ctxPie = document.getElementById('userPieChart');
+    if (ctxPie) {
+        new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: ['Bệnh nhân', 'Bác sĩ', 'Quản trị viên'],
+                datasets: [{
+                    data: [854, 12, 3], // Dữ liệu mẫu (sau này lấy từ API)
+                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
+                    hoverOffset: 12,
+                    borderWidth: 0
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '70%', 
+                plugins: { 
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                // Lấy giá trị hiện tại
+                                let value = context.parsed;
+                                // Tính tổng tất cả các phần tử
+                                let total = context.chart._metasets[context.datasetIndex].total;
+                                // Tính phần trăm
+                                let percentage = Math.round((value / total) * 100) + '%';
+                                
+                                // Trả về chuỗi hiển thị: "Bệnh nhân: 854 người (98%)"
+                                return `${context.label}: ${Number(value).toLocaleString('vi-VN')} người (${percentage})`;
+                            }
+                        }
+                    }
+                } 
+            }
+        });
+    }
+
+    const ctxBar = document.getElementById('revenueBarChart');
+    let revenueChartInstance = null;
+    let currentChartDate = new Date(); // Lấy ngày giờ thực tế của hệ thống làm mốc
+    let currentChartMode = 'week';
+
+    if (ctxBar) {
+        revenueChartInstance = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Tổng doanh thu (VNĐ)',
+                    data: [],
+                    backgroundColor: '#10b981',
+                    borderRadius: 6
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        padding: 14,
+                        cornerRadius: 12,
+                        callbacks: {
+                            label: function(context) {
+                                let value = context.raw || 0;
+                                return context.dataset.label + ': ' + Number(value).toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Hàm Cập nhật lại Biểu đồ dựa theo Thời gian thực
+        function updateRevenueChart() {
+            let labels = [];
+            let data = [];
+            const timeLabel = document.getElementById('timeLabel');
+
+            if (currentChartMode === 'week') {
+                // Tính toán ra ngày Thứ 2 của tuần hiện tại
+                let d = new Date(currentChartDate);
+                let day = d.getDay();
+                let diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                let monday = new Date(d.setDate(diff));
+                
+                // Tính toán ra Chủ Nhật
+                let sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+
+                if(timeLabel) timeLabel.innerText = `Tuần: ${String(monday.getDate()).padStart(2,'0')}/${String(monday.getMonth()+1).padStart(2,'0')} - ${String(sunday.getDate()).padStart(2,'0')}/${String(sunday.getMonth()+1).padStart(2,'0')}/${sunday.getFullYear()}`;
+
+                const daysOfWeek = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+                for (let i = 0; i < 7; i++) {
+                    let cDate = new Date(monday);
+                    cDate.setDate(monday.getDate() + i);
+                    labels.push(`${daysOfWeek[i]} (${String(cDate.getDate()).padStart(2,'0')}/${String(cDate.getMonth()+1).padStart(2,'0')})`);
+                    
+                    // MOCK DATA: Tạo số liệu giả lập thay đổi sinh động dựa trên chính ngày đó (Sau này thay bằng Fetch API)
+                    let seed = cDate.getDate() + cDate.getMonth() * 10;
+                    data.push(1000000 + (seed * 40000) + Math.floor(Math.random() * 500000)); 
+                }
+            } else {
+                let year = currentChartDate.getFullYear();
+                if(timeLabel) timeLabel.innerText = `Năm ${year}`;
+                
+                for (let i = 1; i <= 12; i++) {
+                    labels.push(`Tháng ${i}`);
+                    // MOCK DATA
+                    let seed = i + (year % 100);
+                    data.push(15000000 + (seed * 2000000) + Math.floor(Math.random() * 5000000));
+                }
+            }
+
+            revenueChartInstance.data.labels = labels;
+            revenueChartInstance.data.datasets[0].data = data;
+            revenueChartInstance.update();
+        }
+
+        updateRevenueChart(); // Chạy hàm khởi tạo lần đầu
+
+        // Sự kiện lọc dữ liệu (Dropdown Filter)
+        const revenueFilter = document.getElementById('revenueFilter');
+        if (revenueFilter) {
+            revenueFilter.addEventListener('change', function(e) {
+                currentChartMode = e.target.value;
+                updateRevenueChart();
+            });
+        }
+
+        // Sự kiện Bấm nút Lùi / Tiến
+        const prevBtn = document.getElementById('prevTimeBtn');
+        const nextBtn = document.getElementById('nextTimeBtn');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentChartMode === 'week') currentChartDate.setDate(currentChartDate.getDate() - 7);
+                else currentChartDate.setFullYear(currentChartDate.getFullYear() - 1);
+                updateRevenueChart();
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (currentChartMode === 'week') currentChartDate.setDate(currentChartDate.getDate() + 7);
+                else currentChartDate.setFullYear(currentChartDate.getFullYear() + 1);
+                updateRevenueChart();
+            });
+        }
     }
 });

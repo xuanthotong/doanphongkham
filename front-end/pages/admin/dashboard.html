@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Bác sĩ - TT Medical Admin</title>
+    <title>Quản lý Hệ thống - TT Medical Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Thư viện SweetAlert2 cho Pop-up hiện đại -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
 </head>
 <body>
@@ -18,23 +19,37 @@
             <img src="../../assets/images/logo.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
             <span style="font-size: 20px; font-weight: 700; color: #10b981;">TT Medical</span>
         </div>
+        
         <ul class="menu">
-            <div class="menu-title">Quản lý chung</div>
-            <li class="menu-item active" onclick="switchTab('doctor', this)"><i class="fa-solid fa-user-doctor"></i> Quản lý Bác sĩ</li>
-            <li class="menu-item" onclick="switchTab('specialty', this)"><i class="fa-solid fa-layer-group"></i> Quản lý Chuyên khoa</li>
-            <li class="menu-item" onclick="switchTab('account', this)"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
-            <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
-            <li class="menu-item" onclick="switchTab('category', this)"><i class="fa-solid fa-list"></i> Quản lý Danh mục</li>
-            <li class="menu-item" onclick="switchTab('appointment', this)"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
-            <li class="menu-item" onclick="switchTab('shift', this)"><i class="fa-solid fa-clock"></i> Quản lý Ca làm việc</li>
-            <li class="menu-item" onclick="switchTab('qa', this)"><i class="fa-solid fa-circle-question"></i> Quản lý Câu hỏi</li>
+            <li class="menu-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i> Tổng quan (Dashboard)</li>
+
+            <div class="menu-group" onclick="toggleMenu(this, 'menuNghiepVu')">
+                <span><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Nhân sự</span>
+                <i class="fa-solid fa-chevron-down caret"></i>
+            </div>
+            <div class="submenu open" id="menuNghiepVu">
+                <li class="menu-item" onclick="switchTab('patient', this)"><i class="fa-solid fa-bed-pulse"></i> Quản lý Bệnh nhân</li>
+                <li class="menu-item" onclick="switchTab('appointment', this)"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
+                <li class="menu-item" onclick="switchTab('doctor', this)"><i class="fa-solid fa-user-doctor"></i> Quản lý Bác sĩ</li>
+                <li class="menu-item" onclick="switchTab('shift', this)"><i class="fa-solid fa-clock"></i> Quản lý Ca làm việc</li>
+                <li class="menu-item" onclick="switchTab('specialty', this)"><i class="fa-solid fa-layer-group"></i> Quản lý Chuyên khoa</li>
+            </div>
+
+            <div class="menu-group" onclick="toggleMenu(this, 'menuHeThong')">
+                <span><i class="fa-solid fa-gear"></i> Hệ thống & Nội dung</span>
+                <i class="fa-solid fa-chevron-down caret"></i>
+            </div>
+            <div class="submenu" id="menuHeThong">
+                <li class="menu-item" onclick="switchTab('account', this)"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
+                <li class="menu-item" onclick="switchTab('qa', this)"><i class="fa-solid fa-circle-question"></i> Quản lý Câu hỏi</li>
+                <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
+                <li class="menu-item" onclick="switchTab('category', this)"><i class="fa-solid fa-list"></i> Quản lý Danh mục</li>
+            </div>
         </ul>
     </aside>
 
     <main class="main-wrapper">
         <header class="topbar">
-            
-            
             <div class="user-profile" onclick="confirmLogout()" title="Nhấn để đăng xuất">
                 <div style="background-color: var(--primary-color); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fa-solid fa-user"></i>
@@ -44,12 +59,104 @@
             </div>
         </header>
 
-        <section id="section-doctor" class="content">
+        <section id="section-dashboard" class="content" style="display: block;">
+            <div class="page-header">
+                <h1 class="page-title">Tổng quan Hệ thống</h1>
+            </div>
+            
+            <div class="dashboard-top-row">
+                <div class="stats-column">
+                    <div class="stat-card" style="border-left-color: #3b82f6;">
+                        <div>
+                            <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase;">Tổng Bác sĩ</h3>
+                            <h2 style="font-size: 28px; color: #1f2937;">12</h2>
+                        </div>
+                        <i class="fa-solid fa-user-doctor" style="font-size: 32px; color: #3b82f6; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #10b981;">
+                        <div>
+                            <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase;">Tổng Bệnh nhân</h3>
+                            <h2 style="font-size: 28px; color: #1f2937;">854</h2>
+                        </div>
+                        <i class="fa-solid fa-bed-pulse" style="font-size: 32px; color: #10b981; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #f59e0b;">
+                        <div>
+                            <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase;">Quản trị viên</h3>
+                            <h2 style="font-size: 28px; color: #1f2937;">3</h2>
+                        </div>
+                        <i class="fa-solid fa-user-shield" style="font-size: 32px; color: #f59e0b; opacity: 0.8;"></i>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: #1f2937; text-align: center;">Tỷ lệ Người dùng</h3>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="userPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-card" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="font-size: 16px; color: #1f2937; margin: 0;">Biểu đồ Doanh thu phòng khám</h3>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <button id="prevTimeBtn" style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: #64748b; transition: 0.2s;" onmouseover="this.style.color='#0ea5e9'" onmouseout="this.style.color='#64748b'"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="timeLabel" style="font-weight: 600; font-size: 13px; color: #334155; min-width: 140px; text-align: center;">Tuần: --/--/----</span>
+                            <button id="nextTimeBtn" style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: #64748b; transition: 0.2s;" onmouseover="this.style.color='#0ea5e9'" onmouseout="this.style.color='#64748b'"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        <select id="revenueFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; background: white; color: #334155; font-weight: 500; cursor: pointer;">
+                            <option value="week">Theo Tuần</option>
+                            <option value="month">Theo Năm</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="revenueBarChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-patient" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Hồ sơ Y tế Bệnh nhân</h1>
+            </div>
+            <div class="table-container">
+                <table style="white-space: nowrap;">
+                    <thead>
+                        <tr>
+                            <th>Mã BN</th>
+                            <th>Họ và Tên</th>
+                            <th>Triệu chứng (Lúc đặt)</th>
+                            <th>Hình ảnh</th>
+                            <th>Kết luận của BS</th>
+                            <th>Ghi chú / Đơn thuốc</th>
+                            <th>Trạng thái Tái khám</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTableBody">
+                        <tr>
+                            <td style="color: var(--primary-color); font-weight: 600;">#BN105</td>
+                            <td style="font-weight: 600;">Nguyễn Văn A</td>
+                            <td>Đau họng, sốt nhẹ</td>
+                            <td><button class="action-btn"><i class="fa-solid fa-image"></i> Xem</button></td>
+                            <td><span style="color:#ef4444; font-weight:600;">Viêm amidan cấp</span></td>
+                            <td>Kháng sinh 5 ngày...</td>
+                            <td><span class="badge" style="background:#fef3c7; color:#d97706;">Sau 1 tuần</span></td>
+                            <td><button class="action-btn edit" title="Cập nhật hồ sơ"><i class="fa-solid fa-pen"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="section-doctor" class="content" style="display: none;">
             <div class="page-header">
                 <h1 class="page-title">Quản lý Bác sĩ</h1>
                 <button class="btn-add" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
             </div>
-
             <div class="table-container">
                 <table style="white-space: nowrap;">
                     <thead>
@@ -70,8 +177,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="doctorTableBody">
-                        </tbody>
+                    <tbody id="doctorTableBody"></tbody>
                 </table>
             </div>
         </section>
@@ -81,7 +187,6 @@
                 <h1 class="page-title">Quản lý Chuyên khoa</h1>
                 <button class="btn-add" onclick="openSpecialtyModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
             </div>
-
             <div class="table-container">
                 <table style="white-space: nowrap;">
                     <thead>
@@ -92,8 +197,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="specialtyTableBody">
-                    </tbody>
+                    <tbody id="specialtyTableBody"></tbody>
                 </table>
             </div>
         </section>
@@ -102,7 +206,6 @@
             <div class="page-header">
                 <h1 class="page-title">Quản lý Tài khoản</h1>
             </div>
-
             <div class="table-container">
                 <table style="white-space: nowrap;">
                     <thead>
@@ -122,8 +225,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="accountTableBody">
-                        </tbody>
+                    <tbody id="accountTableBody"></tbody>
                 </table>
             </div>
         </section>
@@ -133,7 +235,6 @@
                 <h1 class="page-title">Quản lý Bài viết</h1>
                 <button class="btn-add" onclick="openPostModal()"><i class="fa-solid fa-plus"></i> Đăng bài</button>
             </div>
-
             <div class="table-container">
                 <table style="white-space: nowrap;">
                     <thead>
@@ -147,8 +248,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="postTableBody">
-                        </tbody>
+                    <tbody id="postTableBody"></tbody>
                 </table>
             </div>
         </section>
@@ -158,7 +258,6 @@
                 <h1 class="page-title">Quản lý Danh mục Tin tức</h1>
                 <button class="btn-add" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
             </div>
-
             <div class="table-container">
                 <table style="white-space: nowrap; width: 60%;">
                     <thead>
@@ -168,8 +267,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="categoryTableBody">
-                    </tbody>
+                    <tbody id="categoryTableBody"></tbody>
                 </table>
             </div>
         </section>
@@ -178,16 +276,14 @@
             <div class="page-header">
                 <h1 class="page-title">Quản lý Lịch hẹn</h1>
             </div>
-
             <div class="table-container">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                          <h2 style="font-size: 22px; margin: 0;">Danh sách Lịch hẹn</h2>
                      <div class="search-box" style="position: relative;">
                          <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
                          <input type="text" id="searchAdminAppointment" oninput="renderAppointmentTable()" placeholder="Tìm tên BN, BS, mã LK, SĐT..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 300px; outline: none; transition: border-color 0.3s;">
-            </div>
-        </div>
-
+                    </div>
+                </div>
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
@@ -203,8 +299,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="appointmentTableBody">
-                        </tbody>
+                    <tbody id="appointmentTableBody"></tbody>
                 </table>
             </div>
         </section>
@@ -234,8 +329,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="shiftAdminTableBody">
-                    </tbody>
+                    <tbody id="shiftAdminTableBody"></tbody>
                 </table>
             </div>
         </section>
@@ -260,31 +354,26 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="qaTableBody">
-                        </tbody>
+                    <tbody id="qaTableBody"></tbody>
                 </table>
             </div>
         </section>
-
     </main>
 
-  <div id="doctorModal" class="modal">
+    <div id="doctorModal" class="modal">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 <h2 id="modalTitle" style="font-size: 20px;">Thêm mới Bác sĩ</h2>
                 <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
             </div>
-            
             <form id="doctorForm">
                 <input type="hidden" id="d_id">
-                
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin đăng nhập</h3>
                 <div class="form-grid">
                     <div class="form-group"><label>Tên đăng nhập</label><input type="text" id="d_ten_dang_nhap" required></div>
                     <div class="form-group"><label>Mật khẩu</label><input type="text" id="d_mat_khau" required></div>
                     <div class="form-group" style="grid-column: span 2;"><label>Email</label><input type="email" id="d_email" required></div>
                 </div>
-
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin cá nhân</h3>
                 <div class="form-grid">
                     <div class="form-group"><label>Họ và tên</label><input type="text" id="d_ho_ten" required></div>
@@ -298,7 +387,6 @@
                     <div class="form-group"><label>Số điện thoại</label><input type="tel" id="d_so_dien_thoai" required></div>
                     <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text" id="d_dia_chi" required></div>
                 </div>
-
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Hồ sơ chuyên môn</h3>
                 <div class="form-grid">
                     <div class="form-group"><label>Chuyên khoa</label>
@@ -307,9 +395,7 @@
                         </select>
                     </div>
                     <div class="form-group"><label>Năm kinh nghiệm</label><input type="number" id="d_nam_kinh_nghiem" required></div>
-                    
                     <div class="form-group"><label>Phí khám (VNĐ)</label><input type="text" id="d_phi_kham" required></div>
-                    
                     <div class="form-group">
                         <label>Ảnh đại diện (Máy HOẶC Link)</label>
                         <div style="display: flex; gap: 5px;">
@@ -317,13 +403,11 @@
                             <input type="text" id="d_anh_dai_dien" placeholder="Dán link..." style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px;">
                         </div>
                     </div>
-
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Tiểu sử / Giới thiệu</label>
                         <textarea id="d_tieu_su" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
                     </div>
                 </div>
-                
                 <div style="text-align: right; margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" onclick="closeModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
                     <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu dữ liệu</button>
@@ -341,16 +425,13 @@
             <form id="postForm" style="margin-top: 15px;">
                 <input type="hidden" id="p_id">
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
-                    
                     <div class="form-group"><label>Tiêu đề bài viết</label><input type="text" id="p_tieu_de" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
-                    
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
                         <div class="form-group"><label>Danh mục</label>
                             <select id="p_danh_muc" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                                 <option value="" disabled selected>-- Đang tải danh mục --</option>
                             </select>
                         </div>
-                        
                         <div class="form-group">
                             <label>Ảnh minh họa (Chọn từ máy HOẶC Dán link)</label>
                             <div style="display: flex; gap: 10px;">
@@ -359,17 +440,14 @@
                             </div>
                         </div>
                     </div>
-
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group"><label>Tác giả</label><input type="text" id="p_tac_gia" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" value="Admin"></div>
                         <div class="form-group"><label>Ngày xuất bản</label><input type="date" id="p_ngay_xuat_ban" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                     </div>
-
                     <div class="form-group">
                         <label>Nội dung bài viết</label>
                         <textarea id="p_noi_dung" rows="6" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
                     </div>
-
                 </div>
                 <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" onclick="closePostModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
@@ -379,7 +457,6 @@
         </div>
     </div>
 
-    <!-- MODAL QUẢN LÝ CHUYÊN KHOA -->
     <div id="specialtyModal" class="modal">
         <div class="modal-content" style="width: 500px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
@@ -406,7 +483,6 @@
         </div>
     </div>
 
-    <!-- MODAL QUẢN LÝ DANH MỤC TIN TỨC -->
     <div id="categoryModal" class="modal">
         <div class="modal-content" style="width: 400px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
@@ -429,7 +505,6 @@
         </div>
     </div>
 
-    <!-- MODAL QUẢN LÝ TÀI KHOẢN -->
     <div id="accountModal" class="modal">
         <div class="modal-content" style="width: 600px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
@@ -438,7 +513,6 @@
             </div>
             <form id="accountForm" style="margin-top: 15px;">
                 <input type="hidden" id="a_id">
-                
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin hệ thống</h3>
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group"><label>Email</label><input type="email" id="a_email" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
@@ -457,7 +531,6 @@
                         </select>
                     </div>
                 </div>
-
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin cá nhân</h3>
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group"><label>Họ và tên</label><input type="text" id="a_ho_ten" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
@@ -472,7 +545,6 @@
                     </div>
                     <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text" id="a_dia_chi" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                 </div>
-
                 <div style="text-align: right; margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
                     <button type="button" onclick="closeAccountModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
                     <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu thay đổi</button>
@@ -490,5 +562,5 @@
     <script src="../../assets/js/account.js"></script>
     <script src="../../assets/js/qa.js"></script>
     
-    </body>
+</body>
 </html>
