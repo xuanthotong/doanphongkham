@@ -7,7 +7,11 @@ async function handleLogin(event) {
     const mat_khau = document.getElementById('login_password').value;
 
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/auth/login', {
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.protocol === 'file:') 
+            ? 'http://localhost:3000/api' 
+            : 'https://doanphongkham.onrender.com/api';
+
+        const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ten_dang_nhap, mat_khau })
@@ -58,12 +62,22 @@ async function handleRegister(event) {
     const email = document.getElementById('reg_email').value;
     const ho_ten = document.getElementById('reg_fullname').value;
     const so_dien_thoai = document.getElementById('reg_phone').value;
+    const ngay_sinh = document.getElementById('reg_birthday') ? document.getElementById('reg_birthday').value : null;
+    const gioi_tinh = document.getElementById('reg_gender') ? document.getElementById('reg_gender').value : null;
+    const dia_chi = document.getElementById('reg_province') ? document.getElementById('reg_province').value : null;
+
+    // Bật log để xem dữ liệu có lấy được từ Form không
+    console.log("📤 Frontend chuẩn bị gửi đăng ký:", { ten_dang_nhap, ngay_sinh, gioi_tinh, dia_chi });
 
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/auth/register', {
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.protocol === 'file:') 
+            ? 'http://localhost:3000/api' 
+            : 'https://doanphongkham.onrender.com/api';
+
+        const response = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ten_dang_nhap, mat_khau, email, ho_ten, so_dien_thoai })
+            body: JSON.stringify({ ten_dang_nhap, mat_khau, email, ho_ten, so_dien_thoai, ngay_sinh, gioi_tinh, dia_chi })
         });
 
         const data = await response.json();
@@ -138,7 +152,11 @@ function handleForgotPassword(event) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch('https://doanphongkham.onrender.com/api/password/reset', {
+                const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+                    ? 'http://localhost:3000/api' 
+                    : 'https://doanphongkham.onrender.com/api';
+
+                const res = await fetch(`${API_URL}/password/reset`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(result.value)
@@ -157,6 +175,24 @@ function handleForgotPassword(event) {
         }
     });
 }
+
+// Bơm danh sách tỉnh thành vào select box ở form Đăng ký
+document.addEventListener('DOMContentLoaded', () => {
+    const provinceSelect = document.getElementById('reg_province');
+    if (provinceSelect) {
+        const provinces = [
+            "Hà Nội", "TP HCM", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "An Giang", "Bà Rịa - Vũng Tàu", "Bắc Giang", "Bắc Kạn", "Bạc Liêu", "Bắc Ninh", "Bến Tre", "Bình Định", "Bình Dương", "Bình Phước", "Bình Thuận", "Cà Mau", "Cao Bằng", "Đắk Lắk", "Đắk Nông", "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Giang", "Hà Nam", "Hà Tĩnh", "Hải Dương", "Hậu Giang", "Hòa Bình", "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", "Lâm Đồng", "Lạng Sơn", "Lào Cai", "Long An", "Nam Định", "Nghệ An", "Ninh Bình", "Ninh Thuận", "Phú Thọ", "Phú Yên", "Quảng Bình", "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên", "Thanh Hóa", "Thừa Thiên Huế", "Tiền Giang", "Trà Vinh", "Tuyên Quang", "Vĩnh Long", "Vĩnh Phúc", "Yên Bái"
+        ];
+        
+        provinceSelect.innerHTML = '<option value="" disabled selected>Chọn Tỉnh/Thành phố</option>';
+        provinces.sort().forEach(province => {
+            const option = document.createElement('option');
+            option.value = province;
+            option.textContent = province;
+            provinceSelect.appendChild(option);
+        });
+    }
+});
 
 // ==================================================
 // HÀM KIỂM TRA: CHẶN ĐẶT LỊCH KHI CHƯA ĐĂNG NHẬP

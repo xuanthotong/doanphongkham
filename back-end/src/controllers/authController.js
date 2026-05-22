@@ -5,7 +5,10 @@ const jwt = require('jsonwebtoken');
 // 1. API ĐĂNG KÝ (Chỉ dành cho Bệnh nhân)
 const registerPatient = async (req, res) => {
     try {
-        const { ten_dang_nhap, mat_khau, email, ho_ten, so_dien_thoai } = req.body;
+        const { ten_dang_nhap, mat_khau, email, ho_ten, so_dien_thoai, gioi_tinh, ngay_sinh, dia_chi } = req.body;
+        
+        console.log("📥 Backend nhận yêu cầu đăng ký:", { ten_dang_nhap, ngay_sinh, gioi_tinh, dia_chi });
+
         const pool = await connectDB();
         
         // Kiểm tra xem Username hoặc Email đã tồn tại chưa
@@ -46,14 +49,17 @@ const registerPatient = async (req, res) => {
                 `);
             const accountId = insertAccount.recordset[0].id;
 
-            // Bảng HoSoNguoiDung
+            // Bảng HoSoNguoiDung (Lưu cả giới tính, ngày sinh, địa chỉ từ form đăng ký)
             await transaction.request()
                 .input('tai_khoan_id', sql.Int, accountId)
                 .input('ho_ten', sql.NVarChar, ho_ten)
                 .input('so_dien_thoai', sql.VarChar, so_dien_thoai)
+                .input('gioi_tinh', sql.TinyInt, gioi_tinh !== undefined && gioi_tinh !== '' ? parseInt(gioi_tinh) : null)
+                .input('ngay_sinh', sql.Date, ngay_sinh || null)
+                .input('dia_chi', sql.NVarChar, dia_chi || null)
                 .query(`
-                    INSERT INTO HoSoNguoiDung (tai_khoan_id, ho_ten, so_dien_thoai) 
-                    VALUES (@tai_khoan_id, @ho_ten, @so_dien_thoai)
+                    INSERT INTO HoSoNguoiDung (tai_khoan_id, ho_ten, so_dien_thoai, gioi_tinh, ngay_sinh, dia_chi) 
+                    VALUES (@tai_khoan_id, @ho_ten, @so_dien_thoai, @gioi_tinh, @ngay_sinh, @dia_chi)
                 `);
 
             // Bảng HoSoBenhNhan
@@ -86,7 +92,7 @@ const login = async (req, res) => {
                 SELECT 
                     tk.id, tk.ten_dang_nhap, tk.email, tk.mat_khau, tk.trang_thai, tk.vai_tro_id,
                     vt.ten_vai_tro,
-                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien, hsnd.gioi_tinh, hsnd.dia_chi,
+                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien, hsnd.gioi_tinh, hsnd.dia_chi, hsnd.ngay_sinh,
                     hsbs.nam_kinh_nghiem, hsbs.phi_kham, hsbs.tieu_su, hsbs.chuyen_khoa_id,
                     ck.ten_chuyen_khoa
                 FROM TaiKhoan tk
@@ -126,6 +132,7 @@ const login = async (req, res) => {
                 ho_ten: user.ho_ten,
                 gioi_tinh: user.gioi_tinh,
                 dia_chi: user.dia_chi,
+                ngay_sinh: user.ngay_sinh,
                 so_dien_thoai: user.so_dien_thoai,
                 anh_dai_dien: user.anh_dai_dien,
                 nam_kinh_nghiem: user.nam_kinh_nghiem,

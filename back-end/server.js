@@ -32,6 +32,7 @@ app.use('/api/questions', qaRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
 app.use('/api/chatbot', require('./src/routes/chatbotRoutes'));
 
 app.listen(PORT, async () => {

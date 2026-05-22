@@ -12,7 +12,6 @@ const getAllAccounts = async (req, res) => {
             FROM TaiKhoan tk
             LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
             JOIN VaiTro vt ON tk.vai_tro_id = vt.id
-            WHERE vt.ten_vai_tro IN ('Admin', 'BenhNhan')
             ORDER BY tk.id ASC
         `);
         res.json(result.recordset);

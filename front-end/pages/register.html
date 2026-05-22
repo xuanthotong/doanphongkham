@@ -11,6 +11,11 @@
   <!-- Thư viện SweetAlert2 cho Pop-up hiện đại -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .input-field, .auth-btn, .swal2-input, .swal2-select, .swal2-textarea, select, input {
+        border-radius: 4px !important;
+    }
+  </style>
 </head>
 <body>
   <div class="auth-wrapper">
@@ -49,6 +54,37 @@
           <div class="input-field">
             <i class="fas fa-phone"></i>
             <input type="text" id="reg_phone" placeholder="Nhập số điện thoại" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="input-group">
+            <label for="reg_gender" class="input-label">Giới tính</label>
+            <div class="input-field">
+              <i class="fas fa-venus-mars"></i>
+              <select id="reg_gender" required style="width: 100%; padding: 0.9rem 0.4rem 0.9rem 0.2rem; border: none; outline: none; font-size: 1rem; font-weight: 450; background: transparent; color: #0f1e2c; font-family: 'Inter', sans-serif; cursor: pointer;">
+                <option value="" disabled selected>-- Chọn --</option>
+                <option value="1">Nam</option>
+                <option value="0">Nữ</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="reg_birthday" class="input-label">Ngày sinh</label>
+            <div class="input-field">
+              <i class="fas fa-calendar-day"></i>
+              <input type="date" id="reg_birthday" required style="cursor: pointer;">
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="reg_province" class="input-label">Tỉnh / Thành phố</label>
+          <div class="input-field">
+            <i class="fas fa-map-marker-alt"></i>
+            <select id="reg_province" required style="width: 100%; padding: 0.9rem 0.4rem 0.9rem 0.2rem; border: none; outline: none; font-size: 1rem; font-weight: 450; background: transparent; color: #0f1e2c; font-family: 'Inter', sans-serif; cursor: pointer;">
+              <option value="" disabled selected>-- Chọn tỉnh/thành --</option>
+            </select>
           </div>
         </div>
 

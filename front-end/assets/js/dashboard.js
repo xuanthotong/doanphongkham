@@ -295,46 +295,80 @@ document.addEventListener('DOMContentLoaded', () => {
         closeMenuBtn.addEventListener('click', () => sidebar.classList.remove('active'));
     }
 
-    // 1. VẼ BIỂU ĐỒ TRÒN (HIỂN THỊ PHẦN TRĂM)
+    // 1. VẼ BIỂU ĐỒ TRÒN VÀ STAT CARDS TỪ API
     const ctxPie = document.getElementById('userPieChart');
-    if (ctxPie) {
-        new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: ['Bệnh nhân', 'Bác sĩ', 'Quản trị viên'],
-                datasets: [{
-                    data: [854, 12, 3], // Dữ liệu mẫu (sau này lấy từ API)
-                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
-                    hoverOffset: 12,
-                    borderWidth: 0
-                }]
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                cutout: '70%', 
-                plugins: { 
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                // Lấy giá trị hiện tại
-                                let value = context.parsed;
-                                // Tính tổng tất cả các phần tử
-                                let total = context.chart._metasets[context.datasetIndex].total;
-                                // Tính phần trăm
-                                let percentage = Math.round((value / total) * 100) + '%';
-                                
-                                // Trả về chuỗi hiển thị: "Bệnh nhân: 854 người (98%)"
-                                return `${context.label}: ${Number(value).toLocaleString('vi-VN')} người (${percentage})`;
-                            }
-                        }
-                    }
-                } 
-            }
-        });
-    }
+    let pieChartInstance = null;
 
+    async function fetchDashboardStats() {
+        try {
+            const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+                ? 'http://localhost:3000/api' 
+                : 'https://doanphongkham.onrender.com/api';
+
+            const response = await fetch(`${API_URL}/dashboard/stats`);
+            if (response.ok) {
+                const stats = await response.json();
+                
+                const elDoctors = document.getElementById('total-doctors');
+                if (elDoctors) elDoctors.innerText = stats.bac_si;
+                
+                const elPatients = document.getElementById('total-patients');
+                if (elPatients) elPatients.innerText = stats.benh_nhan;
+                
+                const elAdmins = document.getElementById('total-admins');
+                if (elAdmins) elAdmins.innerText = stats.admin;
+
+                if (ctxPie) {
+                    pieChartInstance = new Chart(ctxPie, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Bệnh nhân', 'Bác sĩ', 'Quản trị viên'],
+                            datasets: [{
+                                data: [stats.benh_nhan || 0, stats.bac_si || 0, stats.admin || 0],
+                                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
+                                hoverOffset: 12,
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            cutout: '70%', 
+                            plugins: { 
+                                legend: { position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let value = context.parsed;
+                                            let total = context.chart._metasets[context.datasetIndex].total;
+                                            let percentage = Math.round((value / total) * 100) + '%';
+                                            return `${context.label}: ${Number(value).toLocaleString('vi-VN')} người (${percentage})`;
+                                        }
+                                    }
+                                }
+                            } 
+                        }
+                    });
+                }
+            } else {
+                // Nếu API trả về lỗi (404, 500...)
+                const errorText = await response.text();
+                console.error("❌ Lỗi API Thống kê Tổng quan:", errorText);
+                
+                const elDoctors = document.getElementById('total-doctors');
+                if (elDoctors) elDoctors.innerText = '0';
+                const elPatients = document.getElementById('total-patients');
+                if (elPatients) elPatients.innerText = '0';
+                const elAdmins = document.getElementById('total-admins');
+                if (elAdmins) elAdmins.innerText = '0';
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy thống kê tổng quan:', error);
+        }
+    }
+    fetchDashboardStats();
+
+    // 2. VẼ BIỂU ĐỒ CỘT DOANH THU TỪ API
     const ctxBar = document.getElementById('revenueBarChart');
     let revenueChartInstance = null;
     let currentChartDate = new Date(); // Lấy ngày giờ thực tế của hệ thống làm mốc
@@ -371,50 +405,46 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Hàm Cập nhật lại Biểu đồ dựa theo Thời gian thực
-        function updateRevenueChart() {
-            let labels = [];
-            let data = [];
+        // Hàm Cập nhật lại Biểu đồ dựa theo Thời gian thực gọi API
+        async function updateRevenueChart() {
             const timeLabel = document.getElementById('timeLabel');
+            // Format YYYY-MM-DD local
+            const offset = currentChartDate.getTimezoneOffset() * 60000;
+            const dateParam = new Date(currentChartDate.getTime() - offset).toISOString().split('T')[0];
 
             if (currentChartMode === 'week') {
-                // Tính toán ra ngày Thứ 2 của tuần hiện tại
                 let d = new Date(currentChartDate);
                 let day = d.getDay();
                 let diff = d.getDate() - day + (day === 0 ? -6 : 1);
                 let monday = new Date(d.setDate(diff));
-                
-                // Tính toán ra Chủ Nhật
                 let sunday = new Date(monday);
                 sunday.setDate(monday.getDate() + 6);
 
                 if(timeLabel) timeLabel.innerText = `Tuần: ${String(monday.getDate()).padStart(2,'0')}/${String(monday.getMonth()+1).padStart(2,'0')} - ${String(sunday.getDate()).padStart(2,'0')}/${String(sunday.getMonth()+1).padStart(2,'0')}/${sunday.getFullYear()}`;
-
-                const daysOfWeek = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
-                for (let i = 0; i < 7; i++) {
-                    let cDate = new Date(monday);
-                    cDate.setDate(monday.getDate() + i);
-                    labels.push(`${daysOfWeek[i]} (${String(cDate.getDate()).padStart(2,'0')}/${String(cDate.getMonth()+1).padStart(2,'0')})`);
-                    
-                    // MOCK DATA: Tạo số liệu giả lập thay đổi sinh động dựa trên chính ngày đó (Sau này thay bằng Fetch API)
-                    let seed = cDate.getDate() + cDate.getMonth() * 10;
-                    data.push(1000000 + (seed * 40000) + Math.floor(Math.random() * 500000)); 
-                }
             } else {
                 let year = currentChartDate.getFullYear();
                 if(timeLabel) timeLabel.innerText = `Năm ${year}`;
-                
-                for (let i = 1; i <= 12; i++) {
-                    labels.push(`Tháng ${i}`);
-                    // MOCK DATA
-                    let seed = i + (year % 100);
-                    data.push(15000000 + (seed * 2000000) + Math.floor(Math.random() * 5000000));
-                }
             }
 
-            revenueChartInstance.data.labels = labels;
-            revenueChartInstance.data.datasets[0].data = data;
-            revenueChartInstance.update();
+            try {
+                const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+                    ? 'http://localhost:3000/api' 
+                    : 'https://doanphongkham.onrender.com/api';
+
+                const response = await fetch(`${API_URL}/dashboard/revenue?mode=${currentChartMode}&date=${dateParam}`);
+                if (response.ok) {
+                    const resData = await response.json();
+                    revenueChartInstance.data.labels = resData.labels;
+                    revenueChartInstance.data.datasets[0].data = resData.data;
+                    revenueChartInstance.update();
+                } else {
+                    const errorText = await response.text();
+                    console.error("❌ Lỗi API Doanh thu:", errorText);
+                    if(timeLabel) timeLabel.innerText = "Lỗi tải dữ liệu";
+                }
+            } catch (error) {
+                console.error("Lỗi lấy dữ liệu doanh thu:", error);
+            }
         }
 
         updateRevenueChart(); // Chạy hàm khởi tạo lần đầu

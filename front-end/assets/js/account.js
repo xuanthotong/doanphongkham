@@ -8,7 +8,11 @@ async function fetchAccounts() {
     if (!accountTbody) return;
     
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/accounts');
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+            ? 'http://localhost:3000/api' 
+            : 'https://doanphongkham.onrender.com/api';
+
+        const response = await fetch(`${API_URL}/accounts`);
         allAccounts = await response.json();
         renderAccountTable();
     } catch (error) {
@@ -147,7 +151,11 @@ async function deleteAccount(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`https://doanphongkham.onrender.com/api/accounts/${id}`, {
+                const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+                    ? 'http://localhost:3000/api' 
+                    : 'https://doanphongkham.onrender.com/api';
+
+                const response = await fetch(`${API_URL}/accounts/${id}`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -221,7 +229,11 @@ if (accountForm) {
         };
 
         try {
-            const res = await fetch(`https://doanphongkham.onrender.com/api/accounts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
+                ? 'http://localhost:3000/api' 
+                : 'https://doanphongkham.onrender.com/api';
+
+            const res = await fetch(`${API_URL}/accounts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await res.json();
             
             if (res.ok) { Swal.fire('Thành công!', 'Cập nhật tài khoản thành công', 'success'); closeAccountModal(); fetchAccounts(); } 

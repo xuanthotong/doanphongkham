@@ -161,6 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('pt_gioi_tinh').value = gt;
         }
 
+        if (document.getElementById('pt_ngay_sinh')) {
+            if (userInfo.ngay_sinh) {
+                document.getElementById('pt_ngay_sinh').value = userInfo.ngay_sinh.split('T')[0];
+            }
+        }
+
         // 1. Tải danh sách câu hỏi động từ Cơ sở dữ liệu khi mở trang
         loadCommunityQA();
         
@@ -579,36 +585,7 @@ function confirmLogout(event) {
 // ==================================================
 async function updatePatientProfile(event) {
     if(event) event.preventDefault();
-    
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
-    if (!userInfo.id) return;
-
-    const dia_chi = document.getElementById('pt_dia_chi').value.trim();
-    const gioi_tinh = document.getElementById('pt_gioi_tinh').value; // Đảm bảo input này trả về 1 hoặc 0 (Nam/Nữ)
-
-    try {
-        // Gọi API PUT để cập nhật bảng HoSoNguoiDung
-        const response = await fetch(`https://doanphongkham.onrender.com/api/accounts/profile/${userInfo.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dia_chi, gioi_tinh })
-        });
-
-        if (response.ok) {
-            Swal.fire('Thành công!', 'Cập nhật hồ sơ thành công!', 'success');
-            // Cập nhật lại dữ liệu đang lưu ảo trong LocalStorage
-            userInfo.dia_chi = dia_chi;
-            userInfo.gioi_tinh = parseInt(gioi_tinh);
-            localStorage.setItem('userInfo', JSON.stringify(userInfo));
-            
-        } else {
-            const errData = await response.json();
-            Swal.fire('Lỗi!', errData.message || 'Không thể cập nhật hồ sơ.', 'error');
-        }
-    } catch (error) {
-        console.error(error);
-        Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ.', 'error');
-    }
+    Swal.fire('Thông báo', 'Hồ sơ cá nhân không được phép tự ý chỉnh sửa sau khi đăng ký để đảm bảo tính xác thực. Nếu cần thay đổi thông tin, vui lòng liên hệ Admin.', 'info');
 }
 
 // ==================================================

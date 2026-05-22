@@ -481,23 +481,29 @@
                                     <input type="text" id="pt_email" disabled class="form-control readonly-input" style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
                                 </div>
                                 <div class="input-group form-col">
+                                    <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Ngày sinh</label>
+                                    <input type="date" id="pt_ngay_sinh" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569; pointer-events: none;">
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div class="input-group form-col">
                                     <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Giới tính</label>
-                                    <select id="pt_gioi_tinh" class="form-control" style="pointer-events: auto; background: white; cursor: pointer;">
+                                    <select id="pt_gioi_tinh" class="form-control readonly-input" disabled style="background: #f8fafc; border-color: #e2e8f0; color: #475569; appearance: none;">
                                         <option value="1">Nam</option>
                                         <option value="0">Nữ</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div class="input-group form-col">
-                                <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Địa chỉ liên hệ</label>
-                                <textarea id="pt_dia_chi" class="form-control" rows="2" style="pointer-events: auto; background: white; resize: none;"></textarea>
+                                <div class="input-group form-col">
+                                    <label class="form-label" style="font-size: 13px; color: #64748b; font-weight: 600;">Tỉnh/Thành phố</label>
+                                    <input type="text" id="pt_dia_chi" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
+                                </div>
                             </div>
                             
                             <div class="full-width" style="margin-top: auto; padding-top: 20px;">
-                                <button class="btn btn-primary" onclick="updatePatientProfile(event)" style="border-radius: 8px; width: 100%; padding: 12px; font-weight: 600;">
-                                    <i class="fa-solid fa-floppy-disk"></i> Cập nhật thông tin
-                                </button>
+                                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 8px; font-size: 13px; text-align: center;">
+                                    <i class="fa-solid fa-circle-check"></i> Hồ sơ của bạn đã được khóa để đảm bảo tính xác thực. Nếu cần thay đổi, vui lòng liên hệ Admin.
+                                </div>
                             </div>
                         </div>
                     </div>
