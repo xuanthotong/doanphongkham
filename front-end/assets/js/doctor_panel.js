@@ -1123,6 +1123,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (el) el.value = value;
         };
 
+        // ĐỔ ẢNH BÁC SĨ VÀO HỒ SƠ CÁ NHÂN
+        const profileAvatarImg = document.getElementById('hs_avatar');
+        if (profileAvatarImg) {
+            const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=0284C7&color=fff&rounded=true&bold=true`;
+            if (userInfo.anh_dai_dien) {
+                if (userInfo.anh_dai_dien.startsWith('data:image') || userInfo.anh_dai_dien.startsWith('http')) {
+                    profileAvatarImg.src = userInfo.anh_dai_dien;
+                } else {
+                    profileAvatarImg.src = `${window.API_BASE}/uploads/${userInfo.anh_dai_dien}`;
+                }
+                profileAvatarImg.onerror = function() {
+                    this.onerror = null;
+                    this.src = fallbackAvatar;
+                };
+            } else {
+                profileAvatarImg.src = fallbackAvatar;
+            }
+        }
+
         setText('hs_ten', userInfo.ho_ten || "Chưa cập nhật");
         setText('hs_sdt', userInfo.so_dien_thoai || "Chưa cập nhật");
         setText('hs_email', userInfo.email || "Chưa cập nhật");
@@ -1223,5 +1242,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
-
