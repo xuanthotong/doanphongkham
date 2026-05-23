@@ -1,38 +1,50 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Hệ thống - TT Medical Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
 </head>
+
 <body>
 
-   <aside class="sidebar">
+    <aside class="sidebar">
         <div class="sidebar-header" style="display: flex; align-items: center; gap: 10px;">
-            <img src="../../assets/images/logo.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
+            <img src="../../assets/images/logo.png" alt="Logo"
+                style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
             <span style="font-size: 20px; font-weight: 700; color: #10b981;">TT Medical</span>
         </div>
-        
+
         <ul class="menu">
-            <li class="menu-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i> Tổng quan (Dashboard)</li>
+            <li class="menu-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i>
+                Tổng quan (Dashboard)</li>
 
             <div class="menu-group" onclick="toggleMenu(this, 'menuNghiepVu')">
                 <span><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Nhân sự</span>
                 <i class="fa-solid fa-chevron-down caret"></i>
             </div>
             <div class="submenu open" id="menuNghiepVu">
-                <li class="menu-item" onclick="switchTab('patient', this)"><i class="fa-solid fa-bed-pulse"></i> Quản lý Bệnh nhân</li>
-                <li class="menu-item" onclick="switchTab('appointment', this)"><i class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
-                <li class="menu-item" onclick="switchTab('doctor', this)"><i class="fa-solid fa-user-doctor"></i> Quản lý Bác sĩ</li>
-                <li class="menu-item" onclick="switchTab('shift', this)"><i class="fa-solid fa-clock"></i> Quản lý Ca làm việc</li>
-                <li class="menu-item" onclick="switchTab('specialty', this)"><i class="fa-solid fa-layer-group"></i> Quản lý Chuyên khoa</li>
+                <li class="menu-item" onclick="switchTab('patient', this)"><i class="fa-solid fa-bed-pulse"></i> Quản lý
+                    Bệnh nhân</li>
+                <li class="menu-item" onclick="switchTab('appointment', this)"><i
+                        class="fa-solid fa-calendar-check"></i> Quản lý Lịch hẹn</li>
+                <li class="menu-item" onclick="switchTab('medicine', this)"><i class="fa-solid fa-pills"></i> Quản lý
+                    Thuốc</li>
+                <li class="menu-item" onclick="switchTab('doctor', this)"><i class="fa-solid fa-user-doctor"></i> Quản
+                    lý Bác sĩ</li>
+                <li class="menu-item" onclick="switchTab('shift', this)"><i class="fa-solid fa-clock"></i> Quản lý Ca
+                    làm việc</li>
+                <li class="menu-item" onclick="switchTab('specialty', this)"><i class="fa-solid fa-layer-group"></i>
+                    Quản lý Chuyên khoa</li>
+
             </div>
 
             <div class="menu-group" onclick="toggleMenu(this, 'menuHeThong')">
@@ -40,10 +52,14 @@
                 <i class="fa-solid fa-chevron-down caret"></i>
             </div>
             <div class="submenu" id="menuHeThong">
-                <li class="menu-item" onclick="switchTab('account', this)"><i class="fa-solid fa-users"></i> Quản lý Tài khoản</li>
-                <li class="menu-item" onclick="switchTab('qa', this)"><i class="fa-solid fa-circle-question"></i> Quản lý Câu hỏi</li>
-                <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý Bài viết</li>
-                <li class="menu-item" onclick="switchTab('category', this)"><i class="fa-solid fa-list"></i> Quản lý Danh mục</li>
+                <li class="menu-item" onclick="switchTab('account', this)"><i class="fa-solid fa-users"></i> Quản lý Tài
+                    khoản</li>
+                <li class="menu-item" onclick="switchTab('qa', this)"><i class="fa-solid fa-circle-question"></i> Quản
+                    lý Câu hỏi</li>
+                <li class="menu-item" onclick="switchTab('post', this)"><i class="fa-regular fa-newspaper"></i> Quản lý
+                    Bài viết</li>
+                <li class="menu-item" onclick="switchTab('category', this)"><i class="fa-solid fa-list"></i> Quản lý
+                    Danh mục</li>
             </div>
         </ul>
     </aside>
@@ -51,7 +67,8 @@
     <main class="main-wrapper">
         <header class="topbar">
             <div class="user-profile" onclick="confirmLogout()" title="Nhấn để đăng xuất">
-                <div style="background-color: var(--primary-color); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <div
+                    style="background-color: var(--primary-color); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fa-solid fa-user"></i>
                 </div>
                 <span>Admin</span>
@@ -63,7 +80,7 @@
             <div class="page-header">
                 <h1 class="page-title">Tổng quan Hệ thống</h1>
             </div>
-            
+
             <div class="dashboard-top-row">
                 <div class="stats-column">
                     <div class="stat-card" style="border-left-color: #3b82f6;">
@@ -90,7 +107,8 @@
                 </div>
 
                 <div class="chart-card">
-                    <h3 style="margin-bottom: 15px; font-size: 16px; color: #1f2937; text-align: center;">Tỷ lệ Người dùng</h3>
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: #1f2937; text-align: center;">Tỷ lệ Người
+                        dùng</h3>
                     <div style="position: relative; height: 250px; width: 100%;">
                         <canvas id="userPieChart"></canvas>
                     </div>
@@ -98,15 +116,26 @@
             </div>
 
             <div class="chart-card" style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h3 style="font-size: 16px; color: #1f2937; margin: 0;">Biểu đồ Doanh thu phòng khám</h3>
                     <div style="display: flex; align-items: center; gap: 15px;">
-                        <div style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                            <button id="prevTimeBtn" style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: #64748b; transition: 0.2s;" onmouseover="this.style.color='#0ea5e9'" onmouseout="this.style.color='#64748b'"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span id="timeLabel" style="font-weight: 600; font-size: 13px; color: #334155; min-width: 140px; text-align: center;">Tuần: --/--/----</span>
-                            <button id="nextTimeBtn" style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: #64748b; transition: 0.2s;" onmouseover="this.style.color='#0ea5e9'" onmouseout="this.style.color='#64748b'"><i class="fa-solid fa-chevron-right"></i></button>
+                        <div
+                            style="display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px 8px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <button id="prevTimeBtn"
+                                style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: #64748b; transition: 0.2s;"
+                                onmouseover="this.style.color='#0ea5e9'" onmouseout="this.style.color='#64748b'"><i
+                                    class="fa-solid fa-chevron-left"></i></button>
+                            <span id="timeLabel"
+                                style="font-weight: 600; font-size: 13px; color: #334155; min-width: 140px; text-align: center;">Tuần:
+                                --/--/----</span>
+                            <button id="nextTimeBtn"
+                                style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 10px; cursor: pointer; color: #64748b; transition: 0.2s;"
+                                onmouseover="this.style.color='#0ea5e9'" onmouseout="this.style.color='#64748b'"><i
+                                    class="fa-solid fa-chevron-right"></i></button>
                         </div>
-                        <select id="revenueFilter" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; background: white; color: #334155; font-weight: 500; cursor: pointer;">
+                        <select id="revenueFilter"
+                            style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; background: white; color: #334155; font-weight: 500; cursor: pointer;">
                             <option value="week">Theo Tuần</option>
                             <option value="month">Theo Năm</option>
                         </select>
@@ -137,16 +166,7 @@
                         </tr>
                     </thead>
                     <tbody id="patientTableBody">
-                        <tr>
-                            <td style="color: var(--primary-color); font-weight: 600;">#BN105</td>
-                            <td style="font-weight: 600;">Nguyễn Văn A</td>
-                            <td>Đau họng, sốt nhẹ</td>
-                            <td><button class="action-btn"><i class="fa-solid fa-image"></i> Xem</button></td>
-                            <td><span style="color:#ef4444; font-weight:600;">Viêm amidan cấp</span></td>
-                            <td>Kháng sinh 5 ngày...</td>
-                            <td><span class="badge" style="background:#fef3c7; color:#d97706;">Sau 1 tuần</span></td>
-                            <td><button class="action-btn edit" title="Cập nhật hồ sơ"><i class="fa-solid fa-pen"></i></button></td>
-                        </tr>
+                        <!-- JS Render -->
                     </tbody>
                 </table>
             </div>
@@ -158,17 +178,22 @@
                 <button class="btn-add" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
-                <select id="filterDoctorSpecialty" onchange="renderDoctorTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                <select id="filterDoctorSpecialty" onchange="renderDoctorTable()"
+                    style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                     <option value="">Tất cả chuyên khoa</option>
                 </select>
-                <select id="filterDoctorGender" onchange="renderDoctorTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                <select id="filterDoctorGender" onchange="renderDoctorTable()"
+                    style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                     <option value="">Tất cả giới tính</option>
                     <option value="1">Nam</option>
                     <option value="0">Nữ</option>
                 </select>
                 <div class="search-box" style="position: relative;">
-                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                    <input type="text" id="searchAdminDoctor" oninput="renderDoctorTable()" placeholder="Tìm tên bác sĩ..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                    <i class="fa-solid fa-magnifying-glass"
+                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="searchAdminDoctor" oninput="renderDoctorTable()"
+                        placeholder="Tìm tên bác sĩ..."
+                        style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
                 </div>
             </div>
             <div class="table-container">
@@ -199,7 +224,8 @@
         <section id="section-specialty" class="content" style="display: none;">
             <div class="page-header">
                 <h1 class="page-title">Quản lý Chuyên khoa</h1>
-                <button class="btn-add" onclick="openSpecialtyModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
+                <button class="btn-add" onclick="openSpecialtyModal()"><i class="fa-solid fa-plus"></i> Thêm
+                    mới</button>
             </div>
             <div class="table-container">
                 <table style="white-space: nowrap;">
@@ -221,19 +247,24 @@
                 <h1 class="page-title">Quản lý Tài khoản</h1>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
-                <select id="filterAccountRole" onchange="renderAccountTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                <select id="filterAccountRole" onchange="renderAccountTable()"
+                    style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                     <option value="">Tất cả vai trò</option>
                     <option value="BenhNhan">Bệnh Nhân</option>
                     <option value="Admin">Admin</option>
                 </select>
-                <select id="filterAccountStatus" onchange="renderAccountTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                <select id="filterAccountStatus" onchange="renderAccountTable()"
+                    style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                     <option value="">Tất cả trạng thái</option>
                     <option value="1">Hoạt động</option>
                     <option value="0">Đã khóa</option>
                 </select>
                 <div class="search-box" style="position: relative;">
-                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                    <input type="text" id="searchAdminAccount" oninput="renderAccountTable()" placeholder="Tìm ID, email, số điện thoại..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                    <i class="fa-solid fa-magnifying-glass"
+                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="searchAdminAccount" oninput="renderAccountTable()"
+                        placeholder="Tìm ID, email, số điện thoại..."
+                        style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
                 </div>
             </div>
             <div class="table-container">
@@ -266,20 +297,25 @@
                 <button class="btn-add" onclick="openPostModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
-                <select id="filterPostCategory" onchange="renderPostTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                <select id="filterPostCategory" onchange="renderPostTable()"
+                    style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                     <option value="">Tất cả chuyên mục</option>
                     <option value="Sức khỏe">Sức khỏe</option>
                     <option value="Dịch vụ">Dịch vụ</option>
                     <option value="Tin tức">Tin tức</option>
                 </select>
-                <select id="filterPostStatus" onchange="renderPostTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                <select id="filterPostStatus" onchange="renderPostTable()"
+                    style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                     <option value="">Tất cả trạng thái</option>
                     <option value="1">Đã xuất bản</option>
                     <option value="0">Bản nháp</option>
                 </select>
                 <div class="search-box" style="position: relative;">
-                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                    <input type="text" id="searchAdminPost" oninput="renderPostTable()" placeholder="Tìm tiêu đề, tác giả..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                    <i class="fa-solid fa-magnifying-glass"
+                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="searchAdminPost" oninput="renderPostTable()"
+                        placeholder="Tìm tiêu đề, tác giả..."
+                        style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
                 </div>
             </div>
             <div class="table-container">
@@ -324,11 +360,14 @@
                 <h1 class="page-title">Quản lý Lịch hẹn</h1>
             </div>
             <div class="table-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="font-size: 22px; margin: 0;">Danh sách Lịch hẹn</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <input type="date" id="filterAdminAppDate" onchange="renderAppointmentTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; color: #475569;">
-                        <select id="filterAdminAppStatus" onchange="renderAppointmentTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                        <input type="date" id="filterAdminAppDate" onchange="renderAppointmentTable()"
+                            style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; color: #475569;">
+                        <select id="filterAdminAppStatus" onchange="renderAppointmentTable()"
+                            style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                             <option value="">Tất cả trạng thái</option>
                             <option value="pending">Chờ duyệt</option>
                             <option value="approved">Đã duyệt</option>
@@ -336,8 +375,11 @@
                             <option value="cancelled">Đã hủy</option>
                         </select>
                         <div class="search-box" style="position: relative;">
-                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                            <input type="text" id="searchAdminAppointment" oninput="renderAppointmentTable()" placeholder="Tìm tên BN, BS, mã LK, SĐT..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                            <input type="text" id="searchAdminAppointment" oninput="renderAppointmentTable()"
+                                placeholder="Tìm tên BN, BS, mã LK, SĐT..."
+                                style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
                         </div>
                     </div>
                 </div>
@@ -366,11 +408,14 @@
                 <h1 class="page-title">Quản lý Ca làm việc</h1>
             </div>
             <div class="table-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="font-size: 22px; margin: 0;">Danh sách Ca làm việc</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <input type="date" id="filterAdminShiftDate" onchange="renderAdminShiftTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; color: #475569;">
-                        <select id="filterAdminShiftStatus" onchange="renderAdminShiftTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                        <input type="date" id="filterAdminShiftDate" onchange="renderAdminShiftTable()"
+                            style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; color: #475569;">
+                        <select id="filterAdminShiftStatus" onchange="renderAdminShiftTable()"
+                            style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                             <option value="">Tất cả trạng thái</option>
                             <option value="active">Đang mở</option>
                             <option value="full">Đã kín</option>
@@ -378,8 +423,11 @@
                             <option value="expired">Đã đóng</option>
                         </select>
                         <div class="search-box" style="position: relative;">
-                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                            <input type="text" id="searchAdminShift" oninput="renderAdminShiftTable()" placeholder="Tìm tên Bác sĩ, mã ca..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                            <i class="fa-solid fa-magnifying-glass"
+                                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                            <input type="text" id="searchAdminShift" oninput="renderAdminShiftTable()"
+                                placeholder="Tìm tên Bác sĩ, mã ca..."
+                                style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
                         </div>
                     </div>
                 </div>
@@ -405,14 +453,18 @@
             <div class="page-header">
                 <h1 class="page-title">Hỏi Đáp Y Tế</h1>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <select id="filterQaStatus" onchange="renderQATable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <select id="filterQaStatus" onchange="renderQATable()"
+                        style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
                         <option value="">Tất cả trạng thái</option>
                         <option value="1">Đã trả lời</option>
                         <option value="0">Chờ trả lời</option>
                     </select>
                     <div class="search-box" style="position: relative;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                        <input type="text" id="searchAdminQa" oninput="renderQATable()" placeholder="Tìm câu hỏi, người hỏi..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                        <i class="fa-solid fa-magnifying-glass"
+                            style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <input type="text" id="searchAdminQa" oninput="renderQATable()"
+                            placeholder="Tìm câu hỏi, người hỏi..."
+                            style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
                     </div>
                 </div>
             </div>
@@ -436,21 +488,64 @@
                 </table>
             </div>
         </section>
+
+        <section id="section-medicine" class="content" style="display: none;">
+            <div class="page-header">
+                <h1 class="page-title">Quản lý Thuốc</h1>
+                <button class="btn-add" onclick="openMedicineModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <select id="filterMedicineStatus" onchange="renderMedicineTable()"
+                    style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="1">Còn thuốc</option>
+                    <option value="0">Hết thuốc</option>
+                </select>
+                <div class="search-box" style="position: relative;">
+                    <i class="fa-solid fa-magnifying-glass"
+                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="searchAdminMedicine" oninput="renderMedicineTable()"
+                        placeholder="Tìm tên thuốc, đơn vị..."
+                        style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                </div>
+            </div>
+            <div class="table-container">
+                <table style="white-space: nowrap;">
+                    <thead>
+                        <tr>
+                            <th>Mã thuốc</th>
+                            <th>Tên thuốc</th>
+                            <th>Đơn vị</th>
+                            <th>Giá (VNĐ)</th>
+                            <th>Liều dùng mặc định</th>
+                            <th>Hướng dẫn sử dụng</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicineTableBody"></tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
     <div id="doctorModal" class="modal">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 <h2 id="modalTitle" style="font-size: 20px;">Thêm mới Bác sĩ</h2>
-                <button onclick="closeModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                <button onclick="closeModal()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
             </div>
             <form id="doctorForm">
                 <input type="hidden" id="d_id">
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin đăng nhập</h3>
                 <div class="form-grid">
-                    <div class="form-group"><label>Tên đăng nhập</label><input type="text" id="d_ten_dang_nhap" required></div>
+                    <div class="form-group"><label>Tên đăng nhập</label><input type="text" id="d_ten_dang_nhap"
+                            required></div>
                     <div class="form-group"><label>Mật khẩu</label><input type="text" id="d_mat_khau" required></div>
-                    <div class="form-group" style="grid-column: span 2;"><label>Email</label><input type="email" id="d_email" required></div>
+                    <div class="form-group" style="grid-column: span 2;"><label>Email</label><input type="email"
+                            id="d_email" required></div>
                 </div>
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin cá nhân</h3>
                 <div class="form-grid">
@@ -462,8 +557,10 @@
                             <option value="0">Nữ</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="d_so_dien_thoai" required></div>
-                    <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text" id="d_dia_chi" required></div>
+                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="d_so_dien_thoai" required>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text"
+                            id="d_dia_chi" required></div>
                 </div>
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Hồ sơ chuyên môn</h3>
                 <div class="form-grid">
@@ -472,23 +569,32 @@
                             <option value="" disabled selected>-- Đang tải chuyên khoa --</option>
                         </select>
                     </div>
-                    <div class="form-group"><label>Năm kinh nghiệm</label><input type="number" id="d_nam_kinh_nghiem" required></div>
-                    <div class="form-group"><label>Phí khám (VNĐ)</label><input type="text" id="d_phi_kham" required></div>
+                    <div class="form-group"><label>Năm kinh nghiệm</label><input type="number" id="d_nam_kinh_nghiem"
+                            required></div>
+                    <div class="form-group"><label>Phí khám (VNĐ)</label><input type="text" id="d_phi_kham" required>
+                    </div>
                     <div class="form-group">
                         <label>Ảnh đại diện (Máy HOẶC Link)</label>
                         <div style="display: flex; gap: 5px;">
-                            <input type="file" id="d_anh_file" accept="image/*" style="width: 50%; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 12px;">
-                            <input type="text" id="d_anh_dai_dien" placeholder="Dán link..." style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px;">
+                            <input type="file" id="d_anh_file" accept="image/*"
+                                style="width: 50%; padding: 6px; border: 1px solid #ddd; border-radius: 8px; background: #fff; font-size: 12px;">
+                            <input type="text" id="d_anh_dai_dien" placeholder="Dán link..."
+                                style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px;">
                         </div>
                     </div>
                     <div class="form-group" style="grid-column: span 2;">
                         <label>Tiểu sử / Giới thiệu</label>
-                        <textarea id="d_tieu_su" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
+                        <textarea id="d_tieu_su" rows="3"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
                     </div>
                 </div>
                 <div style="text-align: right; margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="closeModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
-                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu dữ liệu</button>
+                    <button type="button" onclick="closeModal()"
+                        style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy
+                        bỏ</button>
+                    <button type="submit"
+                        style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu
+                        dữ liệu</button>
                 </div>
             </form>
         </div>
@@ -496,40 +602,55 @@
 
     <div id="postModal" class="modal">
         <div class="modal-content" style="width: 700px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 <h2 id="postModalTitle" style="font-size: 20px;">Đăng bài viết mới</h2>
-                <button onclick="closePostModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                <button onclick="closePostModal()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
             </div>
             <form id="postForm" style="margin-top: 15px;">
                 <input type="hidden" id="p_id">
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
-                    <div class="form-group"><label>Tiêu đề bài viết</label><input type="text" id="p_tieu_de" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Tiêu đề bài viết</label><input type="text" id="p_tieu_de" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
                         <div class="form-group"><label>Danh mục</label>
-                            <select id="p_danh_muc" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <select id="p_danh_muc" required
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                                 <option value="" disabled selected>-- Đang tải danh mục --</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Ảnh minh họa (Chọn từ máy HOẶC Dán link)</label>
                             <div style="display: flex; gap: 10px;">
-                                <input type="file" id="p_anh_file" accept="image/*" style="width: 50%; padding: 7px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
-                                <input type="text" id="p_anh_thu_nho" placeholder="Dán link ảnh..." style="width: 50%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                                <input type="file" id="p_anh_file" accept="image/*"
+                                    style="width: 50%; padding: 7px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
+                                <input type="text" id="p_anh_thu_nho" placeholder="Dán link ảnh..."
+                                    style="width: 50%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                             </div>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group"><label>Tác giả</label><input type="text" id="p_tac_gia" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" value="Admin"></div>
-                        <div class="form-group"><label>Ngày xuất bản</label><input type="date" id="p_ngay_xuat_ban" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                        <div class="form-group"><label>Tác giả</label><input type="text" id="p_tac_gia" required
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"
+                                value="Admin"></div>
+                        <div class="form-group"><label>Ngày xuất bản</label><input type="date" id="p_ngay_xuat_ban"
+                                required
+                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                     </div>
                     <div class="form-group">
                         <label>Nội dung bài viết</label>
-                        <textarea id="p_noi_dung" rows="6" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
+                        <textarea id="p_noi_dung" rows="6" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
                     </div>
                 </div>
                 <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="closePostModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
-                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Đăng bài</button>
+                    <button type="button" onclick="closePostModal()"
+                        style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy
+                        bỏ</button>
+                    <button type="submit"
+                        style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Đăng
+                        bài</button>
                 </div>
             </form>
         </div>
@@ -537,25 +658,33 @@
 
     <div id="specialtyModal" class="modal">
         <div class="modal-content" style="width: 500px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 <h2 id="specialtyModalTitle" style="font-size: 20px;">Thêm mới Chuyên khoa</h2>
-                <button onclick="closeSpecialtyModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                <button onclick="closeSpecialtyModal()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
             </div>
             <form id="specialtyForm" style="margin-top: 15px;">
                 <input type="hidden" id="s_id">
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>Tên chuyên khoa</label>
-                        <input type="text" id="s_ten_chuyen_khoa" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <input type="text" id="s_ten_chuyen_khoa" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                     <div class="form-group">
                         <label>Mô tả chi tiết</label>
-                        <textarea id="s_mo_ta" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
+                        <textarea id="s_mo_ta" rows="4"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
                     </div>
                 </div>
                 <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="closeSpecialtyModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
-                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu dữ liệu</button>
+                    <button type="button" onclick="closeSpecialtyModal()"
+                        style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy
+                        bỏ</button>
+                    <button type="submit"
+                        style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu
+                        dữ liệu</button>
                 </div>
             </form>
         </div>
@@ -563,21 +692,28 @@
 
     <div id="categoryModal" class="modal">
         <div class="modal-content" style="width: 400px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 <h2 id="categoryModalTitle" style="font-size: 20px;">Thêm mới Danh mục</h2>
-                <button onclick="closeCategoryModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                <button onclick="closeCategoryModal()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
             </div>
             <form id="categoryForm" style="margin-top: 15px;">
                 <input type="hidden" id="c_id">
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>Tên danh mục</label>
-                        <input type="text" id="c_ten_danh_muc" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <input type="text" id="c_ten_danh_muc" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                 </div>
                 <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="closeCategoryModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
-                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu dữ liệu</button>
+                    <button type="button" onclick="closeCategoryModal()"
+                        style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy
+                        bỏ</button>
+                    <button type="submit"
+                        style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu
+                        dữ liệu</button>
                 </div>
             </form>
         </div>
@@ -585,25 +721,33 @@
 
     <div id="accountModal" class="modal">
         <div class="modal-content" style="width: 600px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 <h2 id="accountModalTitle" style="font-size: 20px;">Sửa thông tin Tài khoản</h2>
-                <button type="button" onclick="closeAccountModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                <button type="button" onclick="closeAccountModal()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
             </div>
             <form id="accountForm" style="margin-top: 15px;">
                 <input type="hidden" id="a_id">
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin hệ thống</h3>
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group"><label>Email</label><input type="email" id="a_email" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
-                    <div class="form-group"><label>Mật khẩu mới</label><input type="password" id="a_mat_khau" placeholder="Để trống nếu không đổi" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="a_email" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Mật khẩu mới</label><input type="password" id="a_mat_khau"
+                            placeholder="Để trống nếu không đổi"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                     <div class="form-group"><label>Vai trò</label>
-                        <select id="a_ten_vai_tro" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; pointer-events: none; background: #f3f4f6;" title="Không thể đổi vai trò ở đây">
+                        <select id="a_ten_vai_tro" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; pointer-events: none; background: #f3f4f6;"
+                            title="Không thể đổi vai trò ở đây">
                             <option value="BenhNhan">Bệnh Nhân</option>
                             <option value="BacSi">Bác Sĩ</option>
                             <option value="Admin">Admin</option>
                         </select>
                     </div>
                     <div class="form-group"><label>Trạng thái</label>
-                        <select id="a_trang_thai" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <select id="a_trang_thai" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                             <option value="1">Hoạt động</option>
                             <option value="0">Đã khóa</option>
                         </select>
@@ -611,21 +755,97 @@
                 </div>
                 <h3 style="font-size: 14px; margin-top: 15px; color: var(--primary-color);">Thông tin cá nhân</h3>
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group"><label>Họ và tên</label><input type="text" id="a_ho_ten" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
-                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="a_so_dien_thoai" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
-                    <div class="form-group"><label>Ngày sinh</label><input type="date" id="a_ngay_sinh" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Họ và tên</label><input type="text" id="a_ho_ten"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Số điện thoại</label><input type="tel" id="a_so_dien_thoai"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group"><label>Ngày sinh</label><input type="date" id="a_ngay_sinh"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                     <div class="form-group"><label>Giới tính</label>
-                        <select id="a_gioi_tinh" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <select id="a_gioi_tinh"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                             <option value="">-- Chọn giới tính --</option>
                             <option value="1">Nam</option>
                             <option value="0">Nữ</option>
                         </select>
                     </div>
-                    <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text" id="a_dia_chi" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
+                    <div class="form-group" style="grid-column: span 2;"><label>Địa chỉ</label><input type="text"
+                            id="a_dia_chi"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></div>
                 </div>
                 <div style="text-align: right; margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" onclick="closeAccountModal()" style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy bỏ</button>
-                    <button type="submit" style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu thay đổi</button>
+                    <button type="button" onclick="closeAccountModal()"
+                        style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy
+                        bỏ</button>
+                    <button type="submit"
+                        style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu
+                        thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="medicineModal" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                <h2 id="medicineModalTitle" style="font-size: 20px;">Thêm mới Thuốc</h2>
+                <button onclick="closeMedicineModal()"
+                    style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+            </div>
+            <form id="medicineForm" style="margin-top: 15px;">
+                <input type="hidden" id="m_id">
+                <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Tên thuốc (*)</label>
+                        <input type="text" id="m_ten_thuoc" required placeholder="VD: Paracetamol 500mg"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Đơn vị tính (*)</label>
+                        <select id="m_don_vi" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <option value="Viên">Viên</option>
+                            <option value="Gói">Gói</option>
+                            <option value="Ống">Ống</option>
+                            <option value="Chai">Chai</option>
+                            <option value="Tuýp">Tuýp</option>
+                            <option value="Hộp">Hộp</option>
+                            <option value="Lọ">Lọ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Giá thuốc (VNĐ)</label>
+                        <input type="number" id="m_gia_thuoc" min="0" placeholder="VD: 5000"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Liều dùng mặc định</label>
+                        <input type="text" id="m_lieu_dung" placeholder="VD: 1 viên/lần, ngày 2 lần sau ăn"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>Hướng dẫn sử dụng</label>
+                        <textarea id="m_huong_dan" rows="3"
+                            placeholder="VD: Uống sau ăn 30 phút, cách nhau ít nhất 4 giờ"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none;"></textarea>
+                    </div>
+                    <div class="form-group" id="m_trang_thai_group" style="display: none;">
+                        <label>Trạng thái</label>
+                        <select id="m_trang_thai"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <option value="1">Còn thuốc</option>
+                            <option value="0">Hết thuốc</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeMedicineModal()"
+                        style="padding: 10px 20px; border: none; background: #f3f4f6; color: #4b5563; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy
+                        bỏ</button>
+                    <button type="submit"
+                        style="padding: 10px 20px; border: none; background: var(--primary-color); color: white; border-radius: 8px; cursor: pointer; font-weight: 600;">Lưu
+                        dữ liệu</button>
                 </div>
             </form>
         </div>
@@ -639,6 +859,9 @@
     <script src="../../assets/js/admin_appointment.js"></script>
     <script src="../../assets/js/account.js"></script>
     <script src="../../assets/js/qa.js"></script>
-    
+    <script src="../../assets/js/medicine.js"></script>
+    <script src="../../assets/js/admin_patient.js"></script>
+
 </body>
+
 </html>

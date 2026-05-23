@@ -120,3 +120,16 @@ CREATE TABLE ChatBot (
     ngay_tao        DATETIME          DEFAULT GETDATE(), 
     CONSTRAINT FK_ChatBot_TaiKhoan FOREIGN KEY (tai_khoan_id) REFERENCES TaiKhoan(id)
 );
+
+-- Tạo bảng Thuốc cho hệ thống phòng khám TT Medical
+CREATE TABLE Thuoc (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    ten_thuoc NVARCHAR(200) NOT NULL,
+    don_vi NVARCHAR(50) NOT NULL,
+    gia_thuoc DECIMAL(18, 2) DEFAULT 0,
+    lieu_dung_mac_dinh NVARCHAR(255),
+    huong_dan_su_dung NVARCHAR(500),
+    trang_thai BIT DEFAULT 1,
+    ngay_tao DATETIME DEFAULT GETDATE(),
+    ngay_cap_nhat DATETIME DEFAULT GETDATE()
+);

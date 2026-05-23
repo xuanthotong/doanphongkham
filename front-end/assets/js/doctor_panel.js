@@ -64,34 +64,25 @@ function confirmLogout(event) {
     });
 }
 
-// 4. NGHIỆP VỤ: KHÁM BỆNH & KÊ ĐƠN
-function openMedicalRecord(maLK, tenBN) {
+// 4. NGHIỆP VỤ: KHÁM BỆNH & KÊ ĐƠN (FETCH THUỐC TỪ DATABASE)
+async function openMedicalRecord(maLK, tenBN) {
     let currentPrescriptions = [];
     
-    // Mảng dữ liệu thuốc phổ biến (Có thể tùy chỉnh thêm)
-    const thuocPhoBien = [
-        "Paracetamol 500mg", "Amoxicillin 500mg", "Ibuprofen 400mg",
-        "Omeprazole 20mg", "Cetirizine 10mg", "Loratadine 10mg",
-        "Vitamin C 500mg", "Oresol", "Smecta", "Alpha Choay",
-        "Panadol Extra", "Augmentin 1g", "Erythromycin 500mg",
-        "Azithromycin 500mg", "Metformin 500mg", "Cefuroxime 500mg",
-        "Men tiêu hóa Enterogermina", "Nước muối sinh lý NaCl 0.9%"
-    ];
-    let datalistHtml = thuocPhoBien.map(t => `<option value="${t}">`).join('');
+    // Fetch danh sách thuốc từ Database (chỉ lấy thuốc đang hoạt động)
+    let danhSachThuocDB = [];
+    try {
+        const res = await fetch(`${window.API_BASE}/api/thuoc/active`);
+        danhSachThuocDB = await res.json();
+    } catch (err) {
+        console.error('Lỗi fetch danh sách thuốc:', err);
+    }
 
-    // Mảng dữ liệu liều dùng phổ biến để bác sĩ chọn nhanh
-    const lieuDungPhoBien = [
-        "1 viên/lần, ngày 2 lần sau ăn",
-        "1 viên/lần, ngày 3 lần sau ăn",
-        "2 viên/lần, ngày 2 lần sau ăn",
-        "1 gói/lần, ngày 2 lần",
-        "1 ống/lần, ngày 1 lần",
-        "Sáng 1 viên, Tối 1 viên",
-        "Sáng 1 viên",
-        "Uống 1 viên khi đau hoặc sốt",
-        "Bôi ngoài da ngày 2 lần"
-    ];
-    let lieuDungHtml = lieuDungPhoBien.map(l => `<option value="${l}">`).join('');
+    // Tạo HTML options cho dropdown chọn thuốc
+    let thuocOptionsHtml = '<option value="" disabled selected>-- Chọn thuốc --</option>';
+    danhSachThuocDB.forEach(t => {
+        const gia = Number(t.gia_thuoc || 0).toLocaleString('vi-VN');
+        thuocOptionsHtml += `<option value="${t.id}" data-lieu="${t.lieu_dung_mac_dinh || ''}" data-don-vi="${t.don_vi}" data-gia="${t.gia_thuoc || 0}" data-ten="${t.ten_thuoc}">${t.ten_thuoc} (${t.don_vi}) - ${gia}đ</option>`;
+    });
 
     Swal.fire({
         title: `Khám bệnh: ${tenBN} (#LK${maLK})`,
@@ -103,73 +94,102 @@ function openMedicalRecord(maLK, tenBN) {
                     <textarea id="chan_doan" class="swal2-textarea" placeholder="Nhập chẩn đoán lâm sàng..." style="width: 100%; margin: 0; height: 80px; box-sizing: border-box; font-size: 14px; padding: 12px; border-radius: 8px; border-color: #cbd5e1;"></textarea>
                 </div>
                 
-                <!-- Khu vực 2: Kê đơn thuốc -->
+                <!-- Khu vực 2: Kê đơn thuốc từ Database -->
                 <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                     <label style="font-weight: 700; color: #0f172a; display: block; margin-bottom: 12px; font-size: 15px;"><i class="fa-solid fa-pills" style="color: #10b981;"></i> Kê đơn thuốc:</label>
-                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-                        <input list="thuoc_list" id="ten_thuoc" class="swal2-input" placeholder="Gõ tên thuốc (có gợi ý)..." style="flex: 2; margin: 0; height: 42px; font-size: 14px; border-radius: 8px; border-color: #cbd5e1;">
-                        <datalist id="thuoc_list">
-                            ${datalistHtml}
-                        </datalist>
-                        <input list="lieu_list" id="lieu_dung" class="swal2-input" placeholder="Chọn hoặc nhập liều dùng..." style="flex: 1; margin: 0; height: 42px; font-size: 14px; border-radius: 8px; border-color: #cbd5e1;">
-                        <datalist id="lieu_list">
-                            ${lieuDungHtml}
-                        </datalist>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                        <select id="chon_thuoc" class="swal2-input" style="flex: 2; margin: 0; height: 42px; font-size: 13px; border-radius: 8px; border-color: #cbd5e1; padding: 0 8px;">
+                            ${thuocOptionsHtml}
+                        </select>
+                        <input type="number" id="so_luong_thuoc" class="swal2-input" value="1" min="1" max="100" placeholder="SL" style="flex: 0 0 65px; margin: 0; height: 42px; font-size: 14px; border-radius: 8px; border-color: #cbd5e1; text-align: center;">
                         <button type="button" id="btn_add_thuoc" style="background: #0ea5e9; color: white; border: none; height: 42px; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; white-space: nowrap;"><i class="fa-solid fa-plus"></i> Thêm</button>
                     </div>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 15px;">
+                        <input type="text" id="lieu_dung" class="swal2-input" placeholder="Liều dùng (tự động điền khi chọn thuốc)" style="flex: 1; margin: 0; height: 42px; font-size: 13px; border-radius: 8px; border-color: #cbd5e1;">
+                    </div>
                     
-                    <div style="max-height: 160px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
                         <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                             <thead style="background: #f1f5f9; position: sticky; top: 0; z-index: 1;">
                                 <tr>
-                                    <th style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Tên thuốc</th>
-                                    <th style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Liều dùng</th>
-                                    <th style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: center; width: 50px; color: #475569;"><i class="fa-solid fa-gear"></i></th>
+                                    <th style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Tên thuốc</th>
+                                    <th style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569; font-weight: 600; width: 50px;">SL</th>
+                                    <th style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Liều dùng</th>
+                                    <th style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569; font-weight: 600; width: 90px;">Thành tiền</th>
+                                    <th style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; width: 40px; color: #475569;"><i class="fa-solid fa-gear"></i></th>
                                 </tr>
                             </thead>
                             <tbody id="ds_thuoc_body">
-                                <tr><td colspan="3" style="text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">Chưa có thuốc nào trong đơn</td></tr>
+                                <tr><td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">Chưa có thuốc nào trong đơn</td></tr>
                             </tbody>
+                            <tfoot id="ds_thuoc_footer" style="display: none;">
+                                <tr style="background: #f0fdf4;">
+                                    <td colspan="3" style="padding: 10px 12px; font-weight: 700; color: #166534; text-align: right;">Tổng tiền thuốc:</td>
+                                    <td style="padding: 10px 8px; font-weight: 700; color: #166534; text-align: right;" id="tong_tien_thuoc">0 đ</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
-
-                <!-- Vùng chứa HTML để xuất ảnh (Ẩn khỏi viewport người dùng) -->
-                <div id="prescription_capture_area" style="position: absolute; left: -9999px; top: -9999px; width: 800px; background: white; padding: 40px; color: #000; font-family: 'Times New Roman', serif;"></div>
             </div>
             
-            <!-- Nút xuất ảnh Đơn thuốc -->
+            <!-- Nút xuất PDF Đơn thuốc -->
             <div style="text-align: right; margin-top: 20px;">
-                <button type="button" id="btn_export_img" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-file-arrow-down"></i> Lưu đơn thuốc (Ảnh JPG)</button>
+                <button type="button" id="btn_export_pdf" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);"><i class="fa-solid fa-file-pdf"></i> Xuất đơn thuốc (PDF)</button>
             </div>
         `,
-        width: '750px', 
+        width: '800px', 
         showCancelButton: true, 
         confirmButtonText: '<i class="fa-solid fa-check"></i> Hoàn tất khám', 
         cancelButtonText: 'Hủy', 
         confirmButtonColor: '#0284C7',
         didOpen: () => {
             const btnAdd = document.getElementById('btn_add_thuoc');
-            const btnExport = document.getElementById('btn_export_img');
+            const btnExportPdf = document.getElementById('btn_export_pdf');
             const tbody = document.getElementById('ds_thuoc_body');
-            const inputTen = document.getElementById('ten_thuoc');
+            const tfoot = document.getElementById('ds_thuoc_footer');
+            const selectThuoc = document.getElementById('chon_thuoc');
             const inputLieu = document.getElementById('lieu_dung');
+            const inputSoLuong = document.getElementById('so_luong_thuoc');
             
+            // Khi chọn thuốc → tự động điền liều dùng mặc định
+            selectThuoc.addEventListener('change', () => {
+                const selectedOption = selectThuoc.options[selectThuoc.selectedIndex];
+                const lieuMacDinh = selectedOption.getAttribute('data-lieu') || '';
+                inputLieu.value = lieuMacDinh;
+                inputSoLuong.focus();
+            });
+
+            // Hàm tính tổng tiền thuốc
+            const tinhTongTien = () => {
+                let tong = 0;
+                currentPrescriptions.forEach(t => { tong += (t.gia || 0) * (t.soLuong || 1); });
+                return tong;
+            };
+
             // Hàm render danh sách thuốc ra bảng
             const renderThuoc = () => {
                 if (currentPrescriptions.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">Chưa có thuốc nào trong đơn</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8; font-style: italic;">Chưa có thuốc nào trong đơn</td></tr>';
+                    tfoot.style.display = 'none';
                     return;
                 }
-                tbody.innerHTML = currentPrescriptions.map((t, idx) => `
+                tfoot.style.display = '';
+                tbody.innerHTML = currentPrescriptions.map((t, idx) => {
+                    const thanhTien = Number((t.gia || 0) * (t.soLuong || 1)).toLocaleString('vi-VN');
+                    return `
                     <tr style="transition: 0.2s; cursor: default;">
-                        <td style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #0f172a;">${t.ten}</td>
-                        <td style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; color: #334155;">${t.lieu}</td>
-                        <td style="padding: 10px 15px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+                        <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #0f172a;">${t.ten} <span style="color:#64748b; font-weight:400; font-size:12px;">(${t.donVi})</span></td>
+                        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: 600; color: #0284c7;">${t.soLuong}</td>
+                        <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #334155;">${t.lieu}</td>
+                        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${thanhTien}đ</td>
+                        <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">
                             <button type="button" style="background: #fee2e2; border: none; color: #ef4444; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; transition: 0.2s;" onclick="window.removeThuoc(${idx})" onmouseover="this.style.background='#fca5a5'" onmouseout="this.style.background='#fee2e2'"><i class="fa-solid fa-trash-can"></i></button>
                         </td>
-                    </tr>
-                `).join('');
+                    </tr>`;
+                }).join('');
+                document.getElementById('tong_tien_thuoc').textContent = Number(tinhTongTien()).toLocaleString('vi-VN') + ' đ';
             };
 
             // Xóa thuốc khỏi đơn
@@ -178,52 +198,51 @@ function openMedicalRecord(maLK, tenBN) {
                 renderThuoc();
             };
 
-            // Thêm thuốc mới (Cộng dồn nếu trùng)
+            // Thêm thuốc mới
             btnAdd.addEventListener('click', () => {
-                const ten = inputTen.value.trim();
-                const lieu = inputLieu.value.trim();
-                if (!ten || !lieu) {
-                    Swal.showValidationMessage('Vui lòng nhập đủ Tên thuốc và Liều dùng!');
+                const selectedOption = selectThuoc.options[selectThuoc.selectedIndex];
+                if (!selectedOption || !selectedOption.value) {
+                    Swal.showValidationMessage('Vui lòng chọn thuốc từ danh sách!');
                     setTimeout(() => Swal.resetValidationMessage(), 2000);
                     return;
                 }
-                
-                // KIỂM TRA TRÙNG LẶP: Tự động nối thêm liều dùng nếu thuốc đã tồn tại
+                const lieu = inputLieu.value.trim();
+                if (!lieu) {
+                    Swal.showValidationMessage('Vui lòng nhập liều dùng!');
+                    setTimeout(() => Swal.resetValidationMessage(), 2000);
+                    return;
+                }
+
+                const ten = selectedOption.getAttribute('data-ten');
+                const donVi = selectedOption.getAttribute('data-don-vi');
+                const gia = parseFloat(selectedOption.getAttribute('data-gia')) || 0;
+                const soLuong = parseInt(inputSoLuong.value) || 1;
+
+                // Kiểm tra trùng thuốc
                 const existingIndex = currentPrescriptions.findIndex(t => t.ten.toLowerCase() === ten.toLowerCase());
                 if (existingIndex !== -1) {
-                    currentPrescriptions[existingIndex].lieu += ` + ${lieu}`;
+                    currentPrescriptions[existingIndex].soLuong += soLuong;
+                    currentPrescriptions[existingIndex].lieu = lieu;
                 } else {
-                    currentPrescriptions.push({ ten, lieu });
+                    currentPrescriptions.push({ ten, donVi, gia, soLuong, lieu });
                 }
                 
-                inputTen.value = '';
+                selectThuoc.selectedIndex = 0;
                 inputLieu.value = '';
-                inputTen.focus();
+                inputSoLuong.value = 1;
+                selectThuoc.focus();
                 renderThuoc();
             });
 
-            // XUẤT ẢNH JPG DÙNG HTML2CANVAS
-            btnExport.addEventListener('click', () => {
+            // XUẤT PDF ĐƠN THUỐC
+            btnExportPdf.addEventListener('click', () => {
                 const chanDoan = document.getElementById('chan_doan').value.trim();
                 if (!chanDoan && currentPrescriptions.length === 0) {
                     Swal.showValidationMessage('Vui lòng nhập chẩn đoán hoặc kê đơn trước khi xuất!');
                     setTimeout(() => Swal.resetValidationMessage(), 2500);
                     return;
                 }
-
-                // Tải linh động thư viện HTML2Canvas nếu chưa có
-                if (typeof html2canvas === 'undefined') {
-                    Swal.showLoading();
-                    const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-                    script.onload = () => {
-                        Swal.hideLoading();
-                        exportPrescriptionImage(tenBN, maLK, chanDoan, currentPrescriptions);
-                    };
-                    document.head.appendChild(script);
-                } else {
-                    exportPrescriptionImage(tenBN, maLK, chanDoan, currentPrescriptions);
-                }
+                exportPrescriptionPDF(tenBN, maLK, chanDoan, currentPrescriptions);
             });
         },
         preConfirm: () => {
@@ -236,10 +255,14 @@ function openMedicalRecord(maLK, tenBN) {
             // Nối chẩn đoán và thuốc thành 1 chuỗi để lưu vào Database
             let ghiChu = `Chẩn đoán: ${chanDoan}`;
             if (currentPrescriptions.length > 0) {
+                let tongTien = 0;
                 ghiChu += `\n\nĐơn thuốc:\n`;
                 currentPrescriptions.forEach((t, i) => {
-                    ghiChu += `${i + 1}. ${t.ten} - HDSD: ${t.lieu}\n`;
+                    const thanhTien = (t.gia || 0) * (t.soLuong || 1);
+                    tongTien += thanhTien;
+                    ghiChu += `${i + 1}. ${t.ten} (${t.donVi}) x${t.soLuong} - HDSD: ${t.lieu} - ${Number(thanhTien).toLocaleString('vi-VN')}đ\n`;
                 });
+                ghiChu += `\nTổng tiền thuốc: ${Number(tongTien).toLocaleString('vi-VN')} VNĐ`;
             }
             
             return { ghi_chu: ghiChu };
@@ -263,74 +286,227 @@ function openMedicalRecord(maLK, tenBN) {
     });
 }
 
-// HÀM XUẤT ẢNH ĐƠN THUỐC
-function exportPrescriptionImage(tenBenhNhan, maLK, chanDoan, danhSachThuoc) {
-    const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
-    const tenBacSi = userInfo.ho_ten || userInfo.ten_dang_nhap || 'Bác sĩ';
-    
-    let now = new Date();
-    let ngayIn = `Ngày ${now.getDate().toString().padStart(2, '0')} tháng ${(now.getMonth()+1).toString().padStart(2, '0')} năm ${now.getFullYear()}`;
+// HÀM XUẤT ĐƠN THUỐC DẠNG PDF (JSPDF)
+function exportPrescriptionPDF(tenBenhNhan, maLK, chanDoan, danhSachThuoc) {
+    // Tải jsPDF và autoTable từ CDN nếu chưa có
+    const loadScript = (src) => new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
 
-    let htmlThuoc = '';
-    if (danhSachThuoc.length > 0) {
-        danhSachThuoc.forEach((t, i) => {
-            htmlThuoc += `
-                <div style="margin-bottom: 15px;">
-                    <strong style="font-size: 18px; color: #000;">${i + 1}. ${t.ten}</strong><br>
-                    <span style="font-size: 16px; margin-left: 20px; font-style: italic; color: #333;">Cách dùng: ${t.lieu}</span>
-                </div>
-            `;
+    const generatePDF = async () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        
+        try {
+            Swal.showLoading();
+            // Tải font Roboto Regular
+            const resReg = await fetch('https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf');
+            const bufReg = await resReg.arrayBuffer();
+            let binReg = '';
+            const bytesReg = new Uint8Array(bufReg);
+            for (let i = 0; i < bytesReg.byteLength; i++) binReg += String.fromCharCode(bytesReg[i]);
+            doc.addFileToVFS('Roboto-Regular.ttf', window.btoa(binReg));
+            doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+
+            // Tải font Roboto Bold
+            const resBold = await fetch('https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf');
+            const bufBold = await resBold.arrayBuffer();
+            let binBold = '';
+            const bytesBold = new Uint8Array(bufBold);
+            for (let i = 0; i < bytesBold.byteLength; i++) binBold += String.fromCharCode(bytesBold[i]);
+            doc.addFileToVFS('Roboto-Bold.ttf', window.btoa(binBold));
+            doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+            
+            doc.setFont('Roboto', 'normal');
+            Swal.hideLoading();
+        } catch(e) {
+            console.error('Lỗi nhúng font tiếng Việt:', e);
+            Swal.hideLoading();
+        }
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
+        const tenBacSi = userInfo.ho_ten || userInfo.ten_dang_nhap || 'Bác sĩ';
+        
+        const now = new Date();
+        const ngayIn = `Ngày ${now.getDate().toString().padStart(2, '0')} tháng ${(now.getMonth()+1).toString().padStart(2, '0')} năm ${now.getFullYear()}`;
+
+        // === HEADER ===
+        doc.setFontSize(22);
+        doc.setTextColor(2, 132, 199);
+        doc.setFont('Roboto', 'bold');
+        doc.text('TT MEDICAL', 20, 25);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.setFont('Roboto', 'normal');
+        doc.text('Phòng Khám Đa Khoa Chất Lượng Cao', 20, 32);
+        doc.text('Hotline: 1900 6868', 20, 38);
+
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Mã phiếu: LK${maLK}`, pageWidth - 20, 25, { align: 'right' });
+
+        // Đường kẻ header
+        doc.setDrawColor(2, 132, 199);
+        doc.setLineWidth(0.8);
+        doc.line(20, 43, pageWidth - 20, 43);
+
+        // === TITLE ===
+        doc.setFontSize(24);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('Roboto', 'bold');
+        doc.text('ĐƠN THUỐC', pageWidth / 2, 58, { align: 'center' });
+
+        // === THÔNG TIN BỆNH NHÂN ===
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('Roboto', 'normal');
+
+        const removeVietnamese = (str) => str; // Giữ nguyên Tiếng Việt có dấu
+
+        doc.text(`Họ và tên bệnh nhân: ${tenBenhNhan.toUpperCase()}`, 20, 72);
+        doc.text(`Chẩn đoán lâm sàng: ${chanDoan || '(Chưa chẩn đoán)'}`, 20, 80);
+
+        // === BẢNG ĐƠN THUỐC ===
+        let yPos = 92;
+
+        if (danhSachThuoc.length > 0) {
+            doc.setFontSize(13);
+            doc.text('Chỉ định dùng thuốc:', 20, yPos);
+            yPos += 5;
+
+            const tableData = danhSachThuoc.map((t, i) => {
+                const thanhTien = (t.gia || 0) * (t.soLuong || 1);
+                return [
+                    (i + 1).toString(),
+                    t.ten,
+                    t.donVi || '',
+                    (t.soLuong || 1).toString(),
+                    t.lieu,
+                    Number(thanhTien).toLocaleString('vi-VN') + 'đ'
+                ];
+            });
+
+            // Tính tổng tiền
+            let tongTien = 0;
+            danhSachThuoc.forEach(t => { tongTien += (t.gia || 0) * (t.soLuong || 1); });
+
+            doc.autoTable({
+                startY: yPos,
+                head: [['STT', 'Tên thuốc', 'Đơn vị', 'SL', 'Liều dùng', 'Thành tiền']],
+                body: tableData,
+                foot: [['', '', '', '', 'Tổng tiền thuốc:', Number(tongTien).toLocaleString('vi-VN') + ' VNĐ']],
+                theme: 'grid',
+                styles: { fontSize: 10, cellPadding: 4, font: 'Roboto' },
+                headStyles: { fillColor: [2, 132, 199], textColor: 255, fontStyle: 'bold', halign: 'center', font: 'Roboto' },
+                footStyles: { fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold', font: 'Roboto' },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 12 },
+                    1: { cellWidth: 45 },
+                    2: { halign: 'center', cellWidth: 20 },
+                    3: { halign: 'center', cellWidth: 15 },
+                    4: { cellWidth: 55 },
+                    5: { halign: 'right', cellWidth: 28 }
+                },
+                margin: { left: 20, right: 20 }
+            });
+
+            yPos = doc.lastAutoTable.finalY + 15;
+        } else {
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text('(Bác sĩ không kê thuốc)', 20, yPos + 5);
+            yPos += 20;
+        }
+
+        // === CHỮ KÝ ===
+        const signX = pageWidth - 70;
+        if (yPos > 240) {
+            doc.addPage();
+            yPos = 30;
+        }
+
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Hà Nội, ${ngayIn}`, signX, yPos, { align: 'center' });
+        doc.setFontSize(12);
+        doc.setFont('Roboto', 'bold');
+        doc.text('Bác sĩ điều trị', signX, yPos + 8, { align: 'center' });
+
+        doc.setFontSize(12);
+        doc.setFont('Roboto', 'normal');
+        doc.text(`BS. ${tenBacSi}`, signX, yPos + 45, { align: 'center' });
+
+        // Lưu file PDF
+        doc.save(`Don_Thuoc_LK${maLK}_${tenBenhNhan.replace(/\s+/g, '_')}.pdf`);
+    };
+
+    // Load thư viện jsPDF nếu chưa có
+    if (typeof window.jspdf === 'undefined') {
+        Swal.showLoading();
+        Promise.all([
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
+        ]).then(() => {
+            return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js');
+        }).then(() => {
+            Swal.hideLoading();
+            generatePDF();
+        }).catch(err => {
+            Swal.hideLoading();
+            console.error('Lỗi tải thư viện PDF:', err);
+            Swal.fire('Lỗi', 'Không thể tải thư viện xuất PDF. Vui lòng kiểm tra kết nối mạng!', 'error');
         });
     } else {
-        htmlThuoc = '<p style="font-style: italic; font-size: 16px; color: #555;">(Bác sĩ không kê thuốc)</p>';
+        generatePDF();
+    }
+}
+
+// HÀM XUẤT LẠI ĐƠN THUỐC PDF (TỪ DANH SÁCH ĐÃ KHÁM)
+window.exportDoneAppointmentPdf = (maLK) => {
+    const app = currentAppointments.find(a => a.id == maLK);
+    if (!app) return;
+
+    let chanDoan = 'Chưa chẩn đoán';
+    let danhSachThuoc = [];
+    const ghiChu = app.ghi_chu_cua_bac_si || '';
+    
+    // Parse ghi chú để lấy chẩn đoán
+    const cdMatch = ghiChu.match(/Chẩn đoán:\s*(.+?)(?=\n\nĐơn thuốc:|$)/s);
+    if (cdMatch && cdMatch[1]) {
+        chanDoan = cdMatch[1].trim();
+    } else {
+        chanDoan = ghiChu.trim() || 'Chưa có chẩn đoán'; 
     }
 
-    // Đổ dữ liệu vào vùng ẩn để chụp ảnh
-    const captureArea = document.getElementById('prescription_capture_area');
-    captureArea.innerHTML = `
-        <div style="border-bottom: 3px solid #0284c7; padding-bottom: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h2 style="margin: 0 0 5px 0; color: #0284c7; font-size: 32px; text-transform: uppercase; font-family: sans-serif; font-weight: 800;">TT MEDICAL</h2>
-                <p style="margin: 0; font-size: 16px; color: #555; font-family: sans-serif;">Phòng Khám Đa Khoa Chất Lượng Cao</p>
-                <p style="margin: 5px 0 0 0; font-size: 14px; color: #555; font-family: sans-serif;">Hotline: 1900 6868</p>
-            </div>
-            <div style="text-align: right;">
-                <p style="margin: 0; font-size: 16px; font-weight: bold; color: #000;">Mã phiếu: LK${maLK}</p>
-            </div>
-        </div>
-        <div style="text-align: center; margin: 35px 0;">
-            <h1 style="margin: 0; font-size: 36px; text-transform: uppercase; color: #000; letter-spacing: 2px;">ĐƠN THUỐC</h1>
-        </div>
-        <div style="margin-bottom: 30px; font-size: 18px; line-height: 1.8; color: #000;">
-            <p style="margin: 5px 0;"><strong>Họ và tên bệnh nhân:</strong> <span style="text-transform: uppercase;">${tenBenhNhan}</span></p>
-            <p style="margin: 5px 0;"><strong>Chẩn đoán lâm sàng:</strong> ${chanDoan || '(Chưa chẩn đoán)'}</p>
-        </div>
-        <div style="margin-top: 30px; min-height: 380px;">
-            <h3 style="margin-bottom: 20px; font-size: 20px; border-bottom: 2px dotted #000; display: inline-block; color: #000; padding-bottom: 5px;">Chỉ định dùng thuốc:</h3>
-            ${htmlThuoc}
-        </div>
-        <div style="display: flex; justify-content: flex-end; margin-top: 50px; text-align: center;">
-            <div>
-                <p style="margin: 5px 0; font-size: 16px; font-style: italic;">Hà Nội, ${ngayIn}</p>
-                <p style="margin: 5px 0; font-size: 18px; font-weight: bold;">Bác sĩ điều trị</p>
-                <div style="height: 120px;"></div>
-                <p style="margin: 5px 0; font-size: 18px; font-weight: bold;">BS. ${tenBacSi}</p>
-            </div>
-        </div>
-    `;
+    // Parse ghi chú để lấy đơn thuốc
+    const dtMatch = ghiChu.match(/Đơn thuốc:\n([\s\S]+?)(?=\nTổng tiền thuốc:|$)/);
+    if (dtMatch && dtMatch[1]) {
+        const lines = dtMatch[1].trim().split('\n');
+        lines.forEach(line => {
+            const regex = /^\d+\.\s+(.+?)\s+\((.+?)\)\s+x(\d+)\s+-\s+HDSD:\s+(.+?)\s+-\s+([\d.,]+)đ$/;
+            const match = line.match(regex);
+            if (match) {
+                danhSachThuoc.push({
+                    ten: match[1],
+                    donVi: match[2],
+                    soLuong: parseInt(match[3]),
+                    lieu: match[4],
+                    gia: parseFloat(match[5].replace(/\./g, '').replace(/,/g, '')) / parseInt(match[3])
+                });
+            } else {
+                danhSachThuoc.push({ ten: line.replace(/^\d+\.\s+/, ''), donVi: '', soLuong: 1, lieu: '', gia: 0 });
+            }
+        });
+    }
 
-    captureArea.style.left = '0';
-    captureArea.style.top = '0';
-    captureArea.style.zIndex = '-1';
-
-    html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
-        captureArea.style.left = '-9999px'; captureArea.style.top = '-9999px';
-        const link = document.createElement('a');
-        link.download = `Don_Thuoc_LK${maLK}_${tenBenhNhan.replace(/\s+/g, '_')}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.9);
-        link.click();
-    }).catch(err => { console.error('Lỗi khi tạo ảnh:', err); });
-}
+    exportPrescriptionPDF(app.ten_benh_nhan, app.id, chanDoan, danhSachThuoc);
+};
 
 // 5. NGHIỆP VỤ: DUYỆT & HỦY LỊCH
 function approveAppointment(maLK) {
@@ -1048,6 +1224,7 @@ function renderAppointments(filterStatus) {
         } else if (status === 'done') {
             statusHtml = `<span class="badge" style="background:#f3f4f6; color:#4b5563; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã khám xong</span>`;
             actionHtml = `
+                <button class="action-btn" onclick="exportDoneAppointmentPdf('${app.id}')" title="In đơn thuốc" style="background:#10b981; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-right: 5px;"><i class="fa-solid fa-file-pdf"></i></button>
                 <button class="action-btn" onclick="editMedicalRecord('${app.id}')" title="Sửa ghi chú/đơn thuốc" style="background:#f59e0b; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
                 <span style="font-size: 12px; color: #10B981; margin-left: 5px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> Xong</span>
             `;
@@ -1060,12 +1237,17 @@ function renderAppointments(filterStatus) {
         const d = new Date(app.ngay_lam_viec);
         const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 
+        let trieuChungText = app.mo_ta_trieu_chung || '';
+        trieuChungText = trieuChungText.replace(/<br><div class="symptom-images-wrapper".*?<\/div>/g, '').trim();
+        trieuChungText = trieuChungText.replace(/<[^>]*>?/gm, ''); // Xóa thẻ HTML còn sót
+        if (!trieuChungText) trieuChungText = '<span style="color:#9ca3af;">Không có</span>';
+
         trHTML += `
             <tr>
                 <td><strong>#LK${app.id}</strong></td>
                 <td><b>${app.ten_benh_nhan}</b><br><span style="color:var(--text-sub); font-size:12px;">${app.so_dien_thoai || 'Chưa cập nhật'}</span></td>
                 <td>${formattedDate}<br><span style="color:var(--primary); font-size:12px; font-weight: 600;">${app.gio_kham || app.khung_gio}</span></td>
-                <td>${app.mo_ta_trieu_chung || 'Không có'}</td>
+                <td style="max-width: 200px; white-space: normal;">${trieuChungText}</td>
                 <td>${statusHtml}</td>
                 <td style="display:flex; gap:5px; align-items:center;">${actionHtml}</td>
             </tr>

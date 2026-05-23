@@ -98,6 +98,11 @@ function renderAppointmentTable() {
         const dTao = new Date(app.ngay_tao);
         const ngayTaoStr = `${String(dTao.getDate()).padStart(2, '0')}/${String(dTao.getMonth() + 1).padStart(2, '0')}/${dTao.getFullYear()} ${String(dTao.getHours()).padStart(2, '0')}:${String(dTao.getMinutes()).padStart(2, '0')}`;
 
+        let trieuChungText = app.mo_ta_trieu_chung || '';
+        trieuChungText = trieuChungText.replace(/<br><div class="symptom-images-wrapper".*?<\/div>/g, '').trim();
+        trieuChungText = trieuChungText.replace(/<[^>]*>?/gm, ''); // Xóa toàn bộ tag HTML
+        if (!trieuChungText) trieuChungText = '<span style="color:#9ca3af;">Không có</span>';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong>#LK${app.id}</strong></td>
@@ -105,7 +110,7 @@ function renderAppointmentTable() {
             <td>BS. ${app.ten_bac_si}</td>
             <td>${ngayKhamStr}</td>
             <td style="color:var(--primary-color); font-weight: 600;">${app.gio_kham || app.khung_gio}</td>
-            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${app.mo_ta_trieu_chung || ''}">${app.mo_ta_trieu_chung || '<span style="color:#9ca3af;">Không có</span>'}</td>
+            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${trieuChungText.replace(/"/g, '&quot;')}">${trieuChungText}</td>
             <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${app.ghi_chu_cua_bac_si || ''}">${app.ghi_chu_cua_bac_si || '<span style="color:#9ca3af;">Không có</span>'}</td>
             <td>${ngayTaoStr}</td>
             <td>${statusHtml}</td>

@@ -636,6 +636,39 @@ async function fetchMedicalHistory() {
         window.patientAppointments = history;
 
         // ===========================================
+        // TÍNH TOÁN CÁC CHỈ SỐ DASHBOARD THỰC TẾ
+        // ===========================================
+        let totalVisits = history.length;
+        let donThuocList = history.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'done');
+        let totalPrescriptions = donThuocList.length;
+        
+        let upcomingList = history.filter(app => {
+            const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
+            return status === 'pending' || status === 'approved';
+        });
+        let totalUpcoming = upcomingList.length;
+        
+        // Đếm số lượng bác sĩ đã gặp (Dựa trên tên bác sĩ)
+        let uniqueDoctors = new Set();
+        donThuocList.forEach(app => {
+            if (app.ten_bac_si) uniqueDoctors.add(app.ten_bac_si);
+        });
+        let totalDoctors = uniqueDoctors.size;
+        
+        // Cập nhật DOM Dashboard
+        const elTotalVisits = document.getElementById('stat-total-visits');
+        if (elTotalVisits) elTotalVisits.innerText = totalVisits;
+        
+        const elTotalPrescriptions = document.getElementById('stat-total-prescriptions');
+        if (elTotalPrescriptions) elTotalPrescriptions.innerText = totalPrescriptions;
+        
+        const elTotalUpcoming = document.getElementById('stat-upcoming-appointments');
+        if (elTotalUpcoming) elTotalUpcoming.innerText = totalUpcoming;
+        
+        const elTotalDoctors = document.getElementById('stat-doctors-visited');
+        if (elTotalDoctors) elTotalDoctors.innerText = totalDoctors;
+
+        // ===========================================
         // 1. ĐỔ DỮ LIỆU VÀO VÙNG "LỊCH SỬ KHÁM"
         // ===========================================
         if (containerLichSu) {
@@ -730,7 +763,7 @@ async function fetchMedicalHistory() {
 
                     hoSoHTML += `
                         <div style="background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e2e8f0;">
-                            <div style="background: linear-gradient(135deg, #0284c7, #0ea5e9); padding: 15px 20px; color: #fff; display: flex; justify-content: space-between; align-items: center;">
+                                                        <div style="background: linear-gradient(135deg, #0284c7, #0ea5e9); padding: 15px 20px; color: #fff; display: flex; justify-content: space-between; align-items: center;">
                                 <h4 style="margin: 0; font-size: 16px; font-weight: 600;"><i class="fa-solid fa-file-prescription" style="margin-right: 8px;"></i> Hồ Sơ Bệnh Án & Đơn Thuốc</h4>
                                 <span style="font-size: 13px; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-weight: 500;"><i class="fa-regular fa-calendar-check"></i> ${dateStr}</span>
                             </div>
@@ -758,9 +791,139 @@ async function fetchMedicalHistory() {
             console.warn("⚠️ HTML bị thiếu: Không tìm thấy thẻ div nào có id='ho_so_suc_khoe_list'");
         }
 
+        // ===========================================
+        // 3. XỬ LÝ THÔNG BÁO (NOTIFICATIONS)
+        // ===========================================
+        processNotifications(history);
+
     } catch (error) {
         console.error(error);
         if(containerLichSu) containerLichSu.innerHTML = '<p style="color: red; text-align: center;">Không thể tải lịch sử khám lúc này.</p>';
+    }
+}
+
+// ==================================================
+// 6.5. HỆ THỐNG THÔNG BÁO (NOTIFICATIONS)
+// ==================================================
+function toggleNotificationPopup(event) {
+    if (event) event.preventDefault();
+    const popup = document.getElementById('notif-popup');
+    if (!popup) return;
+    
+    if (popup.style.display === 'none' || popup.style.display === '') {
+        popup.style.display = 'block';
+    } else {
+        popup.style.display = 'none';
+    }
+}
+
+// Ẩn popup khi click ra ngoài
+document.addEventListener('click', (e) => {
+    const popup = document.getElementById('notif-popup');
+    const btn = document.querySelector('.notification-btn');
+    if (popup && popup.style.display === 'block' && btn && !btn.contains(e.target)) {
+        popup.style.display = 'none';
+    }
+});
+
+function markAllNotifAsRead() {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!userInfo.id) return;
+    
+    // Đánh dấu tất cả thông báo là đã đọc
+    localStorage.setItem(`lastSeenNotifId_${userInfo.id}`, '9999999');
+    
+    const dot = document.getElementById('notif-dot');
+    if (dot) dot.style.display = 'none';
+    
+    document.querySelectorAll('.notif-item').forEach(el => {
+        el.style.background = '#ffffff';
+        el.style.border = '1px solid transparent';
+    });
+}
+
+function processNotifications(history) {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!userInfo.id) return;
+
+    const listEl = document.getElementById('notif-list');
+    const dot = document.getElementById('notif-dot');
+    if (!listEl) return;
+
+    let notifs = [];
+
+    history.forEach(app => {
+        const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
+        const dateStr = app.ngay_lam_viec ? new Date(app.ngay_lam_viec).toLocaleDateString('vi-VN') : '';
+        
+        let title = '';
+        let desc = '';
+        let icon = '';
+        let bgColor = '';
+        let timeLabel = `Cập nhật gần đây`; 
+
+        if (status === 'approved') {
+            title = `Lịch hẹn đã được duyệt!`;
+            desc = `Lịch hẹn khám với BS. ${app.ten_bac_si || ''} ngày ${dateStr} đã được phòng khám xác nhận.`;
+            icon = `<i class="fa-solid fa-calendar-check" style="color: #10b981;"></i>`;
+            bgColor = `#ecfdf5`;
+        } else if (status === 'cancelled') {
+            title = `Lịch hẹn bị hủy`;
+            desc = `Lịch khám LK${app.id} ngày ${dateStr} đã bị hủy. ${app.ghi_chu_cua_bac_si ? 'L/do: ' + app.ghi_chu_cua_bac_si : ''}`;
+            icon = `<i class="fa-solid fa-xmark" style="color: #ef4444;"></i>`;
+            bgColor = `#fef2f2`;
+        } else if (status === 'done') {
+            title = `Đã hoàn thành khám bệnh`;
+            desc = `Hồ sơ khám bệnh LK${app.id} đã hoàn tất. Bạn có thể xem kết luận và đơn thuốc của Bác sĩ.`;
+            icon = `<i class="fa-solid fa-notes-medical" style="color: #0284c7;"></i>`;
+            bgColor = `#f0f9ff`;
+        }
+
+        if (title) {
+            notifs.push({ id: app.id, title, desc, icon, bgColor, timeLabel, status });
+        }
+    });
+
+    notifs.sort((a, b) => b.id - a.id);
+    notifs = notifs.slice(0, 10);
+
+    if (notifs.length === 0) {
+        listEl.innerHTML = `<div style="text-align: center; padding: 30px 10px; color: #94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size: 30px; margin-bottom: 10px;"></i><br>Bạn chưa có thông báo nào.</div>`;
+        return;
+    }
+
+    const lastSeenId = parseInt(localStorage.getItem(`lastSeenNotifId_${userInfo.id}`) || '0');
+    let hasUnread = false;
+    let html = '';
+
+    notifs.forEach(n => {
+        const isUnread = n.id > lastSeenId;
+        if (isUnread) hasUnread = true;
+        
+        const itemBg = isUnread ? '#f8fafc' : '#ffffff';
+        const borderColor = isUnread ? '#e2e8f0' : 'transparent';
+        const targetAction = n.status === 'done' ? "switchProfileTab('record')" : "switchProfileTab('history')";
+        
+        html += `
+            <div class="notif-item" onclick="scrollToSection('btn-tab-history', event); ${targetAction}; toggleNotificationPopup(event);" style="padding: 12px; margin-bottom: 8px; border-radius: 12px; background: ${itemBg}; display: flex; gap: 12px; cursor: pointer; transition: 0.2s; border: 1px solid ${borderColor};">
+                <div style="min-width: 40px; height: 40px; border-radius: 50%; background: ${n.bgColor}; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                    ${n.icon}
+                </div>
+                <div>
+                    <h5 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #0f172a;">${n.title}</h5>
+                    <p style="margin: 0 0 5px 0; font-size: 12px; color: #475569; line-height: 1.4;">${n.desc}</p>
+                    <span style="font-size: 11px; color: #94a3b8;"><i class="fa-regular fa-clock"></i> ${n.timeLabel}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    listEl.innerHTML = html;
+
+    if (hasUnread) {
+        if (dot) dot.style.display = 'block';
+    } else {
+        if (dot) dot.style.display = 'none';
     }
 }
 
