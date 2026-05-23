@@ -63,6 +63,29 @@ window.onclick = function(event) {
     }
 }
 
+function showContactOptions(e) {
+    if(e) e.preventDefault();
+    Swal.fire({
+        title: 'Liên hệ Hỗ trợ',
+        html: `
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                <a href="https://www.facebook.com/tongtho308" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: #1877F2; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    <i class="fa-brands fa-facebook" style="font-size: 20px;"></i> Facebook của Tống Thọ
+                </a>
+                <a href="https://www.facebook.com/nguyen.thieu.983134" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: #1877F2; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    <i class="fa-brands fa-facebook" style="font-size: 20px;"></i> Facebook của Nguyễn Thiệu
+                </a>
+                <a href="tel:19006868" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                    <i class="fa-solid fa-phone" style="font-size: 20px;"></i> Gọi điện Hotline 1900 6868
+                </a>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCloseButton: true,
+        width: '400px'
+    });
+}
+
 // =========================================================
 // LOGIC SLIDER TRANG CHỦ
 // =========================================================
@@ -656,17 +679,76 @@ async function fetchMedicalHistory() {
         let totalDoctors = uniqueDoctors.size;
         
         // Cập nhật DOM Dashboard
-        const elTotalVisits = document.getElementById('stat-total-visits');
-        if (elTotalVisits) elTotalVisits.innerText = totalVisits;
-        
-        const elTotalPrescriptions = document.getElementById('stat-total-prescriptions');
-        if (elTotalPrescriptions) elTotalPrescriptions.innerText = totalPrescriptions;
-        
-        const elTotalUpcoming = document.getElementById('stat-upcoming-appointments');
-        if (elTotalUpcoming) elTotalUpcoming.innerText = totalUpcoming;
-        
-        const elTotalDoctors = document.getElementById('stat-doctors-visited');
-        if (elTotalDoctors) elTotalDoctors.innerText = totalDoctors;
+        const updatePatientStatCard = (id, count, action) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.innerText = count;
+                const card = el.closest('.stat-card');
+                if (card) {
+                    card.style.cursor = 'pointer';
+                    card.onclick = action;
+                }
+            }
+        };
+
+        updatePatientStatCard('stat-total-visits', totalVisits, (e) => {
+            scrollToSection('btn-tab-history', e);
+            switchProfileTab('history');
+        });
+
+        updatePatientStatCard('stat-total-prescriptions', totalPrescriptions, (e) => {
+            scrollToSection('btn-tab-record', e);
+            switchProfileTab('record');
+        });
+
+        updatePatientStatCard('stat-upcoming-appointments', totalUpcoming, (e) => {
+            scrollToSection('btn-tab-history', e);
+            switchProfileTab('history');
+        });
+
+        updatePatientStatCard('stat-doctors-visited', totalDoctors, async (e) => {
+            if (uniqueDoctors.size === 0) {
+                Swal.fire('Thông báo', 'Bạn chưa có lịch sử khám bệnh nào nên chưa có bác sĩ đã gặp.', 'info');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${window.API_BASE}/api/doctors`);
+                const doctorsList = await res.json();
+                
+                const visitedDocs = doctorsList.filter(d => uniqueDoctors.has(d.ho_ten) || uniqueDoctors.has(d.ten_dang_nhap));
+                
+                if (visitedDocs.length > 0) {
+                    let html = '<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">';
+                    visitedDocs.forEach(doc => {
+                        const displayName = doc.ho_ten || doc.ten_dang_nhap || 'Bác sĩ';
+                        const defaultImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
+                        let imgSrc = doc.anh_dai_dien && doc.anh_dai_dien.trim() !== "" ? doc.anh_dai_dien : defaultImg;
+                        if (!imgSrc.startsWith('http') && !imgSrc.startsWith('data:image')) imgSrc = `${window.API_BASE}/uploads/${imgSrc}`;
+                        
+                        html += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <img src="${imgSrc}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;" onerror="this.src='${defaultImg}'">
+                                    <div style="text-align: left;">
+                                        <div style="font-weight: 700; color: #0f172a; font-size: 15px;">BS. ${displayName}</div>
+                                        <div style="font-size: 13px; color: #64748b;">${doc.ten_chuyen_khoa || 'Chưa cập nhật'}</div>
+                                    </div>
+                                </div>
+                                <button onclick="Swal.close(); if(typeof switchTab === 'function') switchTab(null, 'tab-dat-lich'); setTimeout(() => { const btn = document.getElementById('bdc-toggle-${doc.id}'); if(btn && !btn.classList.contains('active-toggle')) btn.click(); if(btn) setTimeout(() => btn.scrollIntoView({behavior: 'smooth', block: 'center'}), 200); }, 400)" style="padding: 8px 15px; border-radius: 8px; background: #0284c7; color: white; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s;">Khám lại</button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    Swal.fire({ title: 'Danh sách Bác sĩ đã gặp', html: html, showConfirmButton: false, showCloseButton: true, width: '500px' });
+                } else {
+                    Swal.fire('Thông báo', 'Chưa có thông tin chi tiết của các Bác sĩ bạn đã gặp.', 'info');
+                }
+            } catch (err) {
+                console.error('Lỗi khi fetch bác sĩ:', err);
+                Swal.fire('Lỗi', 'Không thể lấy dữ liệu bác sĩ.', 'error');
+            }
+        });
 
         // ===========================================
         // 1. ĐỔ DỮ LIỆU VÀO VÙNG "LỊCH SỬ KHÁM"
@@ -1190,5 +1272,3 @@ function enforceMobileProfileLayout() {
 // Chạy hàm ngay khi vừa tải trang và khi người dùng xoay ngang/dọc điện thoại
 document.addEventListener('DOMContentLoaded', () => { setTimeout(enforceMobileProfileLayout, 500); });
 window.addEventListener('resize', enforceMobileProfileLayout);
-
-
