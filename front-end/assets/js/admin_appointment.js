@@ -21,12 +21,36 @@ function renderAppointmentTable() {
     const searchInput = document.getElementById('searchAdminAppointment');
     const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-    if (window.lastAdminAppointmentKeyword !== keyword) {
+    const dateInput = document.getElementById('filterAdminAppDate');
+    const filterDate = dateInput ? dateInput.value : '';
+
+    const statusInput = document.getElementById('filterAdminAppStatus');
+    const filterStatus = statusInput ? statusInput.value.toLowerCase() : '';
+
+    if (window.lastAdminAppointmentKeyword !== keyword || window.lastAdminAppDate !== filterDate || window.lastAdminAppStatus !== filterStatus) {
         currentAdminAppointmentPage = 1;
         window.lastAdminAppointmentKeyword = keyword;
+        window.lastAdminAppDate = filterDate;
+        window.lastAdminAppStatus = filterStatus;
     }
 
     let filteredList = allAdminAppointments;
+
+    if (filterDate) {
+        filteredList = filteredList.filter(app => {
+            if (!app.ngay_lam_viec) return false;
+            const dKham = new Date(app.ngay_lam_viec);
+            const appDateStr = `${dKham.getFullYear()}-${String(dKham.getMonth() + 1).padStart(2, '0')}-${String(dKham.getDate()).padStart(2, '0')}`;
+            return appDateStr === filterDate;
+        });
+    }
+
+    if (filterStatus) {
+        filteredList = filteredList.filter(app => {
+            const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
+            return status === filterStatus;
+        });
+    }
 
     if (keyword) {
         filteredList = filteredList.filter(app => 

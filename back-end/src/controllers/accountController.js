@@ -12,6 +12,7 @@ const getAllAccounts = async (req, res) => {
             FROM TaiKhoan tk
             LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
             JOIN VaiTro vt ON tk.vai_tro_id = vt.id
+            WHERE vt.ten_vai_tro IN ('Admin', 'BenhNhan')
             ORDER BY tk.id ASC
         `);
         res.json(result.recordset);
@@ -42,7 +43,8 @@ const deleteAccount = async (req, res) => {
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM ThanhToan WHERE lich_kham_id IN (SELECT id FROM LichKham WHERE benh_nhan_id = @id)`);
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM LichKham WHERE benh_nhan_id = @id`);
             
-            // 3. Xóa Hồ sơ
+            // 3. Xóa Hồ sơ và ChatBot
+            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM ChatBot WHERE tai_khoan_id = @id`);
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoBenhNhan WHERE tai_khoan_id = @id`);
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoNguoiDung WHERE tai_khoan_id = @id`);
             
@@ -170,4 +172,25 @@ const updateProfile = async (req, res) => {
     }
 };
 
-module.exports = { getAllAccounts, deleteAccount, updateAccount, updateProfile };
+// ==========================================
+// 5. KHÓA / MỞ KHÓA TÀI KHOẢN
+// ==========================================
+const toggleAccountStatus = async (req, res) => {
+    try {
+        const pool = await connectDB();
+        const { id } = req.params;
+        const { trang_thai } = req.body;
+        
+        await pool.request()
+            .input('id', sql.Int, id)
+            .input('trang_thai', sql.Bit, trang_thai)
+            .query(`UPDATE TaiKhoan SET trang_thai = @trang_thai WHERE id = @id`);
+            
+        res.status(200).json({ message: 'Cập nhật trạng thái tài khoản thành công!' });
+    } catch (error) {
+        console.error('Lỗi khóa tài khoản:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
+module.exports = { getAllAccounts, deleteAccount, updateAccount, updateProfile, toggleAccountStatus };

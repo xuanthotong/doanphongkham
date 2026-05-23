@@ -1,8 +1,602 @@
 /* =========================================
-   CSS CHO TRANG ĐẶT LỊCH (WIZARD VERCEL STYLE)
+   CSS CHO TRANG ĐẶT LỊCH KHÁM - LAYOUT 3 CỘT
+   (Lấy cảm hứng từ BV ĐH Y Hà Nội)
    ========================================= */
 
-/* Stepper (Thanh tiến trình) */
+/* ===================== LAYOUT 3 CỘT ===================== */
+.booking-3col-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 320px;
+    gap: 24px;
+    align-items: start;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ===================== SIDEBAR TRÁI ===================== */
+.booking-sidebar-left {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    position: sticky;
+    top: 110px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+}
+.booking-sidebar-left h3 {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.booking-sidebar-left h3 i { color: #0284c7; }
+
+.booking-sidebar-left .sidebar-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.booking-sidebar-left .sidebar-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #0f172a;
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 18px;
+    appearance: auto;
+}
+.booking-sidebar-left .sidebar-select:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px #e0f2fe;
+}
+
+.sidebar-group { margin-bottom: 18px; }
+.sidebar-group:last-child { margin-bottom: 0; }
+
+/* Clinic badge */
+.sidebar-clinic-badge {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0369a1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.sidebar-clinic-badge i { color: #0284c7; font-size: 14px; }
+
+/* Date inputs */
+.sidebar-date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.sidebar-date-group input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #334155;
+    cursor: pointer;
+}
+.sidebar-date-group input[type="date"]:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px #e0f2fe;
+}
+.sidebar-date-group span {
+    display: none;
+}
+
+/* ===================== TABS PHƯƠNG THỨC ===================== */
+.booking-method-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 18px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+.booking-method-tab {
+    flex: 1;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: #f8fafc;
+    color: #64748b;
+    transition: 0.2s;
+}
+.booking-method-tab:first-child { border-right: 1px solid #e2e8f0; }
+.booking-method-tab.active {
+    background: #0284c7;
+    color: white;
+}
+.booking-method-tab:hover:not(.active) {
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+/* ===================== NỘI DUNG CHÍNH ===================== */
+.booking-main-content {
+    min-height: 400px;
+}
+
+/* Thanh tìm kiếm */
+.booking-search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: stretch;
+}
+.booking-search-input-wrapper {
+    flex: 1;
+    position: relative;
+}
+.booking-search-input-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 16px;
+}
+.booking-search-input {
+    width: 100%;
+    padding: 12px 16px 12px 42px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #334155;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.booking-search-input:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px #e0f2fe;
+}
+.booking-search-input::placeholder { color: #94a3b8; }
+
+.booking-doctor-count-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+    cursor: default;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.booking-doctor-count-btn i { color: #0284c7; font-size: 18px; }
+.booking-doctor-count-btn strong { color: #0284c7; }
+
+/* ===================== CARD BÁC SĨ ===================== */
+.booking-doctor-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.booking-doctor-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+.booking-doctor-card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(40%);
+}
+.booking-doctor-card.selected-card {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 2px #bae6fd, 0 4px 15px rgba(2, 132, 199, 0.1);
+}
+
+/* Header card (avatar + info + nút) */
+.bdc-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.bdc-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e0f2fe;
+    flex-shrink: 0;
+}
+.bdc-info { flex: 1; }
+.bdc-info h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+}
+.bdc-info .bdc-specialty {
+    font-size: 13px;
+    color: #0284c7;
+    font-weight: 600;
+    margin: 0 0 2px 0;
+}
+.bdc-fee-price {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+.bdc-fee-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+}
+.bdc-fee-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ef4444;
+}
+.bdc-toggle-btn {
+    padding: 8px 20px;
+    background: #0284c7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.bdc-toggle-btn:hover { background: #0369a1; }
+.bdc-toggle-btn.active-toggle {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+.bdc-toggle-btn.active-toggle:hover { background: #e2e8f0; }
+
+/* Body card (ngày + thông tin) */
+.bdc-body {
+    padding: 20px 24px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+.bdc-body.open { display: block; }
+
+/* ===================== CHIP NGÀY ===================== */
+.bdc-dates-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+.booking-date-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.booking-date-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    background: white;
+    min-width: 60px;
+}
+.booking-date-chip:hover:not(.chip-disabled) {
+    border-color: #0284c7;
+    background: #f0f9ff;
+}
+.booking-date-chip.chip-active {
+    background: #1e3a5f;
+    color: white;
+    border-color: #1e3a5f;
+}
+.booking-date-chip.chip-disabled {
+    background: #f8fafc;
+    color: #cbd5e1;
+    cursor: not-allowed;
+    pointer-events: none;
+    border-color: #f1f5f9;
+}
+.chip-day {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+.chip-date {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+/* ===================== TIME SLOTS TRONG CARD ===================== */
+.bdc-timeslots-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+.bdc-timeslots-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.bdc-time-slot {
+    border: 1px solid #cbd5e1;
+    padding: 9px 0;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: 0.2s;
+    background: white;
+}
+.bdc-time-slot:hover:not(.slot-booked):not(.slot-past) {
+    border-color: #0284c7;
+    color: #0284c7;
+    background-color: #f0f9ff;
+}
+.bdc-time-slot.slot-selected {
+    background-color: #0284c7;
+    color: white;
+    border-color: #0284c7;
+    box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3);
+}
+.bdc-time-slot.slot-booked {
+    background: #f1f5f9;
+    color: #94a3b8;
+    pointer-events: none;
+    border-color: #e2e8f0;
+}
+.bdc-time-slot.slot-past {
+    background: #f8fafc;
+    color: #cbd5e1;
+    pointer-events: none;
+    border-color: #e2e8f0;
+    text-decoration: line-through;
+}
+
+/* Clinic info bên dưới card */
+.bdc-clinic-info {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 16px;
+    margin-top: 8px;
+}
+.bdc-clinic-info h5 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0284c7;
+    margin: 0 0 12px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #0284c7;
+    display: inline-block;
+}
+.bdc-clinic-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #475569;
+}
+.bdc-clinic-row:last-child { margin-bottom: 0; }
+.bdc-clinic-row i {
+    color: #0284c7;
+    width: 16px;
+    text-align: center;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* ===================== SIDEBAR PHẢI ===================== */
+.booking-sidebar-right {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    position: sticky;
+    top: 110px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+}
+.booking-sidebar-right h3 {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.booking-sidebar-right h3 i { color: #0284c7; }
+
+/* Summary rows */
+.summary-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    color: #334155;
+}
+.summary-row i {
+    color: #0284c7;
+    width: 18px;
+    text-align: center;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+.summary-row .summary-value {
+    font-weight: 600;
+    color: #0f172a;
+}
+.summary-row .summary-placeholder {
+    color: #94a3b8;
+    font-style: italic;
+    font-weight: 400;
+}
+
+.summary-divider {
+    border: none;
+    border-top: 1px solid #f1f5f9;
+    margin: 16px 0;
+}
+
+/* Textarea triệu chứng */
+.summary-symptom-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.summary-symptom-label .required-star { color: #ef4444; }
+.summary-symptom-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #334155;
+    resize: vertical;
+    min-height: 80px;
+    margin-bottom: 16px;
+}
+.summary-symptom-textarea:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px #e0f2fe;
+}
+.summary-symptom-textarea::placeholder { color: #94a3b8; }
+
+/* Nút xác nhận */
+.btn-confirm-booking {
+    width: 100%;
+    padding: 14px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-confirm-booking:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Doctor avatar trong summary */
+.summary-doctor-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.summary-doc-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e0f2fe;
+}
+.summary-doc-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 2px 0;
+}
+.summary-doc-spec {
+    font-size: 13px;
+    color: #0284c7;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Không tìm thấy bác sĩ */
+.booking-no-result {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+}
+.booking-no-result i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    color: #cbd5e1;
+}
+.booking-no-result p {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* ===================== LOADING ===================== */
+.booking-loading {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+}
+.booking-loading i { margin-right: 8px; }
+
+/* ===================== PAYMENT STEP CONTAINER ===================== */
+.booking-payment-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ===================== STEPPER (giữ cho step 5-6) ===================== */
 .stepper-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding: 0 20px; }
 .step { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 2; }
 .step-circle { width: 35px; height: 35px; border-radius: 50%; background-color: #f1f5f9; color: #64748b; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; border: 2px solid #e2e8f0; transition: 0.3s; }
@@ -17,24 +611,7 @@
 .booking-step { display: none; animation: fadeIn 0.4s ease; }
 .booking-step.active { display: block; }
 
-/* Grid Bác sĩ chọn lọc */
-.doctor-selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
-.doc-select-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; }
-.doc-select-card:hover { border-color: #0284c7; background-color: #f0f9ff; }
-.doc-select-card.selected { border-color: #0284c7; background-color: #f0f9ff; box-shadow: 0 0 0 2px #bae6fd; }
-.doc-select-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
-.doc-select-info h4 { margin: 0 0 5px 0; font-size: 15px; color: #0f172a; }
-.doc-select-info p { margin: 0; font-size: 13px; color: #0284c7; font-weight: 600; }
-
-/* --- BỐ CỤC CHIA 2 CỘT BƯỚC 2 (Vercel Style) --- */
-.datetime-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; align-items: start; }
-.apt-section-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-
-/* Khối Chọn Ngày */
-.custom-date-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #cbd5e1; font-size: 16px; color: #334155; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); font-family: inherit; pointer-events: auto; }
-.custom-date-input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px #e0f2fe; outline: none; }
-
-/* Khối Chọn Giờ (4 cột) */
+/* Time slots giữ lại cho tương thích */
 .time-slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .time-slot { border: 1px solid #cbd5e1; padding: 12px 0; text-align: center; border-radius: 8px; font-size: 14px; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; background: white; }
 .time-slot:hover { border-color: #0284c7; color: #0284c7; background-color: #f0f9ff; }
@@ -194,5 +771,63 @@
 @media (max-width: 768px) {
     .payment-methods-grid { 
         grid-template-columns: 1fr; 
+    }
+}
+
+/* ===================== RESPONSIVE 3 CỘT ===================== */
+@media (max-width: 1024px) {
+    .booking-3col-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0 16px;
+    }
+    .booking-sidebar-left,
+    .booking-sidebar-right {
+        position: static;
+    }
+    .booking-sidebar-right {
+        order: -1;
+    }
+    .bdc-timeslots-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .booking-3col-layout {
+        padding: 0 12px;
+    }
+    .booking-search-bar {
+        flex-direction: column;
+    }
+    .booking-doctor-count-btn {
+        justify-content: center;
+    }
+    .bdc-header {
+        flex-wrap: wrap;
+        padding: 16px;
+    }
+    .bdc-body {
+        padding: 16px;
+    }
+    .bdc-timeslots-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .booking-date-chips {
+        gap: 6px;
+    }
+    .booking-date-chip {
+        padding: 6px 10px;
+        min-width: 50px;
+    }
+    .chip-day { font-size: 12px; }
+    .chip-date { font-size: 11px; }
+    .bdc-toggle-btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+    .booking-method-tabs {
+        margin-bottom: 14px;
     }
 }

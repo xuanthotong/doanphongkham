@@ -1,3 +1,4 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 let questions = []; 
 const qaTbody = document.getElementById('qaTableBody');
 let currentAdminQAPage = 1;
@@ -6,7 +7,7 @@ const adminQAItemsPerPage = 20;
 // HÀM LẤY CÂU HỎI TỪ CƠ SỞ DỮ LIỆU
 async function fetchQuestions() {
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/questions');
+        const response = await fetch(window.API_BASE + '/api/questions');
         questions = await response.json();
         renderQATable();
     } catch (error) {
@@ -17,21 +18,63 @@ async function fetchQuestions() {
 function renderQATable() {
     if (!qaTbody) return;
     qaTbody.innerHTML = '';
-    
-    if (questions.length === 0) {
-        qaTbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có câu hỏi nào từ người dùng.</td></tr>`;
+
+    const searchInput = document.getElementById('searchAdminQa');
+    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const statusInput = document.getElementById('filterQaStatus');
+    const filterStatus = statusInput ? statusInput.value : '';
+
+    if (window.lastAdminQaKeyword !== keyword || window.lastAdminQaStatus !== filterStatus) {
+        currentAdminQAPage = 1;
+        window.lastAdminQaKeyword = keyword;
+        window.lastAdminQaStatus = filterStatus;
+    }
+
+    let filteredQA = questions;
+
+    if (filterStatus !== '') {
+        filteredQA = filteredQA.filter(q => {
+            const isAnswered = q.trang_thai == 1 || q.tra_loi;
+            return filterStatus === '1' ? isAnswered : !isAnswered;
+        });
+    }
+
+    if (keyword) {
+        filteredQA = filteredQA.filter(q => {
+            let isAnDanh = false;
+            let displayTieuDe = q.tieu_de || '';
+            if (displayTieuDe.startsWith('[Ẩn danh]')) {
+                isAnDanh = true;
+                displayTieuDe = displayTieuDe.replace('[Ẩn danh] ', '').replace('[Ẩn danh]', '');
+            } else if (!q.nguoi_hoi || q.nguoi_hoi.trim() === '') {
+                isAnDanh = true;
+            }
+            const nguoiHoi = isAnDanh ? 'ẩn danh' : (q.nguoi_hoi ? q.nguoi_hoi.toLowerCase() : 'ẩn danh');
+
+            return (
+                (displayTieuDe.toLowerCase().includes(keyword)) ||
+                (nguoiHoi.includes(keyword)) ||
+                (q.noi_dung && q.noi_dung.toLowerCase().includes(keyword)) ||
+                (q.id && q.id.toString() === keyword)
+            );
+        });
+    }
+
+    if (filteredQA.length === 0) {
+        qaTbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy câu hỏi phù hợp.</td></tr>`;
         let paginationContainer = document.getElementById('admin_qa_pagination');
         if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    const totalPages = Math.ceil(questions.length / adminQAItemsPerPage);
+    const totalPages = Math.ceil(filteredQA.length / adminQAItemsPerPage);
     if (currentAdminQAPage > totalPages) currentAdminQAPage = totalPages;
     if (currentAdminQAPage < 1) currentAdminQAPage = 1;
 
     const startIndex = (currentAdminQAPage - 1) * adminQAItemsPerPage;
     const endIndex = startIndex + adminQAItemsPerPage;
-    const paginatedQA = questions.slice(startIndex, endIndex);
+    const paginatedQA = filteredQA.slice(startIndex, endIndex);
 
     paginatedQA.forEach((q) => {
         const statusBadge = q.trang_thai == 1 || q.tra_loi
@@ -158,7 +201,7 @@ async function replyQA(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`https://doanphongkham.onrender.com/api/questions/${id}/reply`, {
+                const res = await fetch(`${window.API_BASE}/api/questions/${id}/reply`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     // ĐÃ SỬA: Gửi kèm ID người trả lời và Vai trò lên Backend
@@ -190,7 +233,7 @@ async function deleteQA(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`https://doanphongkham.onrender.com/api/questions/${id}`, { method: 'DELETE' });
+                const res = await fetch(`${window.API_BASE}/api/questions/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     Swal.fire('Đã xóa!', 'Xóa câu hỏi thành công.', 'success');
                     fetchQuestions();
@@ -201,3 +244,5 @@ async function deleteQA(id) {
 }
 
 fetchQuestions();
+
+

@@ -115,21 +115,20 @@ const updateAppointmentStatus = async (req, res) => {
         const { trang_thai, ghi_chu_cua_bac_si } = req.body;
         const pool = await connectDB();
 
-        // Lấy trạng thái cũ để kiểm tra
-        const oldStatusQuery = await pool.request().input('id', sql.Int, id).query('SELECT trang_thai, lich_lam_viec_id FROM LichKham WHERE id = @id');
+        // Lấy trạng thái cũ và ngày giờ khám để kiểm tra
+        const oldStatusQuery = await pool.request().input('id', sql.Int, id).query(`
+            SELECT lk.trang_thai, lk.lich_lam_viec_id, llv.ngay_lam_viec, lk.gio_kham 
+            FROM LichKham lk
+            JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+            WHERE lk.id = @id
+        `);
         if (oldStatusQuery.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy lịch hẹn!' });
-        const oldStatus = oldStatusQuery.recordset[0].trang_thai;
+        const rowInfo = oldStatusQuery.recordset[0];
+        const oldStatus = rowInfo.trang_thai;
 
-        // Bổ sung chặn Hủy lịch nếu đã thanh toán chuyển khoản
+        // Bác sĩ KHÔNG được quyền hủy lịch
         if (trang_thai === 'Cancelled') {
-            const paymentCheck = await pool.request().input('id', sql.Int, id).query('SELECT phuong_thuc_thanh_toan, trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @id');
-            if (paymentCheck.recordset.length > 0) {
-                const payment = paymentCheck.recordset[0];
-                // Chỉ chặn hủy nếu thanh toán Chuyển khoản (transfer) và đã chuyển tiền thành công (1)
-                if ((payment.phuong_thuc_thanh_toan === 'transfer' || payment.phuong_thuc_thanh_toan === 'momo') && payment.trang_thai_thanh_toan === 1) {
-                    return res.status(400).json({ message: 'Lịch khám này đã được thanh toán Online. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
-                }
-            }
+            return res.status(400).json({ message: 'Bác sĩ không có quyền hủy lịch. Chỉ Admin mới có thể hủy lịch khi sát giờ khám (dưới 30 phút)!' });
         }
 
         let query = `UPDATE LichKham SET trang_thai = @trang_thai`;
@@ -264,13 +263,36 @@ const deleteAppointment = async (req, res) => {
         const { id } = req.params;
         const pool = await connectDB();
 
-        const appInfo = await pool.request().input('id', sql.Int, id).query('SELECT lich_lam_viec_id, trang_thai FROM LichKham WHERE id = @id');
+        const appInfo = await pool.request().input('id', sql.Int, id).query(`
+            SELECT lk.lich_lam_viec_id, lk.trang_thai, llv.ngay_lam_viec, lk.gio_kham 
+            FROM LichKham lk
+            JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+            WHERE lk.id = @id
+        `);
         if (appInfo.recordset.length === 0) return res.status(404).json({ message: 'Không tìm thấy lịch hẹn!' });
 
-        const { lich_lam_viec_id, trang_thai } = appInfo.recordset[0];
+        const rowInfo = appInfo.recordset[0];
+        const { lich_lam_viec_id, trang_thai } = rowInfo;
 
         if (trang_thai.trim().toLowerCase() === 'done') {
             return res.status(400).json({ message: 'Không thể hủy lịch đã khám xong! Dữ liệu này cần được giữ lại làm hồ sơ bệnh án và bảo vệ đánh giá của bệnh nhân.' });
+        }
+
+        // Kiểm tra thời gian: Admin CHỈ được hủy nếu còn <= 30 phút trước giờ khám
+        const d = new Date(rowInfo.ngay_lam_viec);
+        const year = d.getUTCFullYear();
+        const month = d.getUTCMonth();
+        const date = d.getUTCDate();
+        
+        const gioKhamStr = rowInfo.gio_kham ? rowInfo.gio_kham.split(' - ')[0] : '00:00';
+        const [gio, phut] = gioKhamStr.split(':');
+        const localAppointmentDate = new Date(year, month, date, parseInt(gio), parseInt(phut), 0);
+        
+        const now = new Date();
+        const diffInMinutes = (localAppointmentDate - now) / (1000 * 60);
+
+        if (diffInMinutes > 30) {
+            return res.status(400).json({ message: 'Chưa đến thời gian cho phép hủy lịch! Admin chỉ có quyền hủy lịch nếu bệnh nhân không đến khi còn cách giờ khám dưới 30 phút.' });
         }
 
         // KIỂM TRA LOGIC THANH TOÁN (Tránh mất tiền của khách hàng)
@@ -373,7 +395,7 @@ const createAppointment = async (req, res) => {
                 .input('benh_nhan_id', sql.Int, benh_nhan_id)
                 .input('gio_kham', sql.VarChar, khung_gio)
                 .input('mo_ta_trieu_chung', sql.NVarChar, mo_ta_trieu_chung)
-                .input('trang_thai', sql.VarChar, 'Pending')
+                .input('trang_thai', sql.VarChar, 'Approved')
                 .query(`
                     INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao, gio_kham) 
                     OUTPUT inserted.id

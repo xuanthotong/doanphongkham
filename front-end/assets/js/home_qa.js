@@ -1,10 +1,11 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 let homeQAData = [];
 let currentHomeQAPage = 1;
 const homeQAItemsPerPage = 4;
 
 async function fetchHomeQA() {
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/questions');
+        const response = await fetch(window.API_BASE + '/api/questions');
         const questions = await response.json();
         // LỌC: Chỉ lấy những câu hỏi đã được trả lời để hiển thị ở trang chủ
         homeQAData = questions.filter(q => q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== ''));
@@ -171,3 +172,5 @@ function changeHomeQAPage(page) {
 }
 
 document.addEventListener('DOMContentLoaded', fetchHomeQA);
+
+

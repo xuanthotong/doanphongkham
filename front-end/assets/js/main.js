@@ -1,3 +1,7 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
+// Cấu hình đường dẫn API tự động nhận diện Local và Production
+window.API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? window.API_BASE + '' : 'https://doanphongkham.onrender.com';
+
 // Mở popup
 function openModal(modalId, e) {
     if(e) e.preventDefault();
@@ -101,3 +105,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeroSlider();
     initAIChatbox();
 });
+
+

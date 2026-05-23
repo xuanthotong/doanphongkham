@@ -1,9 +1,10 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 let homePostsList = []; // Lưu trữ danh sách bài viết toàn cục
 let homeCategoriesList = []; // Lưu trữ danh sách danh mục toàn cục
 
 async function initHomePosts() {
     try {
-        const res = await fetch('https://doanphongkham.onrender.com/api/categories');
+        const res = await fetch(window.API_BASE + '/api/categories');
         homeCategoriesList = await res.json();
     } catch (error) {
         console.error('Lỗi khi lấy danh sách danh mục:', error);
@@ -13,7 +14,7 @@ async function initHomePosts() {
 
 async function fetchHomePosts() {
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/posts');
+        const response = await fetch(window.API_BASE + '/api/posts');
         homePostsList = await response.json();
         renderHomePosts(homePostsList);
     } catch (error) {
@@ -142,3 +143,5 @@ function returnToHome(event) {
 }
 
 document.addEventListener('DOMContentLoaded', initHomePosts);
+
+

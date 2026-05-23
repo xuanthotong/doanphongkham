@@ -1,3 +1,4 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 // Khởi tạo mảng rỗng
 let doctors = [];
 
@@ -43,15 +44,42 @@ function formatDate(dateString) {
 // =======================================================
 // HÀM RENDER DỮ LIỆU RA BẢNG
 // =======================================================
-function renderTable() {
+function renderDoctorTable() {
     tbody.innerHTML = '';
     
-    if (doctors.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có dữ liệu bác sĩ nào. Vui lòng thêm mới.</td></tr>`;
+    const searchInput = document.getElementById('searchAdminDoctor');
+    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const specialtyInput = document.getElementById('filterDoctorSpecialty');
+    const filterSpecialty = specialtyInput ? specialtyInput.value : '';
+
+    const genderInput = document.getElementById('filterDoctorGender');
+    const filterGender = genderInput ? genderInput.value : '';
+
+    let filteredDoctors = doctors;
+
+    if (filterSpecialty) {
+        filteredDoctors = filteredDoctors.filter(doc => doc.chuyen_khoa_id == filterSpecialty);
+    }
+
+    if (filterGender !== '') {
+        filteredDoctors = filteredDoctors.filter(doc => doc.gioi_tinh == filterGender);
+    }
+
+    if (keyword) {
+        filteredDoctors = filteredDoctors.filter(doc => 
+            (doc.ho_ten && doc.ho_ten.toLowerCase().includes(keyword)) ||
+            (doc.so_dien_thoai && doc.so_dien_thoai.includes(keyword)) ||
+            (doc.email && doc.email.toLowerCase().includes(keyword))
+        );
+    }
+
+    if (filteredDoctors.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy bác sĩ phù hợp.</td></tr>`;
         return;
     }
 
-    doctors.forEach((doc) => {
+    filteredDoctors.forEach((doc) => {
         const genderText = doc.gioi_tinh == 1 ? "Nam" : "Nữ";
         const statusBadge = doc.trang_thai == 1 ? 
             `<span class="badge" style="background-color: #dcfce7; color: #166534;">Hoạt động</span>` : 
@@ -170,7 +198,7 @@ async function toggleLockDoctor(id, isLocked) {
         if (result.isConfirmed) {
             try {
                 // Vẫn dùng endpoint DELETE nhưng API Backend đã được sửa lại để thực hiện Khóa/Mở khóa
-                const res = await fetch('https://doanphongkham.onrender.com/api/doctors/' + id, { method: 'DELETE' });
+                const res = await fetch(window.API_BASE + '/api/doctors/' + id, { method: 'DELETE' });
                 const data = await res.json();
                 if(res.ok) {
                     Swal.fire('Thành công!', data.message, 'success');
@@ -188,9 +216,9 @@ async function toggleLockDoctor(id, isLocked) {
 // =======================================================
 async function fetchDoctors() {
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/doctors');
+        const response = await fetch(window.API_BASE + '/api/doctors');
         doctors = await response.json(); // Cập nhật mảng ảo bằng dữ liệu thật
-        renderTable();
+        renderDoctorTable();
     } catch (error) { console.error('Lỗi khi lấy dữ liệu bác sĩ:', error); }
 }
 
@@ -198,18 +226,30 @@ async function fetchDoctors() {
 // GỌI API LẤY DANH SÁCH CHUYÊN KHOA CHO DROPDOWN
 // =======================================================
 async function fetchSpecialtiesForDropdown() {
-    if (!chuyenKhoaSelect) return;
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/specialties');
+        const response = await fetch(window.API_BASE + '/api/specialties');
         const specialties = await response.json();
         
-        chuyenKhoaSelect.innerHTML = '<option value="" disabled selected>-- Chọn chuyên khoa --</option>';
-        specialties.forEach(spec => {
-            const option = document.createElement('option');
-            option.value = spec.id;
-            option.textContent = spec.ten_chuyen_khoa;
-            chuyenKhoaSelect.appendChild(option);
-        });
+        if (chuyenKhoaSelect) {
+            chuyenKhoaSelect.innerHTML = '<option value="" disabled selected>-- Chọn chuyên khoa --</option>';
+            specialties.forEach(spec => {
+                const option = document.createElement('option');
+                option.value = spec.id;
+                option.textContent = spec.ten_chuyen_khoa;
+                chuyenKhoaSelect.appendChild(option);
+            });
+        }
+
+        const filterSpecialtySelect = document.getElementById('filterDoctorSpecialty');
+        if (filterSpecialtySelect) {
+            filterSpecialtySelect.innerHTML = '<option value="">Tất cả chuyên khoa</option>';
+            specialties.forEach(spec => {
+                const option = document.createElement('option');
+                option.value = spec.id;
+                option.textContent = spec.ten_chuyen_khoa;
+                filterSpecialtySelect.appendChild(option);
+            });
+        }
     } catch (error) { console.error('Lỗi khi lấy dữ liệu chuyên khoa:', error); }
 }
 
@@ -257,7 +297,7 @@ form.addEventListener('submit', function(e) {
 
             try {
                 // GỌI API SỬA (PUT) VÀO CƠ SỞ DỮ LIỆU
-                const res = await fetch('https://doanphongkham.onrender.com/api/doctors/' + idValue, {
+                const res = await fetch(window.API_BASE + '/api/doctors/' + idValue, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newDoc)
@@ -274,7 +314,7 @@ form.addEventListener('submit', function(e) {
         } else {
             try {
                 // GỌI API THÊM MỚI (POST) VÀO CƠ SỞ DỮ LIỆU
-                const res = await fetch('https://doanphongkham.onrender.com/api/doctors', {
+                const res = await fetch(window.API_BASE + '/api/doctors', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newDoc)
@@ -307,3 +347,5 @@ form.addEventListener('submit', function(e) {
 // Gọi dữ liệu khi mở trang thay vì gọi bảng trống
 fetchDoctors();
 fetchSpecialtiesForDropdown();
+
+

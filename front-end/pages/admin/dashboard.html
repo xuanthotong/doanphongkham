@@ -157,6 +157,20 @@
                 <h1 class="page-title">Quản lý Bác sĩ</h1>
                 <button class="btn-add" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
             </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <select id="filterDoctorSpecialty" onchange="renderDoctorTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <option value="">Tất cả chuyên khoa</option>
+                </select>
+                <select id="filterDoctorGender" onchange="renderDoctorTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <option value="">Tất cả giới tính</option>
+                    <option value="1">Nam</option>
+                    <option value="0">Nữ</option>
+                </select>
+                <div class="search-box" style="position: relative;">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="searchAdminDoctor" oninput="renderDoctorTable()" placeholder="Tìm tên bác sĩ..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                </div>
+            </div>
             <div class="table-container">
                 <table style="white-space: nowrap;">
                     <thead>
@@ -206,6 +220,22 @@
             <div class="page-header">
                 <h1 class="page-title">Quản lý Tài khoản</h1>
             </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <select id="filterAccountRole" onchange="renderAccountTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <option value="">Tất cả vai trò</option>
+                    <option value="BenhNhan">Bệnh Nhân</option>
+                    <option value="Admin">Admin</option>
+                </select>
+                <select id="filterAccountStatus" onchange="renderAccountTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="1">Hoạt động</option>
+                    <option value="0">Đã khóa</option>
+                </select>
+                <div class="search-box" style="position: relative;">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="searchAdminAccount" oninput="renderAccountTable()" placeholder="Tìm ID, email, số điện thoại..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                </div>
+            </div>
             <div class="table-container">
                 <table style="white-space: nowrap;">
                     <thead>
@@ -233,7 +263,24 @@
         <section id="section-post" class="content" style="display: none;">
             <div class="page-header">
                 <h1 class="page-title">Quản lý Bài viết</h1>
-                <button class="btn-add" onclick="openPostModal()"><i class="fa-solid fa-plus"></i> Đăng bài</button>
+                <button class="btn-add" onclick="openPostModal()"><i class="fa-solid fa-plus"></i> Thêm mới</button>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+                <select id="filterPostCategory" onchange="renderPostTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <option value="">Tất cả chuyên mục</option>
+                    <option value="Sức khỏe">Sức khỏe</option>
+                    <option value="Dịch vụ">Dịch vụ</option>
+                    <option value="Tin tức">Tin tức</option>
+                </select>
+                <select id="filterPostStatus" onchange="renderPostTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="1">Đã xuất bản</option>
+                    <option value="0">Bản nháp</option>
+                </select>
+                <div class="search-box" style="position: relative;">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="searchAdminPost" oninput="renderPostTable()" placeholder="Tìm tiêu đề, tác giả..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                </div>
             </div>
             <div class="table-container">
                 <table style="white-space: nowrap;">
@@ -277,11 +324,21 @@
                 <h1 class="page-title">Quản lý Lịch hẹn</h1>
             </div>
             <div class="table-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                         <h2 style="font-size: 22px; margin: 0;">Danh sách Lịch hẹn</h2>
-                     <div class="search-box" style="position: relative;">
-                         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                         <input type="text" id="searchAdminAppointment" oninput="renderAppointmentTable()" placeholder="Tìm tên BN, BS, mã LK, SĐT..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 300px; outline: none; transition: border-color 0.3s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="font-size: 22px; margin: 0;">Danh sách Lịch hẹn</h2>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="date" id="filterAdminAppDate" onchange="renderAppointmentTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; color: #475569;">
+                        <select id="filterAdminAppStatus" onchange="renderAppointmentTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="pending">Chờ duyệt</option>
+                            <option value="approved">Đã duyệt</option>
+                            <option value="done">Đã khám</option>
+                            <option value="cancelled">Đã hủy</option>
+                        </select>
+                        <div class="search-box" style="position: relative;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                            <input type="text" id="searchAdminAppointment" oninput="renderAppointmentTable()" placeholder="Tìm tên BN, BS, mã LK, SĐT..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                        </div>
                     </div>
                 </div>
                 <table style="white-space: nowrap;">
@@ -309,11 +366,21 @@
                 <h1 class="page-title">Quản lý Ca làm việc</h1>
             </div>
             <div class="table-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="font-size: 22px; margin: 0;">Danh sách Ca làm việc</h2>
-                    <div class="search-box" style="position: relative;">
-                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                        <input type="text" id="searchAdminShift" oninput="renderAdminShiftTable()" placeholder="Tìm tên Bác sĩ, mã ca..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 300px; outline: none; transition: border-color 0.3s;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="date" id="filterAdminShiftDate" onchange="renderAdminShiftTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; color: #475569;">
+                        <select id="filterAdminShiftStatus" onchange="renderAdminShiftTable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="active">Đang mở</option>
+                            <option value="full">Đã kín</option>
+                            <option value="stopped">Đã dừng</option>
+                            <option value="expired">Đã đóng</option>
+                        </select>
+                        <div class="search-box" style="position: relative;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                            <input type="text" id="searchAdminShift" oninput="renderAdminShiftTable()" placeholder="Tìm tên Bác sĩ, mã ca..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                        </div>
                     </div>
                 </div>
                 <table style="white-space: nowrap;">
@@ -336,7 +403,18 @@
 
         <section id="section-qa" class="content" style="display: none;">
             <div class="page-header">
-                <h1 class="page-title">Quản lý câu hỏi</h1>
+                <h1 class="page-title">Hỏi Đáp Y Tế</h1>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <select id="filterQaStatus" onchange="renderQATable()" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; background: white; color: #475569;">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="1">Đã trả lời</option>
+                        <option value="0">Chờ trả lời</option>
+                    </select>
+                    <div class="search-box" style="position: relative;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <input type="text" id="searchAdminQa" oninput="renderQATable()" placeholder="Tìm câu hỏi, người hỏi..." style="padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.3s;">
+                    </div>
+                </div>
             </div>
             <div class="table-container">
                 <table style="white-space: nowrap;">

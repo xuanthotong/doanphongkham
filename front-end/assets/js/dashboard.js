@@ -1,3 +1,4 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 // Chuyển Tab Menu
 function switchTab(tabName, clickedElement) {
     const menuItems = document.querySelectorAll('.menu-item');
@@ -90,13 +91,54 @@ function renderAdminShiftTable() {
 
     const searchInput = document.getElementById('searchAdminShift');
     const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    const dateInput = document.getElementById('filterAdminShiftDate');
+    const filterDate = dateInput ? dateInput.value : '';
+    
+    const statusInput = document.getElementById('filterAdminShiftStatus');
+    const filterStatus = statusInput ? statusInput.value : '';
 
-    if (window.lastAdminShiftKeyword !== keyword) {
+    if (window.lastAdminShiftKeyword !== keyword || window.lastAdminShiftDate !== filterDate || window.lastAdminShiftStatus !== filterStatus) {
         currentAdminShiftPage = 1;
         window.lastAdminShiftKeyword = keyword;
+        window.lastAdminShiftDate = filterDate;
+        window.lastAdminShiftStatus = filterStatus;
     }
 
     let filteredShifts = allAdminShifts;
+
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+    const currentTimeStr = now.toTimeString().substring(0, 5);
+
+    if (filterDate) {
+        filteredShifts = filteredShifts.filter(shift => {
+            if (!shift.ngay_lam_viec) return false;
+            return shift.ngay_lam_viec.split('T')[0] === filterDate;
+        });
+    }
+
+    if (filterStatus) {
+        filteredShifts = filteredShifts.filter(shift => {
+            const shiftDateStr = shift.ngay_lam_viec.split('T')[0];
+            const timeParts = shift.khung_gio.split(' - ');
+            const endTime = timeParts.length === 2 ? timeParts[1] : '23:59';
+
+            let isExpired = false;
+            if (shiftDateStr < localDateStr) isExpired = true;
+            else if (shiftDateStr === localDateStr && currentTimeStr > endTime) isExpired = true;
+
+            let computedStatus = '';
+            if (isExpired) computedStatus = 'expired';
+            else if (shift.trang_thai === 'Stopped') computedStatus = 'stopped';
+            else if (shift.so_luong_hien_tai >= shift.so_luong_toi_da) computedStatus = 'full';
+            else computedStatus = 'active';
+
+            return computedStatus === filterStatus;
+        });
+    }
+
     if (keyword) {
         filteredShifts = filteredShifts.filter(shift => 
             (shift.ten_bac_si && shift.ten_bac_si.toLowerCase().includes(keyword)) ||
@@ -118,11 +160,7 @@ function renderAdminShiftTable() {
     const endIndex = startIndex + adminShiftItemsPerPage;
     const paginatedShifts = filteredShifts.slice(startIndex, endIndex);
     
-    // Lấy giờ hiện tại chuẩn theo múi giờ local (Việt Nam)
-    const now = new Date();
-    const offset = now.getTimezoneOffset() * 60000;
-    const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
-    const currentTimeStr = now.toTimeString().substring(0, 5);
+    // Đã tính toán `now`, `offset`, `localDateStr`, `currentTimeStr` ở phía trên
 
     paginatedShifts.forEach(shift => {
         const shiftDateStr = shift.ngay_lam_viec.split('T')[0];

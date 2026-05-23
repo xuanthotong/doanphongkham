@@ -1,3 +1,4 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 let posts = [];
 let categoriesList = []; // Mảng chứa danh mục để tra cứu
 
@@ -25,13 +26,46 @@ function formatDatePost(dateString) {
 function renderPostTable() {
     if (!postTbody) return;
     postTbody.innerHTML = '';
-    
-    if (posts.length === 0) {
-        postTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có bài viết nào.</td></tr>`;
+
+    const searchInput = document.getElementById('searchAdminPost');
+    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const categoryInput = document.getElementById('filterPostCategory');
+    const filterCategory = categoryInput ? categoryInput.value : '';
+
+    const statusInput = document.getElementById('filterPostStatus');
+    const filterStatus = statusInput ? statusInput.value : '';
+
+    let filteredPosts = posts;
+
+    if (filterCategory) {
+        // filterCategory is the name here
+        filteredPosts = filteredPosts.filter(p => {
+            const catName = getCategoryName(p.danh_muc_id);
+            return catName === filterCategory;
+        });
+    }
+
+    if (filterStatus !== '') {
+        filteredPosts = filteredPosts.filter(p => {
+            const status = p.trang_thai !== undefined ? p.trang_thai : 1;
+            return status == filterStatus;
+        });
+    }
+
+    if (keyword) {
+        filteredPosts = filteredPosts.filter(p => 
+            (p.tieu_de && p.tieu_de.toLowerCase().includes(keyword)) ||
+            (p.tac_gia && p.tac_gia.toLowerCase().includes(keyword))
+        );
+    }
+
+    if (filteredPosts.length === 0) {
+        postTbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy bài viết phù hợp.</td></tr>`;
         return;
     }
 
-    posts.forEach((p) => {
+    filteredPosts.forEach((p) => {
         // Xử lý ảnh mặc định nếu không có ảnh hoặc ảnh bị lỗi
         const defaultImg = "https://placehold.co/80x50?text=No+Image";
         const imgSrc = p.anh_thu_nho && p.anh_thu_nho.trim() !== "" ? p.anh_thu_nho : defaultImg;
@@ -116,7 +150,7 @@ async function deletePost(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch('https://doanphongkham.onrender.com/api/posts/' + id, { method: 'DELETE' });
+                const res = await fetch(window.API_BASE + '/api/posts/' + id, { method: 'DELETE' });
                 if(res.ok) {
                     Swal.fire('Đã xóa!', 'Xóa bài viết thành công.', 'success');
                     fetchPosts();
@@ -134,7 +168,7 @@ async function deletePost(id) {
 
 async function fetchPosts() {
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/posts');
+        const response = await fetch(window.API_BASE + '/api/posts');
         posts = await response.json();
         renderPostTable();
     } catch (error) { console.error('Lỗi khi lấy dữ liệu bài viết:', error); }
@@ -168,7 +202,7 @@ if (postForm) {
                 }
                 
                 try {
-                    const res = await fetch('https://doanphongkham.onrender.com/api/posts/' + idValue, {
+                    const res = await fetch(window.API_BASE + '/api/posts/' + idValue, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newPost)
@@ -182,7 +216,7 @@ if (postForm) {
                 } catch(err) { Swal.fire('Lỗi!', "Lỗi kết nối", 'error'); }
             } else {
                 try {
-                    const res = await fetch('https://doanphongkham.onrender.com/api/posts', {
+                    const res = await fetch(window.API_BASE + '/api/posts', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(newPost)
@@ -215,7 +249,7 @@ if (postForm) {
 async function fetchCategoriesForDropdown() {
     const danhMucSelect = document.getElementById('p_danh_muc');
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/categories');
+        const response = await fetch(window.API_BASE + '/api/categories');
         categoriesList = await response.json();
         
         if (danhMucSelect) {
@@ -237,3 +271,5 @@ fetchCategoriesForDropdown();
 
 // Khởi chạy lần đầu để hiển thị bảng
 fetchPosts();
+
+

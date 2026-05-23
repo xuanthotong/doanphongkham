@@ -1,3 +1,4 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 // Gán hàm này vào sự kiện submit form Đăng nhập của bạn
 async function handleLogin(event) {
     event.preventDefault();
@@ -9,7 +10,7 @@ async function handleLogin(event) {
     try {
         const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.protocol === 'file:') 
             ? 'http://localhost:3000/api' 
-            : 'https://doanphongkham.onrender.com/api';
+            : window.API_BASE + '/api';
 
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
@@ -72,7 +73,7 @@ async function handleRegister(event) {
     try {
         const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.protocol === 'file:') 
             ? 'http://localhost:3000/api' 
-            : 'https://doanphongkham.onrender.com/api';
+            : window.API_BASE + '/api';
 
         const response = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
@@ -154,7 +155,7 @@ function handleForgotPassword(event) {
             try {
                 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
                     ? 'http://localhost:3000/api' 
-                    : 'https://doanphongkham.onrender.com/api';
+                    : window.API_BASE + '/api';
 
                 const res = await fetch(`${API_URL}/password/reset`, {
                     method: 'PUT',
@@ -238,3 +239,5 @@ function requireLoginToBook(e) {
         }
     });
 }
+
+

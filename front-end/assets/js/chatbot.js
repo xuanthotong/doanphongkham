@@ -1,3 +1,4 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 // ============================================
 // CHATBOT FRONTEND - TT Medical AI
 // ============================================
@@ -5,7 +6,7 @@
 (function() {
     'use strict';
 
-    const API_BASE = 'https://doanphongkham.onrender.com/api/chatbot';
+    const API_BASE = window.API_BASE + '/api/chatbot';
 
     // Tạo phiên chat duy nhất cho mỗi tab trình duyệt
     let PHIEN_ID = sessionStorage.getItem('chatbot_phien_id');
@@ -290,3 +291,5 @@
     }
 
 })();
+
+

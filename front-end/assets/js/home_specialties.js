@@ -1,9 +1,10 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 // Khai báo biến toàn cục để lưu trữ dữ liệu chuyên khoa dùng cho việc xem chi tiết
 let windowSpecialtiesData = [];
 
 async function fetchHomeSpecialties() {
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/specialties');
+        const response = await fetch(window.API_BASE + '/api/specialties');
         const specialties = await response.json();
         windowSpecialtiesData = specialties; // Lưu lại dữ liệu
         renderHomeSpecialties(specialties);
@@ -119,3 +120,5 @@ function openSpecialtyDetail(id, event) {
 }
 
 document.addEventListener('DOMContentLoaded', fetchHomeSpecialties);
+
+

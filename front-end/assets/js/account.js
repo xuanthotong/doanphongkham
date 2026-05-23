@@ -1,3 +1,4 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
 const accountTbody = document.getElementById('accountTableBody');
 let allAccounts = []; // Lưu lại danh sách tài khoản dùng cho chức năng Sửa
 let currentAccountPage = 1;
@@ -10,7 +11,7 @@ async function fetchAccounts() {
     try {
         const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
             ? 'http://localhost:3000/api' 
-            : 'https://doanphongkham.onrender.com/api';
+            : window.API_BASE + '/api';
 
         const response = await fetch(`${API_URL}/accounts`);
         allAccounts = await response.json();
@@ -23,21 +24,56 @@ async function fetchAccounts() {
 function renderAccountTable() {
     if (!accountTbody) return;
     accountTbody.innerHTML = '';
-    
-    if (allAccounts.length === 0) {
-        accountTbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #6b7280; padding: 20px;">Chưa có dữ liệu tài khoản.</td></tr>`;
+
+    const searchInput = document.getElementById('searchAdminAccount');
+    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const roleInput = document.getElementById('filterAccountRole');
+    const filterRole = roleInput ? roleInput.value : '';
+
+    const statusInput = document.getElementById('filterAccountStatus');
+    const filterStatus = statusInput ? statusInput.value : '';
+
+    if (window.lastAdminAccountKeyword !== keyword || window.lastAdminAccountRole !== filterRole || window.lastAdminAccountStatus !== filterStatus) {
+        currentAccountPage = 1;
+        window.lastAdminAccountKeyword = keyword;
+        window.lastAdminAccountRole = filterRole;
+        window.lastAdminAccountStatus = filterStatus;
+    }
+
+    let filteredAccounts = allAccounts;
+
+    if (filterRole) {
+        filteredAccounts = filteredAccounts.filter(acc => acc.ten_vai_tro === filterRole);
+    }
+
+    if (filterStatus !== '') {
+        filteredAccounts = filteredAccounts.filter(acc => acc.trang_thai == filterStatus);
+    }
+
+    if (keyword) {
+        filteredAccounts = filteredAccounts.filter(acc => 
+            (`tk${acc.id}`.includes(keyword)) ||
+            (acc.email && acc.email.toLowerCase().includes(keyword)) ||
+            (acc.so_dien_thoai && acc.so_dien_thoai.includes(keyword)) ||
+            (acc.ho_ten && acc.ho_ten.toLowerCase().includes(keyword))
+        );
+    }
+
+    if (filteredAccounts.length === 0) {
+        accountTbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy tài khoản phù hợp.</td></tr>`;
         let paginationContainer = document.getElementById('admin_account_pagination');
         if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    const totalPages = Math.ceil(allAccounts.length / accountItemsPerPage);
+    const totalPages = Math.ceil(filteredAccounts.length / accountItemsPerPage);
     if (currentAccountPage > totalPages) currentAccountPage = totalPages;
     if (currentAccountPage < 1) currentAccountPage = 1;
 
     const startIndex = (currentAccountPage - 1) * accountItemsPerPage;
     const endIndex = startIndex + accountItemsPerPage;
-    const paginatedAccounts = allAccounts.slice(startIndex, endIndex);
+    const paginatedAccounts = filteredAccounts.slice(startIndex, endIndex);
 
     paginatedAccounts.forEach((acc) => {
         const genderText = acc.gioi_tinh == 1 ? "Nam" : (acc.gioi_tinh == 0 ? "Nữ" : "Chưa cập nhật");
@@ -52,19 +88,18 @@ function renderAccountTable() {
         // Màu nhãn dán tùy theo vai trò
         const roleBadgeColor = acc.ten_vai_tro === 'Admin' ? 'background: #fef08a; color: #92400e;' : (acc.ten_vai_tro === 'BacSi' ? 'background: #bae6fd; color: #075985;' : 'background: #e0e7ff; color: #4338ca;');
 
-        // TẠO NÚT BẤM (CHẶN ADMIN)
+        // TẠO NÚT BẤM
         let actionButtons = '';
         if (acc.ten_vai_tro === 'Admin') {
-            // Nút mờ, không click được đối với Admin
-            actionButtons = `
-                <button class="action-btn edit" style="opacity: 0.3; cursor: not-allowed;" title="Không thể sửa Admin"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="action-btn delete" style="opacity: 0.3; cursor: not-allowed;" title="Không thể xóa Admin"><i class="fa-solid fa-trash"></i></button>
-            `;
+            actionButtons = `<button class="action-btn edit" onclick="editAccount(${acc.id})" title="Sửa tài khoản"><i class="fa-solid fa-pen-to-square"></i></button>`;
         } else {
-            // Nút bình thường đối với Bệnh nhân / Bác sĩ
+            const lockIcon = acc.trang_thai == 1 ? '<i class="fa-solid fa-lock"></i>' : '<i class="fa-solid fa-lock-open"></i>';
+            const lockTitle = acc.trang_thai == 1 ? 'Khóa tài khoản' : 'Mở khóa tài khoản';
+            const lockColor = acc.trang_thai == 1 ? '#eab308' : '#10b981';
+
             actionButtons = `
                 <button class="action-btn edit" onclick="editAccount(${acc.id})" title="Sửa tài khoản"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="action-btn delete" onclick="deleteAccount(${acc.id})" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i></button>
+                <button class="action-btn" style="color: ${lockColor}; border-color: ${lockColor};" onclick="toggleLockAccount(${acc.id}, ${acc.trang_thai})" title="${lockTitle}">${lockIcon}</button>
             `;
         }
 
@@ -153,7 +188,7 @@ async function deleteAccount(id) {
             try {
                 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
                     ? 'http://localhost:3000/api' 
-                    : 'https://doanphongkham.onrender.com/api';
+                    : window.API_BASE + '/api';
 
                 const response = await fetch(`${API_URL}/accounts/${id}`, {
                     method: 'DELETE',
@@ -231,7 +266,7 @@ if (accountForm) {
         try {
             const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
                 ? 'http://localhost:3000/api' 
-                : 'https://doanphongkham.onrender.com/api';
+                : window.API_BASE + '/api';
 
             const res = await fetch(`${API_URL}/accounts/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await res.json();
@@ -243,4 +278,41 @@ if (accountForm) {
 }
 
 // Gọi API ngay khi tải trang
+async function toggleLockAccount(id, currentStatus) {
+    const newStatus = currentStatus == 1 ? 0 : 1;
+    const actionText = currentStatus == 1 ? 'khóa' : 'mở khóa';
+
+    Swal.fire({
+        title: `Xác nhận ${actionText}`,
+        text: `Bạn có chắc chắn muốn ${actionText} tài khoản này không?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0284C7',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: `Đồng ý ${actionText}`,
+        cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(window.API_BASE + '/api/accounts/' + id + '/toggle-status', { 
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ trang_thai: newStatus })
+                });
+                if (res.ok) {
+                    Swal.fire('Thành công!', `Tài khoản đã được ${actionText}.`, 'success');
+                    fetchAccounts();
+                } else {
+                    Swal.fire('Lỗi', `Không thể ${actionText} tài khoản!`, 'error');
+                }
+            } catch(e) {
+                console.error(e);
+                Swal.fire('Lỗi', 'Không thể kết nối Backend', 'error');
+            }
+        }
+    });
+}
+
 fetchAccounts();
+
+
