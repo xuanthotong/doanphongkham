@@ -12,8 +12,8 @@ async function fetchAdminPatients() {
         const response = await fetch(`${window.API_BASE}/api/appointments`);
         const data = await response.json();
 
-        // Chỉ lấy các hồ sơ đã khám xong
-        allPatients = data.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'done');
+        // Chỉ lấy các hồ sơ đã khám xong và sắp xếp theo ID tăng dần
+        allPatients = data.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'done').sort((a, b) => a.id - b.id);
         renderPatientTable();
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu bệnh nhân:', error);

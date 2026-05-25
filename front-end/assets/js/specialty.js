@@ -9,7 +9,8 @@ async function fetchAdminSpecialties() {
     if (!specialtyTbody) return;
     try {
         const res = await fetch(window.API_BASE + '/api/specialties');
-        specialtiesList = await res.json();
+        const data = await res.json();
+        specialtiesList = data.sort((a, b) => a.id - b.id);
         renderSpecialtyTable();
     } catch (error) {
         console.error('Lỗi lấy danh sách chuyên khoa:', error);

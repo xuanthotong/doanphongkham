@@ -9,7 +9,8 @@ const medicineItemsPerPage = 15;
 async function fetchMedicines() {
     try {
         const response = await fetch(`${window.API_BASE}/api/thuoc`);
-        allMedicines = await response.json();
+        const data = await response.json();
+        allMedicines = data.sort((a, b) => a.id - b.id);
         renderMedicineTable();
     } catch (error) {
         console.error('Lỗi khi lấy danh sách thuốc:', error);

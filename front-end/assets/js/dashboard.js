@@ -1,4 +1,80 @@
 window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
+
+// =========================================================================================
+// HÀM SẮP XẾP ĐỘNG DÙNG CHUNG CHO TẤT CẢ CÁC BẢNG
+// =========================================================================================
+window.currentGlobalSort = { th: null, key: null, order: 'asc', type: 'string' };
+
+window.toggleSortGlobal = function(thElement, arrayName, renderFnName, key, type = 'string') {
+    // 1. Reset các icon ở các thẻ th khác (trừ thẻ đang click)
+    const table = thElement.closest('table');
+    const allThs = table.querySelectorAll('th');
+    allThs.forEach(th => {
+        if (th !== thElement) {
+            const icon = th.querySelector('i.fa-sort, i.fa-sort-up, i.fa-sort-down');
+            if (icon) {
+                icon.className = 'fa-solid fa-sort'; // Reset icon về mặc định
+                icon.style.color = '#94a3b8'; // Màu xám nhạt
+            }
+        }
+    });
+
+    // 2. Cập nhật trạng thái sắp xếp
+    if (window.currentGlobalSort.th === thElement && window.currentGlobalSort.key === key) {
+        window.currentGlobalSort.order = window.currentGlobalSort.order === 'asc' ? 'desc' : 'asc';
+    } else {
+        window.currentGlobalSort.th = thElement;
+        window.currentGlobalSort.key = key;
+        window.currentGlobalSort.order = 'asc';
+        window.currentGlobalSort.type = type;
+    }
+
+    // 3. Đổi icon cho thẻ đang click
+    let icon = thElement.querySelector('i.fa-sort, i.fa-sort-up, i.fa-sort-down');
+    if (!icon) {
+        thElement.innerHTML += ' <i class="fa-solid fa-sort"></i>';
+        icon = thElement.querySelector('i');
+    }
+    icon.className = window.currentGlobalSort.order === 'asc' ? 'fa-solid fa-sort-up' : 'fa-solid fa-sort-down';
+    icon.style.color = '#0284c7'; // Màu primary để làm nổi bật
+
+    // 4. Sắp xếp mảng
+    let array;
+    try { array = eval(arrayName); } catch(e) { console.error(e); }
+    if (Array.isArray(array)) {
+        array.sort((a, b) => {
+            let valA = a[key];
+            let valB = b[key];
+            
+            if (valA === null || valA === undefined) valA = '';
+            if (valB === null || valB === undefined) valB = '';
+
+            if (type === 'number') {
+                valA = typeof valA === 'boolean' ? (valA ? 1 : 0) : (parseFloat(valA) || 0);
+                valB = typeof valB === 'boolean' ? (valB ? 1 : 0) : (parseFloat(valB) || 0);
+                return window.currentGlobalSort.order === 'asc' ? valA - valB : valB - valA;
+            } else if (type === 'date') {
+                valA = new Date(valA).getTime() || 0;
+                valB = new Date(valB).getTime() || 0;
+                return window.currentGlobalSort.order === 'asc' ? valA - valB : valB - valA;
+            } else {
+                valA = valA.toString().toLowerCase();
+                valB = valB.toString().toLowerCase();
+                if (valA < valB) return window.currentGlobalSort.order === 'asc' ? -1 : 1;
+                if (valA > valB) return window.currentGlobalSort.order === 'asc' ? 1 : -1;
+                return 0;
+            }
+        });
+    }
+
+    // 5. Gọi hàm render để cập nhật bảng
+    let renderFn;
+    try { renderFn = eval(renderFnName); } catch(e) { console.error(e); }
+    if (typeof renderFn === 'function') {
+        renderFn();
+    }
+};
+
 // Chuyển Tab Menu
 function switchTab(tabName, clickedElement) {
     const menuItems = document.querySelectorAll('.menu-item');
@@ -78,7 +154,30 @@ async function fetchAdminShifts() {
     if (!shiftTbody) return;
     try {
         const response = await fetch(`${window.API_BASE}/api/doctors/shifts/admin/all`);
-        allAdminShifts = await response.json();
+        const data = await response.json();
+        
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+        const currentTimeStr = now.toTimeString().substring(0, 5);
+
+        data.forEach(shift => {
+            const shiftDateStr = shift.ngay_lam_viec ? shift.ngay_lam_viec.split('T')[0] : '';
+            const timeParts = shift.khung_gio ? shift.khung_gio.split(' - ') : [];
+            const endTime = timeParts.length === 2 ? timeParts[1] : '23:59';
+
+            let isExpired = false;
+            if (shiftDateStr < localDateStr) isExpired = true;
+            else if (shiftDateStr === localDateStr && currentTimeStr > endTime) isExpired = true;
+
+            if (isExpired) shift.computed_status = 4; // Đã đóng
+            else if (shift.trang_thai === 'Stopped') shift.computed_status = 3; // Đã dừng
+            else if (shift.so_luong_hien_tai >= shift.so_luong_toi_da) shift.computed_status = 2; // Đã kín
+            else shift.computed_status = 1; // Đang mở
+        });
+
+        allAdminShifts = data.sort((a, b) => new Date(b.ngay_lam_viec) - new Date(a.ngay_lam_viec));
+        currentAdminShiftSort = 'date_desc';
         renderAdminShiftTable();
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu ca làm việc:', error);

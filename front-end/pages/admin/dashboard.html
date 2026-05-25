@@ -20,7 +20,7 @@
         <div class="sidebar-header" style="display: flex; align-items: center; gap: 10px;">
             <img src="../../assets/images/logo.png" alt="Logo"
                 style="width: 40px; height: 40px; object-fit: contain; border-radius: 8px;">
-            <span style="font-size: 20px; font-weight: 700; color: #10b981;">TT Medical</span>
+            <span style="font-size: 20px; font-weight: 900; color: #0ea5e9; letter-spacing: -0.5px;">TT Medical</span>
         </div>
 
         <ul class="menu">
@@ -155,13 +155,13 @@
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã BN</th>
-                            <th>Họ và Tên</th>
-                            <th>Triệu chứng (Lúc đặt)</th>
+                            <th onclick="toggleSortGlobal(this, 'allPatients', 'renderPatientTable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Mã BN</th>
+                            <th onclick="toggleSortGlobal(this, 'allPatients', 'renderPatientTable', 'ten_benh_nhan', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Họ và Tên</th>
+                            <th onclick="toggleSortGlobal(this, 'allPatients', 'renderPatientTable', 'trieu_chung', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Triệu chứng (Lúc đặt)</th>
                             <th>Hình ảnh</th>
-                            <th>Kết luận của BS</th>
+                            <th onclick="toggleSortGlobal(this, 'allPatients', 'renderPatientTable', 'chan_doan', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Kết luận của BS</th>
                             <th>Ghi chú / Đơn thuốc</th>
-                            <th>Trạng thái Tái khám</th>
+                            <th onclick="toggleSortGlobal(this, 'allPatients', 'renderPatientTable', 'trang_thai', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Trạng thái Tái khám</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -201,18 +201,18 @@
                     <thead>
                         <tr>
                             <th>Ảnh</th>
-                            <th>Họ và tên</th>
-                            <th>Ngày sinh</th>
-                            <th>Giới tính</th>
-                            <th>SĐT</th>
-                            <th>Email</th>
-                            <th>Địa chỉ</th>
-                            <th>Chuyên khoa</th>
-                            <th>Kinh nghiệm</th>
-                            <th>Phí khám (VNĐ)</th>
-                            <th>Tên đăng nhập</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'ho_ten', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Họ và tên</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'ngay_sinh', 'date')" style="cursor: pointer;" title="Bấm để sắp xếp">Ngày sinh</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'gioi_tinh', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Giới tính</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'so_dien_thoai', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">SĐT</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'email', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Email</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'dia_chi', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Địa chỉ</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'chuyen_khoa_id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Chuyên khoa</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'kinh_nghiem', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Kinh nghiệm</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'phi_kham', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Phí khám (VNĐ)</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'ten_dang_nhap', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tên đăng nhập</th>
                             <th>Mật khẩu</th>
-                            <th>Trạng thái</th>
+                            <th onclick="toggleSortGlobal(this, 'doctors', 'renderDoctorTable', 'trang_thai', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -231,8 +231,8 @@
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã chuyên khoa</th>
-                            <th>Tên chuyên khoa</th>
+                            <th onclick="toggleSortGlobal(this, 'specialtiesList', 'renderSpecialtyTable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Mã chuyên khoa</th>
+                            <th onclick="toggleSortGlobal(this, 'specialtiesList', 'renderSpecialtyTable', 'ten_chuyen_khoa', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tên chuyên khoa</th>
                             <th>Mô tả chi tiết</th>
                             <th>Thao tác</th>
                         </tr>
@@ -272,17 +272,17 @@
                     <thead>
                         <tr>
                             <th>Ảnh</th>
-                            <th>ID</th>
-                            <th>Tên đăng nhập</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">ID</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'ten_dang_nhap', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tên đăng nhập</th>
                             <th>Mật khẩu</th>
-                            <th>Họ và tên</th>
-                            <th>Ngày sinh</th>
-                            <th>Giới tính</th>
-                            <th>SĐT</th>
-                            <th>Email</th>
-                            <th>Địa chỉ</th>
-                            <th>Vai trò</th>
-                            <th>Trạng thái</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'ho_ten', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Họ và tên</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'ngay_sinh', 'date')" style="cursor: pointer;" title="Bấm để sắp xếp">Ngày sinh</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'gioi_tinh', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Giới tính</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'so_dien_thoai', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">SĐT</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'email', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Email</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'dia_chi', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Địa chỉ</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'vai_tro', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Vai trò</th>
+                            <th onclick="toggleSortGlobal(this, 'allAccounts', 'renderAccountTable', 'trang_thai', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -323,11 +323,11 @@
                     <thead>
                         <tr>
                             <th>Ảnh minh họa</th>
-                            <th>Tiêu đề bài viết</th>
-                            <th>Nội dung</th>
-                            <th>Danh mục</th>
-                            <th>Tác giả</th>
-                            <th>Ngày xuất bản</th>
+                            <th onclick="toggleSortGlobal(this, 'posts', 'renderPostTable', 'tieu_de', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tiêu đề bài viết</th>
+                            <th onclick="toggleSortGlobal(this, 'posts', 'renderPostTable', 'noi_dung', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Nội dung</th>
+                            <th onclick="toggleSortGlobal(this, 'posts', 'renderPostTable', 'danh_muc_id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Danh mục</th>
+                            <th onclick="toggleSortGlobal(this, 'posts', 'renderPostTable', 'tac_gia', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tác giả</th>
+                            <th onclick="toggleSortGlobal(this, 'posts', 'renderPostTable', 'ngay_tao', 'date')" style="cursor: pointer;" title="Bấm để sắp xếp">Ngày xuất bản</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -345,8 +345,8 @@
                 <table style="white-space: nowrap; width: 60%;">
                     <thead>
                         <tr>
-                            <th>Mã Danh Mục</th>
-                            <th>Tên Danh Mục</th>
+                            <th onclick="toggleSortGlobal(this, 'adminCategoriesList', 'renderCategoryTable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Mã Danh Mục</th>
+                            <th onclick="toggleSortGlobal(this, 'adminCategoriesList', 'renderCategoryTable', 'ten_danh_muc', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tên Danh Mục</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -386,15 +386,15 @@
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã lịch hẹn</th>
-                            <th>Bệnh nhân</th>
-                            <th>Bác sĩ phụ trách</th>
-                            <th>Ngày khám</th>
-                            <th>Khung giờ</th>
-                            <th>Triệu chứng</th>
-                            <th>Ghi chú của BS</th>
-                            <th>Ngày đặt lịch</th>
-                            <th>Trạng thái</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Mã lịch hẹn</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'ten_benh_nhan', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Bệnh nhân</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'ten_bac_si', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Bác sĩ phụ trách</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'ngay_kham', 'date')" style="cursor: pointer;" title="Bấm để sắp xếp">Ngày khám</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'khung_gio', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Khung giờ</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'trieu_chung', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Triệu chứng</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'chan_doan', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Ghi chú của BS</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'ngay_tao', 'date')" style="cursor: pointer;" title="Bấm để sắp xếp">Ngày đặt lịch</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminAppointments', 'renderAppointmentTable', 'trang_thai', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -434,13 +434,13 @@
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã ca làm</th>
-                            <th>Bác sĩ</th>
-                            <th>Chuyên khoa</th>
-                            <th>Ngày làm việc</th>
-                            <th>Khung giờ</th>
-                            <th>Số lượng (Đặt / Tối đa)</th>
-                            <th>Trạng thái</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminShifts', 'renderAdminShiftTable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Mã ca làm</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminShifts', 'renderAdminShiftTable', 'ten_bac_si', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Bác sĩ</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminShifts', 'renderAdminShiftTable', 'ten_chuyen_khoa', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Chuyên khoa</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminShifts', 'renderAdminShiftTable', 'ngay_lam_viec', 'date')" style="cursor: pointer;" title="Bấm để sắp xếp">Ngày làm việc</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminShifts', 'renderAdminShiftTable', 'khung_gio', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Khung giờ</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminShifts', 'renderAdminShiftTable', 'so_luong_hien_tai', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Số lượng (Đặt / Tối đa)</th>
+                            <th onclick="toggleSortGlobal(this, 'allAdminShifts', 'renderAdminShiftTable', 'computed_status', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -472,15 +472,15 @@
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã câu hỏi</th>
-                            <th>Bệnh nhân hỏi</th>
-                            <th>Chuyên khoa</th>
-                            <th>Tiêu đề câu hỏi</th>
-                            <th>Nội dung câu hỏi</th>
-                            <th>Bác sĩ trả lời</th>
-                            <th>Nội dung trả lời</th>
-                            <th>Ngày gửi</th>
-                            <th>Trạng thái</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Mã câu hỏi</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'ten_benh_nhan', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Bệnh nhân hỏi</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'chuyen_khoa_id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Chuyên khoa</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'tieu_de', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tiêu đề câu hỏi</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'noi_dung', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Nội dung câu hỏi</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'ten_bac_si', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Bác sĩ trả lời</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'tra_loi', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Nội dung trả lời</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'ngay_hoi', 'date')" style="cursor: pointer;" title="Bấm để sắp xếp">Ngày gửi</th>
+                            <th onclick="toggleSortGlobal(this, 'questions', 'renderQATable', 'trang_thai', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -513,13 +513,13 @@
                 <table style="white-space: nowrap;">
                     <thead>
                         <tr>
-                            <th>Mã thuốc</th>
-                            <th>Tên thuốc</th>
-                            <th>Đơn vị</th>
-                            <th>Giá (VNĐ)</th>
-                            <th>Liều dùng mặc định</th>
-                            <th>Hướng dẫn sử dụng</th>
-                            <th>Trạng thái</th>
+                            <th onclick="toggleSortGlobal(this, 'allMedicines', 'renderMedicineTable', 'id', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Mã thuốc</th>
+                            <th onclick="toggleSortGlobal(this, 'allMedicines', 'renderMedicineTable', 'ten_thuoc', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Tên thuốc</th>
+                            <th onclick="toggleSortGlobal(this, 'allMedicines', 'renderMedicineTable', 'don_vi', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Đơn vị</th>
+                            <th onclick="toggleSortGlobal(this, 'allMedicines', 'renderMedicineTable', 'gia_thuoc', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Giá (VNĐ)</th>
+                            <th onclick="toggleSortGlobal(this, 'allMedicines', 'renderMedicineTable', 'lieu_dung', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Liều dùng mặc định</th>
+                            <th onclick="toggleSortGlobal(this, 'allMedicines', 'renderMedicineTable', 'huong_dan', 'string')" style="cursor: pointer;" title="Bấm để sắp xếp">Hướng dẫn sử dụng</th>
+                            <th onclick="toggleSortGlobal(this, 'allMedicines', 'renderMedicineTable', 'trang_thai', 'number')" style="cursor: pointer;" title="Bấm để sắp xếp">Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>

@@ -1,5 +1,6 @@
 window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
-let questions = []; 
+let questions = [];
+
 const qaTbody = document.getElementById('qaTableBody');
 let currentAdminQAPage = 1;
 const adminQAItemsPerPage = 20;
@@ -8,7 +9,8 @@ const adminQAItemsPerPage = 20;
 async function fetchQuestions() {
     try {
         const response = await fetch(window.API_BASE + '/api/questions');
-        questions = await response.json();
+        const data = await response.json();
+        questions = data.sort((a, b) => a.id - b.id);
         renderQATable();
     } catch (error) {
         console.error("Lỗi lấy câu hỏi:", error);

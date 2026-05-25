@@ -169,7 +169,8 @@ async function deletePost(id) {
 async function fetchPosts() {
     try {
         const response = await fetch(window.API_BASE + '/api/posts');
-        posts = await response.json();
+        const data = await response.json();
+        posts = data.sort((a, b) => a.id - b.id);
         renderPostTable();
     } catch (error) { console.error('Lỗi khi lấy dữ liệu bài viết:', error); }
 }

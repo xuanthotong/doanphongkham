@@ -9,7 +9,9 @@ async function fetchAdminAppointments() {
     if (!appointmentTbody) return;
     try {
         const response = await fetch(`${window.API_BASE}/api/appointments`);
-        allAdminAppointments = await response.json();
+        const data = await response.json();
+        allAdminAppointments = data.sort((a, b) => new Date(b.ngay_tao) - new Date(a.ngay_tao));
+        currentAdminAppSort = 'date_desc';
         renderAppointmentTable();
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu lịch hẹn:', error);

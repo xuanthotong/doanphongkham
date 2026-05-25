@@ -187,12 +187,21 @@ async function openMedicalRecord(maLK, tenBN, isEdit = false) {
             const inputLieu = document.getElementById('lieu_dung');
             const inputSoLuong = document.getElementById('so_luong_thuoc');
             
+            // Khởi tạo Select2 cho ô chọn thuốc để có tính năng Search
+            $('#chon_thuoc').select2({
+                dropdownParent: $('.swal2-popup'),
+                width: '100%',
+                placeholder: '-- Tìm và chọn thuốc --'
+            });
+
             // Khi chọn thuốc → tự động điền liều dùng mặc định
-            selectThuoc.addEventListener('change', () => {
-                const selectedOption = selectThuoc.options[selectThuoc.selectedIndex];
-                const lieuMacDinh = selectedOption.getAttribute('data-lieu') || '';
-                inputLieu.value = lieuMacDinh;
-                inputSoLuong.focus();
+            $('#chon_thuoc').on('change', function() {
+                const selectedOption = $(this).find('option:selected')[0];
+                if(selectedOption && selectedOption.value) {
+                    const lieuMacDinh = selectedOption.getAttribute('data-lieu') || '';
+                    inputLieu.value = lieuMacDinh;
+                    inputSoLuong.focus();
+                }
             });
 
             // Hàm tính tổng tiền thuốc
@@ -238,7 +247,7 @@ async function openMedicalRecord(maLK, tenBN, isEdit = false) {
 
             // Thêm thuốc mới
             btnAdd.addEventListener('click', () => {
-                const selectedOption = selectThuoc.options[selectThuoc.selectedIndex];
+                const selectedOption = $('#chon_thuoc').find('option:selected')[0];
                 if (!selectedOption || !selectedOption.value) {
                     Swal.showValidationMessage('Vui lòng chọn thuốc từ danh sách!');
                     setTimeout(() => Swal.resetValidationMessage(), 2000);
@@ -265,10 +274,10 @@ async function openMedicalRecord(maLK, tenBN, isEdit = false) {
                     currentPrescriptions.push({ ten, donVi, gia, soLuong, lieu });
                 }
                 
-                selectThuoc.selectedIndex = 0;
+                $('#chon_thuoc').val('').trigger('change');
                 inputLieu.value = '';
                 inputSoLuong.value = 1;
-                selectThuoc.focus();
+                $('#chon_thuoc').select2('open'); // Mở lại dropdown để chọn tiếp
                 renderThuoc();
             });
 

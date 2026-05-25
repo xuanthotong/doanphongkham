@@ -217,7 +217,8 @@ async function toggleLockDoctor(id, isLocked) {
 async function fetchDoctors() {
     try {
         const response = await fetch(window.API_BASE + '/api/doctors');
-        doctors = await response.json(); // Cập nhật mảng ảo bằng dữ liệu thật
+        const data = await response.json(); // Cập nhật mảng ảo bằng dữ liệu thật
+        doctors = data.sort((a, b) => a.id - b.id);
         renderDoctorTable();
     } catch (error) { console.error('Lỗi khi lấy dữ liệu bác sĩ:', error); }
 }

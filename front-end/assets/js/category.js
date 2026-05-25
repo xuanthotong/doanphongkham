@@ -14,7 +14,8 @@ async function fetchAdminCategories() {
             categoryTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #ef4444; padding: 20px;">Lỗi kết nối API Danh mục (Mã lỗi ${res.status}). Vui lòng kiểm tra lại server.js!</td></tr>`;
             return;
         }
-        adminCategoriesList = await res.json();
+        const data = await res.json();
+        adminCategoriesList = data.sort((a, b) => a.id - b.id);
         renderCategoryTable();
     } catch (error) { console.error('Lỗi lấy danh sách danh mục:', error); }
 }

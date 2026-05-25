@@ -14,7 +14,8 @@ async function fetchAccounts() {
             : window.API_BASE + '/api';
 
         const response = await fetch(`${API_URL}/accounts`);
-        allAccounts = await response.json();
+        const data = await response.json();
+        allAccounts = data.sort((a, b) => a.id - b.id);
         renderAccountTable();
     } catch (error) {
         console.error('Lỗi khi lấy dữ liệu tài khoản:', error);
