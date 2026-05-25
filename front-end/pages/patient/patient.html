@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TT Medical - Cổng Thông Tin Bệnh Nhân</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="../../assets/css/home.css">
@@ -12,174 +14,285 @@
     <link rel="stylesheet" href="../../assets/css/patient.css">
     <link rel="stylesheet" href="../../assets/css/appointment.css">
 </head>
+
 <body class="patient-body">
 
     <aside class="sidebar">
-        <div class="logo" onclick="switchTab(event, 'tab-trang-chu')" style="cursor: pointer; display: flex; align-items: center; font-size: 22px; font-weight: 800; color: #10b981; margin-bottom: 40px; padding: 0 10px;">
-            <img src="../../assets/images/logo.png" alt="Logo" style="height: 40px; margin-right: 10px; object-fit: contain;"> 
+        <div class="logo" onclick="switchTab(event, 'tab-trang-chu')"
+            style="cursor: pointer; display: flex; align-items: center; font-size: 22px; font-weight: 800; color: #10b981; margin-bottom: 40px; padding: 0 10px;">
+            <img src="../../assets/images/logo.png" alt="Logo"
+                style="height: 40px; margin-right: 10px; object-fit: contain;">
             <span>TT Medical</span>
         </div>
         <nav class="nav-group" style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
-            <a href="#" class="nav-item tab-link active" onclick="switchTab(event, 'tab-trang-chu')"><i class="fa-solid fa-border-all"></i> Tổng quan</a>
-            <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-dat-lich')"><i class="fa-solid fa-calendar-plus"></i> Đặt lịch khám</a>
-            <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-ho-so')"><i class="fa-solid fa-address-card"></i> Hồ sơ cá nhân</a>
-            <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-hoi-dap-bac-si')"><i class="fa-solid fa-comments"></i> Hỏi Bác sĩ</a>
-            <a href="#bac-si" class="nav-item" onclick="switchTab(event, 'tab-trang-chu'); setTimeout(() => scrollToSection('bac-si', event), 100);"><i class="fa-solid fa-user-doctor"></i> Bác sĩ của tôi</a>
+            <a href="#" class="nav-item tab-link active" onclick="switchTab(event, 'tab-trang-chu')"><i
+                    class="fa-solid fa-border-all"></i> Tổng quan</a>
+            <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-dat-lich')"><i
+                    class="fa-solid fa-calendar-plus"></i> Đặt lịch khám</a>
+            <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-ho-so')"><i
+                    class="fa-solid fa-address-card"></i> Hồ sơ cá nhân</a>
+            <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-hoi-dap-bac-si')"><i
+                    class="fa-solid fa-comments"></i> Hỏi Bác sĩ</a>
+            <a href="#bac-si" class="nav-item"
+                onclick="switchTab(event, 'tab-trang-chu'); setTimeout(() => scrollToSection('bac-si', event), 100);"><i
+                    class="fa-solid fa-user-doctor"></i> Bác sĩ của tôi</a>
         </nav>
-        <div class="sidebar-footer" onclick="confirmLogout(event)" style="cursor: pointer; background: #fee2e2; border: 1px solid #fca5a5; padding: 15px; border-radius: 16px; text-align: center; margin-top: auto; transition: 0.2s;">
-            <p style="color: #ef4444; margin: 0; font-weight: 700; font-size: 14px;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất tài khoản</p>
+        <div class="sidebar-footer" onclick="confirmLogout(event)"
+            style="cursor: pointer; background: #fee2e2; border: 1px solid #fca5a5; padding: 15px; border-radius: 16px; text-align: center; margin-top: auto; transition: 0.2s;">
+            <p style="color: #ef4444; margin: 0; font-weight: 700; font-size: 14px;"><i
+                    class="fa-solid fa-right-from-bracket"></i> Đăng xuất tài khoản</p>
         </div>
     </aside>
 
     <main class="main-content">
         <header class="header">
-            <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active')" style="display: none; background: none; border: none; font-size: 24px; color: #0f172a; cursor: pointer; margin-right: 15px;"><i class="fa-solid fa-bars"></i></button>
+            <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active')"
+                style="display: none; background: none; border: none; font-size: 24px; color: #0f172a; cursor: pointer; margin-right: 15px;"><i
+                    class="fa-solid fa-bars"></i></button>
             <div class="search-bar">
                 <i class="fa-solid fa-magnifying-glass" style="color: #64748b;"></i>
                 <input type="text" placeholder="Tìm kiếm bác sĩ, dịch vụ, bài viết...">
             </div>
             <div class="user-profile" onclick="switchTab(event, 'tab-ho-so')" style="cursor: pointer;">
-                <div class="notification-btn" onclick="toggleNotificationPopup(event); event.stopPropagation()" style="position: relative;">
+                <div class="notification-btn" onclick="toggleNotificationPopup(event); event.stopPropagation()"
+                    style="position: relative;">
                     <i class="fa-regular fa-bell"></i>
-                    <span id="notif-dot" style="display: none; position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; border: 2px solid white;"></span>
-                    
-                    <div id="notif-popup" style="display: none; position: absolute; top: 120%; right: 0; width: 320px; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 1000; text-align: left; cursor: default;" onclick="event.stopPropagation()">
-                        <div style="padding: 15px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 16px; color: #0f172a; display: flex; justify-content: space-between; align-items: center;">
+                    <span id="notif-dot"
+                        style="display: none; position: absolute; top: 10px; right: 10px; width: 10px; height: 10px; background: #ef4444; border-radius: 50%; border: 2px solid white;"></span>
+
+                    <div id="notif-popup"
+                        style="display: none; position: absolute; top: 120%; right: 0; width: 320px; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 1000; text-align: left; cursor: default;"
+                        onclick="event.stopPropagation()">
+                        <div
+                            style="padding: 15px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 16px; color: #0f172a; display: flex; justify-content: space-between; align-items: center;">
                             <span>Thông báo mới</span>
-                            <span onclick="markAllNotifAsRead()" style="font-size: 12px; font-weight: 600; color: #0284c7; cursor: pointer; background: #f0f9ff; padding: 4px 8px; border-radius: 12px;">Đã đọc tất cả</span>
+                            <span onclick="markAllNotifAsRead()"
+                                style="font-size: 12px; font-weight: 600; color: #0284c7; cursor: pointer; background: #f0f9ff; padding: 4px 8px; border-radius: 12px;">Đã
+                                đọc tất cả</span>
                         </div>
                         <div id="notif-list" style="max-height: 350px; overflow-y: auto; padding: 10px;">
-                            <div style="text-align: center; padding: 20px; color: #64748b; font-size: 13px;">Đang tải thông báo...</div>
+                            <div style="text-align: center; padding: 20px; color: #64748b; font-size: 13px;">Đang tải
+                                thông báo...</div>
                         </div>
                     </div>
                 </div>
                 <div style="text-align: right;">
-                    <p style="font-weight: 800; font-size: 14px; margin: 0; color: #0f172a;">BN. <span id="patientName">...</span></p>
-                    <p style="font-size: 12px; color: #64748b; font-weight: 600; margin: 0;">Mã BN: #105234</p>
+                    <p style="font-weight: 800; font-size: 14px; margin: 0; color: #0f172a;">BN. <span
+                            id="patientName">...</span></p>
+                    <p style="font-size: 12px; color: #64748b; font-weight: 600; margin: 0;">Mã BN: <span
+                            id="patientIdDisplay">#...</span></p>
                 </div>
-                <img id="nav_patient_img" src="../../assets/images/doctors/default-avatar.png" class="user-avatar" alt="Avatar">
+                <img id="nav_patient_img" src="../../assets/images/doctors/default-avatar.png" class="user-avatar"
+                    alt="Avatar">
             </div>
         </header>
 
         <div>
             <div id="tab-trang-chu" class="tab-content active">
                 <div id="main-home-content">
-                    
+
                     <section class="welcome-card">
                         <div style="z-index: 1;">
-                            <h1 id="welcomeText" style="font-size: 32px; font-weight: 800; margin-bottom: 12px;">Chào mừng trở lại!</h1>
-                            <p style="opacity: 0.8; font-size: 15px; max-width: 500px; line-height: 1.6; margin-bottom: 25px;">Hệ thống y tế thông minh của chúng tôi đã đồng bộ dữ liệu sức khỏe của bạn. Hãy kiểm tra kết quả mới nhất ngay hôm nay.</p>
-                            <button class="btn-book" onclick="switchTab(event, 'tab-dat-lich')"><i class="fa-solid fa-calendar-check"></i> Đặt lịch khám mới</button>
+                            <h1 id="welcomeText" style="font-size: 32px; font-weight: 800; margin-bottom: 12px;">Chào
+                                mừng trở lại!</h1>
+                            <p
+                                style="opacity: 0.8; font-size: 15px; max-width: 500px; line-height: 1.6; margin-bottom: 25px;">
+                                Hệ thống y tế thông minh của chúng tôi đã đồng bộ dữ liệu sức khỏe của bạn. Hãy kiểm tra
+                                kết quả mới nhất ngay hôm nay.</p>
+                            <button class="btn-book" onclick="switchTab(event, 'tab-dat-lich')"><i
+                                    class="fa-solid fa-calendar-check"></i> Đặt lịch khám mới</button>
                         </div>
                     </section>
 
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #eff6ff; color: #3b82f6;"><i class="fa-regular fa-calendar-check"></i></div>
-                            <div class="stat-info"><h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Tổng lượt khám</h4><p class="value" id="stat-total-visits" style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p></div>
+                            <div class="stat-icon" style="background: #eff6ff; color: #3b82f6;"><i
+                                    class="fa-regular fa-calendar-check"></i></div>
+                            <div class="stat-info">
+                                <h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Tổng
+                                    lượt khám</h4>
+                                <p class="value" id="stat-total-visits"
+                                    style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #fef2f2; color: #ef4444;"><i class="fa-solid fa-file-prescription"></i></div>
-                            <div class="stat-info"><h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Đơn thuốc</h4><p class="value" id="stat-total-prescriptions" style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p></div>
+                            <div class="stat-icon" style="background: #fef2f2; color: #ef4444;"><i
+                                    class="fa-solid fa-file-prescription"></i></div>
+                            <div class="stat-info">
+                                <h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Đơn
+                                    thuốc</h4>
+                                <p class="value" id="stat-total-prescriptions"
+                                    style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #f0fdf4; color: #22c55e;"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                            <div class="stat-info"><h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Lịch sắp tới</h4><p class="value" id="stat-upcoming-appointments" style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p></div>
+                            <div class="stat-icon" style="background: #f0fdf4; color: #22c55e;"><i
+                                    class="fa-solid fa-clock-rotate-left"></i></div>
+                            <div class="stat-info">
+                                <h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Lịch
+                                    sắp tới</h4>
+                                <p class="value" id="stat-upcoming-appointments"
+                                    style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p>
+                            </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #fffbeb; color: #f59e0b;"><i class="fa-solid fa-user-doctor"></i></div>
-                            <div class="stat-info"><h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Bác sĩ đã gặp</h4><p class="value" id="stat-doctors-visited" style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p></div>
+                            <div class="stat-icon" style="background: #fffbeb; color: #f59e0b;"><i
+                                    class="fa-solid fa-user-doctor"></i></div>
+                            <div class="stat-info">
+                                <h4 style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: 600;">Bác sĩ
+                                    đã gặp</h4>
+                                <p class="value" id="stat-doctors-visited"
+                                    style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">...</p>
+                            </div>
                         </div>
                     </div>
 
                     <div class="content-grid">
                         <div class="left-pane">
                             <div style="display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 20px;">
-                                <button onclick="switchProfileTab('history')" id="btn-tab-history" style="flex: 1; padding: 15px; border: none; background: transparent; border-bottom: 3px solid #10b981; color: #10b981; font-weight: 700; cursor: pointer; font-size: 15px;"><i class="fa-regular fa-calendar-check"></i> Lịch sử Đặt Khám</button>
-                                <button onclick="switchProfileTab('record')" id="btn-tab-record" style="flex: 1; padding: 15px; border: none; background: transparent; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; cursor: pointer; font-size: 15px;"><i class="fa-solid fa-notes-medical"></i> Hồ Sơ Bệnh Án</button>
+                                <button onclick="switchProfileTab('history')" id="btn-tab-history"
+                                    style="flex: 1; padding: 15px; border: none; background: transparent; border-bottom: 3px solid #10b981; color: #10b981; font-weight: 700; cursor: pointer; font-size: 15px;"><i
+                                        class="fa-regular fa-calendar-check"></i> Lịch sử Đặt Khám</button>
+                                <button onclick="switchProfileTab('record')" id="btn-tab-record"
+                                    style="flex: 1; padding: 15px; border: none; background: transparent; border-bottom: 3px solid transparent; color: #64748b; font-weight: 600; cursor: pointer; font-size: 15px;"><i
+                                        class="fa-solid fa-notes-medical"></i> Hồ Sơ Bệnh Án</button>
                             </div>
-                            
+
                             <div id="content-tab-history" style="max-height: 500px; overflow-y: auto;">
                                 <div id="lich_su_kham_list" style="display: flex; flex-direction: column; gap: 15px;">
-                                    <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải lịch sử khám...</p>
+                                    <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải lịch sử
+                                        khám...</p>
                                 </div>
                             </div>
                             <div id="content-tab-record" style="display: none; max-height: 500px; overflow-y: auto;">
                                 <div id="ho_so_suc_khoe_list" style="display: flex; flex-direction: column; gap: 15px;">
-                                    <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải hồ sơ bệnh án...</p>
+                                    <p class="loading-text" style="color: #64748b; font-style: italic;">Đang tải hồ sơ
+                                        bệnh án...</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="right-pane">
-                            <div class="section-header"><h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">Thao tác nhanh</h2></div>
+                            <div class="section-header">
+                                <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">Thao tác nhanh
+                                </h2>
+                            </div>
                             <div class="actions-grid">
-                                <a href="https://maps.google.com/?q=92A+Lê+Thanh+Nghị,+Hà+Nội" target="_blank" class="action-item"><i class="fa-solid fa-map-location-dot"></i><span>Chỉ đường</span></a>
-                                <a href="#" class="action-item" onclick="scrollToSection('btn-tab-history', event); switchProfileTab('record');"><i class="fa-solid fa-pills"></i><span>Đơn thuốc</span></a>
-                                <a href="#" class="action-item" onclick="switchTab(event, 'tab-hoi-dap-bac-si')"><i class="fa-solid fa-headset"></i><span>Hỏi Bác sĩ</span></a>
-                                <a href="#" class="action-item" onclick="showContactOptions(event)"><i class="fa-solid fa-phone"></i><span>Hotline</span></a>
+                                <a href="https://maps.google.com/?q=92A+Lê+Thanh+Nghị,+Hà+Nội" target="_blank"
+                                    class="action-item"><i class="fa-solid fa-map-location-dot"></i><span>Chỉ
+                                        đường</span></a>
+                                <a href="#" class="action-item"
+                                    onclick="scrollToSection('btn-tab-history', event); switchProfileTab('record');"><i
+                                        class="fa-solid fa-pills"></i><span>Đơn thuốc</span></a>
+                                <a href="#" class="action-item" onclick="switchTab(event, 'tab-hoi-dap-bac-si')"><i
+                                        class="fa-solid fa-headset"></i><span>Hỏi Bác sĩ</span></a>
+                                <a href="#" class="action-item" onclick="showContactOptions(event)"><i
+                                        class="fa-solid fa-phone"></i><span>Hotline</span></a>
                             </div>
 
                             <div class="security-banner">
                                 <div class="security-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                                <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 800; color: #0f172a;">Bảo mật tài khoản</h3>
-                                <p style="margin: 0 0 20px 0; font-size: 13px; color: #64748b; line-height: 1.5;">TT Medical cam kết bảo mật 100% hồ sơ bệnh án của bạn.</p>
-                                <button class="btn-outline" style="width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ecfdf5; color: #10b981; background: transparent; font-weight: 700; cursor: pointer; transition: 0.3s;">Cấu hình ngay</button>
+                                <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 800; color: #0f172a;">Bảo
+                                    mật tài khoản</h3>
+                                <p style="margin: 0 0 20px 0; font-size: 13px; color: #64748b; line-height: 1.5;">TT
+                                    Medical cam kết bảo mật 100% hồ sơ bệnh án của bạn.</p>
+                                <button class="btn-outline"
+                                    style="width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ecfdf5; color: #10b981; background: transparent; font-weight: 700; cursor: pointer; transition: 0.3s;">Cấu
+                                    hình ngay</button>
                             </div>
                         </div>
                     </div>
 
                     <section id="bac-si" class="section" style="margin-top: 50px;">
-                        <div class="section-header-flex" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
+                        <div class="section-header-flex"
+                            style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
                             <div class="section-header-text">
-                                <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 10px; color: #0f172a;">Đội ngũ bác sĩ hàng đầu</h2>
-                                <p style="color: #64748b; margin: 0;">Các bác sĩ giàu kinh nghiệm, được đào tạo chuyên sâu tại các trường y khoa uy tín.</p>
+                                <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 10px; color: #0f172a;">Đội
+                                    ngũ bác sĩ hàng đầu</h2>
+                                <p style="color: #64748b; margin: 0;">Các bác sĩ giàu kinh nghiệm, được đào tạo chuyên
+                                    sâu tại các trường y khoa uy tín.</p>
                             </div>
-                            <button class="btn btn-outline" onclick="showAllDoctors(event)" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Xem tất cả &rarr;</button>
+                            <button class="btn btn-outline" onclick="showAllDoctors(event)"
+                                style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Xem
+                                tất cả &rarr;</button>
                         </div>
-                        <div id="doctor-list-container" class="item-list-container" style="display: flex; flex-wrap: wrap; gap: 20px;"><p class="loading-text full-width">Đang tải danh sách bác sĩ...</p></div>
+                        <div id="doctor-list-container" class="item-list-container"
+                            style="display: flex; flex-wrap: wrap; gap: 20px;">
+                            <p class="loading-text full-width">Đang tải danh sách bác sĩ...</p>
+                        </div>
                     </section>
 
-                    <section id="bai-viet" class="section bg-light" style="border-radius: 24px; padding: 40px; margin-bottom: 40px; margin-top: 40px; background: white; border: 1px solid #e2e8f0;">
-                        <div class="section-header-flex" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
+                    <section id="bai-viet" class="section bg-light"
+                        style="border-radius: 24px; padding: 40px; margin-bottom: 40px; margin-top: 40px; background: white; border: 1px solid #e2e8f0;">
+                        <div class="section-header-flex"
+                            style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
                             <div class="section-header-text">
-                                <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 10px; color: #0f172a;">Bài viết sức khỏe</h2>
-                                <p style="color: #64748b; margin: 0;">Cập nhật kiến thức y khoa từ đội ngũ bác sĩ TT Medical.</p>
+                                <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 10px; color: #0f172a;">Bài
+                                    viết sức khỏe</h2>
+                                <p style="color: #64748b; margin: 0;">Cập nhật kiến thức y khoa từ đội ngũ bác sĩ TT
+                                    Medical.</p>
                             </div>
-                            <button class="btn btn-outline" onclick="showAllPosts(event)" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Xem tất cả &rarr;</button>
+                            <button class="btn btn-outline" onclick="showAllPosts(event)"
+                                style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Xem
+                                tất cả &rarr;</button>
                         </div>
-                        <div id="post-list-container" class="articles-grid"><p class="loading-text full-width">Đang tải danh sách bài viết...</p></div>
+                        <div id="post-list-container" class="articles-grid">
+                            <p class="loading-text full-width">Đang tải danh sách bài viết...</p>
+                        </div>
                     </section>
                 </div>
 
-                <section id="post-detail-view" style="display: none; background-color: transparent; padding: 0 0 80px 0;">
-                    <div style="background: white; padding: 50px; border-radius: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                <section id="post-detail-view"
+                    style="display: none; background-color: transparent; padding: 0 0 80px 0;">
+                    <div
+                        style="background: white; padding: 50px; border-radius: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
                         <div style="margin-bottom: 25px; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px;">
-                            <h1 id="page_post_title" style="color: #0f172a; font-size: 32px; font-weight: 800; margin-bottom: 15px;"></h1>
-                            <div id="page_post_meta" style="display: flex; align-items: center; gap: 15px; color: #64748b; font-size: 15px;"></div>
+                            <h1 id="page_post_title"
+                                style="color: #0f172a; font-size: 32px; font-weight: 800; margin-bottom: 15px;"></h1>
+                            <div id="page_post_meta"
+                                style="display: flex; align-items: center; gap: 15px; color: #64748b; font-size: 15px;">
+                            </div>
                         </div>
-                        <div style="margin-bottom: 30px;"><img id="page_post_img" src="" alt="Post Image" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 16px;"></div>
-                        <div id="page_post_content" style="color: #334155; line-height: 1.8; font-size: 18px; text-align: justify;"></div>
-                        <div style="margin-top: 50px; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 30px;">
-                            <button onclick="returnToHome(event)" class="btn btn-outline" style="padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer;"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
+                        <div style="margin-bottom: 30px;"><img id="page_post_img" src="" alt="Post Image"
+                                style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 16px;"></div>
+                        <div id="page_post_content"
+                            style="color: #334155; line-height: 1.8; font-size: 18px; text-align: justify;"></div>
+                        <div
+                            style="margin-top: 50px; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 30px;">
+                            <button onclick="returnToHome(event)" class="btn btn-outline"
+                                style="padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer;"><i
+                                    class="fa-solid fa-arrow-left"></i> Quay lại</button>
                         </div>
                     </div>
                 </section>
 
                 <section id="all-doctors-view" style="display: none; padding: 0 0 80px 0;">
-                    <div style="margin-bottom: 40px; text-align: center;"><h1 style="font-size: 32px; font-weight: 800; color: #0f172a;">Đội ngũ Bác sĩ chuyên môn cao</h1></div>
-                    <div id="all-doctors-list-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;"></div>
-                    <div style="margin-top: 50px; text-align: center;"><button onclick="returnToHome(event)" class="btn btn-outline" style="padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer;"><i class="fa-solid fa-arrow-left"></i> Quay lại</button></div>
+                    <div style="margin-bottom: 40px; text-align: center;">
+                        <h1 style="font-size: 32px; font-weight: 800; color: #0f172a;">Đội ngũ Bác sĩ chuyên môn cao
+                        </h1>
+                    </div>
+                    <div id="all-doctors-list-container"
+                        style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;"></div>
+                    <div style="margin-top: 50px; text-align: center;"><button onclick="returnToHome(event)"
+                            class="btn btn-outline"
+                            style="padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer;"><i
+                                class="fa-solid fa-arrow-left"></i> Quay lại</button></div>
                 </section>
 
                 <section id="all-posts-view" style="display: none; padding: 0 0 80px 0;">
-                    <div style="margin-bottom: 40px; text-align: center;"><h1 style="font-size: 32px; font-weight: 800; color: #0f172a;">Tất cả Bài viết sức khỏe</h1></div>
+                    <div style="margin-bottom: 40px; text-align: center;">
+                        <h1 style="font-size: 32px; font-weight: 800; color: #0f172a;">Tất cả Bài viết sức khỏe</h1>
+                    </div>
                     <div id="all-posts-list-container" class="articles-grid"></div>
-                    <div style="margin-top: 50px; text-align: center;"><button onclick="returnToHome(event)" class="btn btn-outline" style="padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer;"><i class="fa-solid fa-arrow-left"></i> Quay lại</button></div>
+                    <div style="margin-top: 50px; text-align: center;"><button onclick="returnToHome(event)"
+                            class="btn btn-outline"
+                            style="padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer;"><i
+                                class="fa-solid fa-arrow-left"></i> Quay lại</button></div>
                 </section>
             </div>
 
-            <div id="tab-dat-lich" class="tab-content tab-padding" style="background-color: transparent; min-height: 80vh;">
+            <div id="tab-dat-lich" class="tab-content tab-padding"
+                style="background-color: transparent; min-height: 80vh;">
                 <div id="booking-main-view">
                     <div class="booking-3col-layout">
                         <div class="booking-sidebar-left">
@@ -187,21 +300,29 @@
                             <div class="sidebar-group">
                                 <span class="sidebar-label">Phương thức đặt khám</span>
                                 <div class="booking-method-tabs">
-                                    <button class="booking-method-tab active" onclick="switchBookingMethod('doctor', this)">Theo bác sĩ</button>
-                                    <button class="booking-method-tab" onclick="switchBookingMethod('specialty', this)">Theo chuyên khoa</button>
+                                    <button class="booking-method-tab active"
+                                        onclick="switchBookingMethod('doctor', this)">Theo bác sĩ</button>
+                                    <button class="booking-method-tab"
+                                        onclick="switchBookingMethod('specialty', this)">Theo chuyên khoa</button>
                                 </div>
                             </div>
                             <div class="sidebar-group">
                                 <span class="sidebar-label">Người tới khám (*)</span>
-                                <select id="sidebar_nguoi_kham" class="sidebar-select"><option value="">-- Chọn --</option></select>
+                                <select id="sidebar_nguoi_kham" class="sidebar-select">
+                                    <option value="">-- Chọn --</option>
+                                </select>
                             </div>
                             <div class="sidebar-group">
                                 <span class="sidebar-label">Cơ sở khám</span>
-                                <div class="sidebar-clinic-badge"><i class="fa-solid fa-hospital"></i> Phòng khám TT Medical</div>
+                                <div class="sidebar-clinic-badge"><i class="fa-solid fa-hospital"></i> Phòng khám TT
+                                    Medical</div>
                             </div>
                             <div class="sidebar-group" id="sidebar-specialty-group" style="display: none;">
                                 <span class="sidebar-label">Chọn chuyên khoa</span>
-                                <select id="sidebar_chuyen_khoa" class="sidebar-select" onchange="onSidebarSpecialtyChange()"><option value="">Tất cả chuyên khoa</option></select>
+                                <select id="sidebar_chuyen_khoa" class="sidebar-select"
+                                    onchange="onSidebarSpecialtyChange()">
+                                    <option value="">Tất cả chuyên khoa</option>
+                                </select>
                             </div>
                             <div class="sidebar-group">
                                 <span class="sidebar-label">Chọn ngày khám</span>
@@ -217,12 +338,15 @@
                             <div class="booking-search-bar">
                                 <div class="booking-search-input-wrapper">
                                     <i class="fa-solid fa-magnifying-glass"></i>
-                                    <input type="text" class="booking-search-input" id="booking_search_input" placeholder="Tìm kiếm theo tên bác sĩ..." oninput="onBookingSearchInput()">
+                                    <input type="text" class="booking-search-input" id="booking_search_input"
+                                        placeholder="Tìm kiếm theo tên bác sĩ..." oninput="onBookingSearchInput()">
                                 </div>
-                                <div class="booking-doctor-count-btn"><i class="fa-solid fa-user-doctor"></i> Tìm thấy <strong id="booking_doc_count">0</strong> bác sĩ phù hợp.</div>
+                                <div class="booking-doctor-count-btn"><i class="fa-solid fa-user-doctor"></i> Tìm thấy
+                                    <strong id="booking_doc_count">0</strong> bác sĩ phù hợp.</div>
                             </div>
                             <div id="booking-doctor-list">
-                                <div class="booking-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải danh sách bác sĩ...</div>
+                                <div class="booking-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải danh
+                                    sách bác sĩ...</div>
                             </div>
                         </div>
 
@@ -231,79 +355,148 @@
                             <div id="summary-doctor-section" style="display: none;">
                                 <div class="summary-doctor-info">
                                     <img id="summary_doc_avatar" class="summary-doc-avatar" src="" alt="Avatar">
-                                    <div><p class="summary-doc-name" id="summary_doc_name">...</p><p class="summary-doc-spec" id="summary_doc_spec">...</p></div>
+                                    <div>
+                                        <p class="summary-doc-name" id="summary_doc_name">...</p>
+                                        <p class="summary-doc-spec" id="summary_doc_spec">...</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="summary-row"><i class="fa-regular fa-calendar"></i><span id="summary_date" class="summary-placeholder">Chưa chọn ngày</span></div>
-                            <div class="summary-row"><i class="fa-regular fa-clock"></i><span id="summary_time" class="summary-placeholder">Chưa chọn giờ</span></div>
-                            <div class="summary-row"><i class="fa-solid fa-stethoscope"></i><span id="summary_specialty" class="summary-placeholder">Chưa chọn chuyên khoa</span></div>
-                            <div class="summary-row"><i class="fa-solid fa-location-dot"></i><span class="summary-value">Phòng khám TT Medical</span></div>
-                            <div class="summary-row"><i class="fa-solid fa-hospital"></i><span id="summary_department" class="summary-placeholder">Chưa chọn khoa</span></div>
+                            <div class="summary-row"><i class="fa-regular fa-calendar"></i><span id="summary_date"
+                                    class="summary-placeholder">Chưa chọn ngày</span></div>
+                            <div class="summary-row"><i class="fa-regular fa-clock"></i><span id="summary_time"
+                                    class="summary-placeholder">Chưa chọn giờ</span></div>
+                            <div class="summary-row"><i class="fa-solid fa-stethoscope"></i><span id="summary_specialty"
+                                    class="summary-placeholder">Chưa chọn chuyên khoa</span></div>
+                            <div class="summary-row"><i class="fa-solid fa-location-dot"></i><span
+                                    class="summary-value">Phòng khám TT Medical</span></div>
+                            <div class="summary-row"><i class="fa-solid fa-hospital"></i><span id="summary_department"
+                                    class="summary-placeholder">Chưa chọn khoa</span></div>
                             <hr class="summary-divider">
-                            <div class="summary-symptom-label">Vấn đề sức khỏe gặp phải <span class="required-star">*</span></div>
-                            <div class="symptom-input-wrapper" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px;">
-                                <textarea id="summary_trieu_chung" class="summary-symptom-textarea" placeholder="Mô tả ngắn gọn triệu chứng..." style="border: none; outline: none; width: 100%; resize: vertical; min-height: 80px; box-shadow: none; margin-bottom: 0;"></textarea>
-                                <div class="symptom-image-upload" style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; border-top: 1px solid #f1f5f9;">
-                                    <label for="symptom_images" style="cursor: pointer; color: #64748b; font-size: 14px; display: flex; align-items: center; gap: 5px; margin: 0;"><i class="fa-regular fa-image" style="font-size: 18px;"></i> Tải ảnh lên</label>
-                                    <input type="file" id="symptom_images" accept="image/*" multiple style="display: none;" onchange="handleSymptomImages(event)">
+                            <div class="summary-symptom-label">Vấn đề sức khỏe gặp phải <span
+                                    class="required-star">*</span></div>
+                            <div class="symptom-input-wrapper"
+                                style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px;">
+                                <textarea id="summary_trieu_chung" class="summary-symptom-textarea"
+                                    placeholder="Mô tả ngắn gọn triệu chứng..."
+                                    style="border: none; outline: none; width: 100%; resize: vertical; min-height: 80px; box-shadow: none; margin-bottom: 0;"></textarea>
+                                <div class="symptom-image-upload"
+                                    style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; border-top: 1px solid #f1f5f9;">
+                                    <label for="symptom_images"
+                                        style="cursor: pointer; color: #64748b; font-size: 14px; display: flex; align-items: center; gap: 5px; margin: 0;"><i
+                                            class="fa-regular fa-image" style="font-size: 18px;"></i> Tải ảnh
+                                        lên</label>
+                                    <input type="file" id="symptom_images" accept="image/*" multiple
+                                        style="display: none;" onchange="handleSymptomImages(event)">
                                     <span style="font-size: 12px; color: #94a3b8;">Tối đa 3 ảnh</span>
                                 </div>
-                                <div id="symptom_images_preview" style="display: flex; gap: 10px; padding: 5px; flex-wrap: wrap;"></div>
+                                <div id="symptom_images_preview"
+                                    style="display: flex; gap: 10px; padding: 5px; flex-wrap: wrap;"></div>
                             </div>
-                            <button class="btn-confirm-booking" onclick="confirmNewBooking()"><i class="fa-regular fa-calendar-check"></i> Xác nhận đặt khám</button>
+                            <button class="btn-confirm-booking" onclick="confirmNewBooking()"><i
+                                    class="fa-regular fa-calendar-check"></i> Xác nhận đặt khám</button>
                         </div>
                     </div>
                 </div>
 
                 <div id="booking-payment-view" style="display: none;">
                     <div class="booking-payment-wrapper">
-                        <div class="qa-form-box" style="padding: 30px; background: white; border: 1px solid #e2e8f0; border-radius: 12px;">
+                        <div class="qa-form-box"
+                            style="padding: 30px; background: white; border: 1px solid #e2e8f0; border-radius: 12px;">
                             <div id="step-5" class="booking-step active">
                                 <h3 class="step-title">Thanh toán</h3>
                                 <p class="step-desc">Chọn phương thức thanh toán phù hợp với bạn.</p>
                                 <div class="payment-methods-grid">
-                                    <label class="payment-option"><input type="radio" name="payment_method" value="cash" checked><div class="payment-card-content"><i class="fa-solid fa-money-bill-wave" style="color: #10b981; font-size: 24px; margin-bottom: 10px;"></i><h4 style="margin: 0; font-size: 15px; color: #0f172a;">Tiền mặt</h4><p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Thanh toán tại quầy khi đến khám</p></div></label>
-                                    <label class="payment-option"><input type="radio" name="payment_method" value="transfer"><div class="payment-card-content"><i class="fa-solid fa-building-columns" style="color: #0284c7; font-size: 24px; margin-bottom: 10px;"></i><h4 style="margin: 0; font-size: 15px; color: #0f172a;">Chuyển khoản</h4><p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Quét mã QR bằng ứng dụng Ngân hàng</p></div></label>
-                                    <label class="payment-option"><input type="radio" name="payment_method" value="momo"><div class="payment-card-content"><i class="fa-solid fa-wallet" style="color: #A50064; font-size: 24px; margin-bottom: 10px;"></i><h4 style="margin: 0; font-size: 15px; color: #0f172a;">Ví MoMo</h4><p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Quét mã QR bằng ứng dụng MoMo</p></div></label>
+                                    <label class="payment-option"><input type="radio" name="payment_method" value="cash"
+                                            checked>
+                                        <div class="payment-card-content"><i class="fa-solid fa-money-bill-wave"
+                                                style="color: #10b981; font-size: 24px; margin-bottom: 10px;"></i>
+                                            <h4 style="margin: 0; font-size: 15px; color: #0f172a;">Tiền mặt</h4>
+                                            <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Thanh toán tại
+                                                quầy khi đến khám</p>
+                                        </div>
+                                    </label>
+                                    <label class="payment-option"><input type="radio" name="payment_method"
+                                            value="transfer">
+                                        <div class="payment-card-content"><i class="fa-solid fa-building-columns"
+                                                style="color: #0284c7; font-size: 24px; margin-bottom: 10px;"></i>
+                                            <h4 style="margin: 0; font-size: 15px; color: #0f172a;">Chuyển khoản</h4>
+                                            <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Quét mã QR bằng
+                                                ứng dụng Ngân hàng</p>
+                                        </div>
+                                    </label>
+                                    <label class="payment-option"><input type="radio" name="payment_method"
+                                            value="momo">
+                                        <div class="payment-card-content"><i class="fa-solid fa-wallet"
+                                                style="color: #A50064; font-size: 24px; margin-bottom: 10px;"></i>
+                                            <h4 style="margin: 0; font-size: 15px; color: #0f172a;">Ví MoMo</h4>
+                                            <p style="margin: 5px 0 0; font-size: 13px; color: #64748b;">Quét mã QR bằng
+                                                ứng dụng MoMo</p>
+                                        </div>
+                                    </label>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-                                    <button type="button" class="btn btn-outline" onclick="backToBookingView()"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
-                                    <button type="button" class="btn btn-primary btn-save" onclick="processPayment()"><i class="fa-regular fa-calendar-check"></i> Xác nhận đặt lịch</button>
+                                    <button type="button" class="btn btn-outline" onclick="backToBookingView()"><i
+                                            class="fa-solid fa-arrow-left"></i> Quay lại</button>
+                                    <button type="button" class="btn btn-primary btn-save" onclick="processPayment()"><i
+                                            class="fa-regular fa-calendar-check"></i> Xác nhận đặt lịch</button>
                                 </div>
                             </div>
                             <div id="step-6" class="booking-step">
                                 <h3 class="step-title">Thanh toán chuyển khoản</h3>
                                 <p class="step-desc">Vui lòng dùng ứng dụng Ngân hàng quét mã QR bên dưới.</p>
                                 <div id="transfer-details-box" style="margin-top: 10px;">
-                                    <div id="content-bank" style="display: flex; flex-direction: column; align-items: center; background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px; max-width: 420px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
-                                        <div style="background: #0284c7; color: white; padding: 6px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">Quét mã QR Ngân hàng</div>
-                                        <div style="padding: 15px; border: 1px solid #f1f5f9; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                                            <img id="dynamic-vietqr-img" src="" alt="Bank QR" style="width: 250px; height: 250px; object-fit: contain; display: none;">
-                                            <div id="qr-loading-spinner" style="width: 250px; height: 250px; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
+                                    <div id="content-bank"
+                                        style="display: flex; flex-direction: column; align-items: center; background: white; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 30px; max-width: 420px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.04);">
+                                        <div
+                                            style="background: #0284c7; color: white; padding: 6px 20px; border-radius: 20px; font-weight: 600; font-size: 14px; margin-bottom: 20px; text-transform: uppercase;">
+                                            Quét mã QR Ngân hàng</div>
+                                        <div
+                                            style="padding: 15px; border: 1px solid #f1f5f9; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                                            <img id="dynamic-vietqr-img" src="" alt="Bank QR"
+                                                style="width: 250px; height: 250px; object-fit: contain; display: none;">
+                                            <div id="qr-loading-spinner"
+                                                style="width: 250px; height: 250px; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                                                <i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
                                         </div>
-                                        <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 20px; font-weight: 800;">Số tiền: <span id="pay-amount-text" style="color: #ef4444;">...</span> VNĐ</h3>
-                                        <div id="auto-check-payment-status" style="display: flex; align-items: center; gap: 10px; background: #f0fdf4; color: #166534; padding: 12px 20px; border-radius: 10px; border: 1px solid #bbf7d0; font-weight: 600; font-size: 14px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Hệ thống đang chờ thanh toán...</div>
-                                        <div id="payment-countdown" style="margin-top: 15px; font-size: 16px; font-weight: 700; color: #ef4444;">Thời gian còn lại: <span id="countdown-timer">30:00</span></div>
+                                        <h3
+                                            style="margin: 0 0 15px 0; color: #0f172a; font-size: 20px; font-weight: 800;">
+                                            Số tiền: <span id="pay-amount-text" style="color: #ef4444;">...</span> VNĐ
+                                        </h3>
+                                        <div id="auto-check-payment-status"
+                                            style="display: flex; align-items: center; gap: 10px; background: #f0fdf4; color: #166534; padding: 12px 20px; border-radius: 10px; border: 1px solid #bbf7d0; font-weight: 600; font-size: 14px;">
+                                            <i class="fa-solid fa-circle-notch fa-spin"></i> Hệ thống đang chờ thanh
+                                            toán...</div>
+                                        <div id="payment-countdown"
+                                            style="margin-top: 15px; font-size: 16px; font-weight: 700; color: #ef4444;">
+                                            Thời gian còn lại: <span id="countdown-timer">30:00</span></div>
                                     </div>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-                                    <button type="button" class="btn btn-outline" onclick="cancelUnpaidAndGoBack()"><i class="fa-solid fa-arrow-left"></i> Quay lại chọn phương thức</button>
+                                    <button type="button" class="btn btn-outline" onclick="cancelUnpaidAndGoBack()"><i
+                                            class="fa-solid fa-arrow-left"></i> Quay lại chọn phương thức</button>
                                 </div>
                             </div>
                             <div id="step-success" class="booking-step success-step">
                                 <div class="success-icon-wrapper"><i class="fa-solid fa-check"></i></div>
                                 <h2 class="success-title">Đặt lịch thành công!</h2>
-                                <p class="success-desc">Chúng tôi đã gửi thông tin chi tiết lịch hẹn qua email của bạn.</p>
+                                <p class="success-desc">Chúng tôi đã gửi thông tin chi tiết lịch hẹn qua email của bạn.
+                                </p>
                                 <div class="success-info-box">
                                     <div class="success-info-title">Thông tin lịch hẹn:</div>
-                                    <div class="success-info-row"><span class="c-label">Bác sĩ:</span> <strong class="c-value" id="succ_bac_si">...</strong></div>
-                                    <div class="success-info-row"><span class="c-label">Chuyên khoa:</span> <strong class="c-value" id="succ_chuyen_khoa">...</strong></div>
-                                    <div class="success-info-row"><span class="c-label">Ngày:</span> <strong class="c-value" id="succ_ngay">...</strong></div>
-                                    <div class="success-info-row"><span class="c-label">Giờ:</span> <strong class="c-value" id="succ_gio">...</strong></div>
+                                    <div class="success-info-row"><span class="c-label">Bác sĩ:</span> <strong
+                                            class="c-value" id="succ_bac_si">...</strong></div>
+                                    <div class="success-info-row"><span class="c-label">Chuyên khoa:</span> <strong
+                                            class="c-value" id="succ_chuyen_khoa">...</strong></div>
+                                    <div class="success-info-row"><span class="c-label">Ngày:</span> <strong
+                                            class="c-value" id="succ_ngay">...</strong></div>
+                                    <div class="success-info-row"><span class="c-label">Giờ:</span> <strong
+                                            class="c-value" id="succ_gio">...</strong></div>
                                 </div>
                                 <div class="success-actions">
-                                    <button type="button" class="btn btn-outline" onclick="window.location.reload()">Về trang chủ</button>
-                                    <button type="button" class="btn btn-primary" onclick="resetBooking()">Đặt lịch khác</button>
+                                    <button type="button" class="btn btn-outline" onclick="window.location.reload()">Về
+                                        trang chủ</button>
+                                    <button type="button" class="btn btn-primary" onclick="resetBooking()">Đặt lịch
+                                        khác</button>
                                 </div>
                             </div>
                         </div>
@@ -312,27 +505,60 @@
             </div>
 
             <div id="tab-ho-so" class="tab-content tab-padding" style="background-color: transparent;">
-                <div class="container" style="max-width: 800px !important; width: 100%;"> 
-                    <div class="main-content-card patient-card" style="background: #fff; padding: 40px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
-                        <h2 class="card-title" style="font-size: 22px; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; color: #0f172a; font-weight: 700; text-align: center;"><i class="fa-regular fa-address-card" style="color: #0284c7; margin-right: 8px;"></i> Hồ sơ cá nhân</h2>
+                <div class="container" style="max-width: 800px !important; width: 100%;">
+                    <div class="main-content-card patient-card"
+                        style="background: #fff; padding: 40px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                        <h2 class="card-title"
+                            style="font-size: 22px; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; color: #0f172a; font-weight: 700; text-align: center;">
+                            <i class="fa-regular fa-address-card" style="color: #0284c7; margin-right: 8px;"></i> Hồ sơ
+                            cá nhân</h2>
                         <div class="profile-grid form-grid" style="display: flex; flex-direction: column; flex: 1;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                                <div class="input-group form-col"><label class="form-label" style="font-size: 14px; color: #64748b; font-weight: 600;">Họ và tên</label><input type="text" id="pt_ten" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;"></div>
-                                <div class="input-group form-col"><label class="form-label" style="font-size: 14px; color: #64748b; font-weight: 600;">Số điện thoại</label><input type="text" id="pt_sdt" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;"></div>
+                                <div class="input-group form-col"><label class="form-label"
+                                        style="font-size: 14px; color: #64748b; font-weight: 600;">Họ và
+                                        tên</label><input type="text" id="pt_ten" class="form-control readonly-input"
+                                        readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
+                                </div>
+                                <div class="input-group form-col"><label class="form-label"
+                                        style="font-size: 14px; color: #64748b; font-weight: 600;">Số điện
+                                        thoại</label><input type="text" id="pt_sdt" class="form-control readonly-input"
+                                        readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;">
+                                </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                                <div class="input-group form-col"><label class="form-label" style="font-size: 14px; color: #64748b; font-weight: 600;">Tài khoản Email</label><input type="text" id="pt_email" disabled class="form-control readonly-input" style="background: #f8fafc; border-color: #e2e8f0; color: #475569;"></div>
-                                <div class="input-group form-col"><label class="form-label" style="font-size: 14px; color: #64748b; font-weight: 600;">Ngày sinh</label><input type="date" id="pt_ngay_sinh" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569; pointer-events: none;"></div>
+                                <div class="input-group form-col"><label class="form-label"
+                                        style="font-size: 14px; color: #64748b; font-weight: 600;">Tài khoản
+                                        Email</label><input type="text" id="pt_email" disabled
+                                        class="form-control readonly-input"
+                                        style="background: #f8fafc; border-color: #e2e8f0; color: #475569;"></div>
+                                <div class="input-group form-col"><label class="form-label"
+                                        style="font-size: 14px; color: #64748b; font-weight: 600;">Ngày
+                                        sinh</label><input type="date" id="pt_ngay_sinh"
+                                        class="form-control readonly-input" readonly
+                                        style="background: #f8fafc; border-color: #e2e8f0; color: #475569; pointer-events: none;">
+                                </div>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                                 <div class="input-group form-col">
-                                    <label class="form-label" style="font-size: 14px; color: #64748b; font-weight: 600;">Giới tính</label>
-                                    <select id="pt_gioi_tinh" class="form-control readonly-input" disabled style="background: #f8fafc; border-color: #e2e8f0; color: #475569; appearance: none;"><option value="1">Nam</option><option value="0">Nữ</option></select>
+                                    <label class="form-label"
+                                        style="font-size: 14px; color: #64748b; font-weight: 600;">Giới tính</label>
+                                    <select id="pt_gioi_tinh" class="form-control readonly-input" disabled
+                                        style="background: #f8fafc; border-color: #e2e8f0; color: #475569; appearance: none;">
+                                        <option value="1">Nam</option>
+                                        <option value="0">Nữ</option>
+                                    </select>
                                 </div>
-                                <div class="input-group form-col"><label class="form-label" style="font-size: 14px; color: #64748b; font-weight: 600;">Tỉnh/Thành phố</label><input type="text" id="pt_dia_chi" class="form-control readonly-input" readonly style="background: #f8fafc; border-color: #e2e8f0; color: #475569;"></div>
+                                <div class="input-group form-col"><label class="form-label"
+                                        style="font-size: 14px; color: #64748b; font-weight: 600;">Tỉnh/Thành
+                                        phố</label><input type="text" id="pt_dia_chi"
+                                        class="form-control readonly-input" readonly
+                                        style="background: #f8fafc; border-color: #e2e8f0; color: #475569;"></div>
                             </div>
                             <div class="full-width" style="margin-top: auto; padding-top: 20px;">
-                                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 8px; font-size: 14px; text-align: center;"><i class="fa-solid fa-circle-check"></i> Hồ sơ của bạn đã được khóa để đảm bảo tính xác thực. Nếu cần thay đổi, vui lòng liên hệ Admin.</div>
+                                <div
+                                    style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 8px; font-size: 14px; text-align: center;">
+                                    <i class="fa-solid fa-circle-check"></i> Hồ sơ của bạn đã được khóa để đảm bảo tính
+                                    xác thực. Nếu cần thay đổi, vui lòng liên hệ Admin.</div>
                             </div>
                         </div>
                     </div>
@@ -341,31 +567,67 @@
 
             <div id="tab-hoi-dap-bac-si" class="tab-content tab-padding" style="background-color: transparent;">
                 <div class="container">
-                    <div class="qa-page-header"><h1 style="font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 10px;">Hỏi đáp sức khỏe</h1></div>
+                    <div class="qa-page-header">
+                        <h1 style="font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 10px;">Hỏi đáp sức
+                            khỏe</h1>
+                    </div>
                     <div class="qa-layout">
                         <div class="qa-main-feed">
                             <div class="qa-search-bar" style="display: flex; gap: 15px; margin-bottom: 20px;">
-                                <div style="flex: 1; position: relative;"><i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b;"></i><input type="text" id="qa_search_keyword" class="form-control" placeholder="Tìm kiếm theo tiêu đề, nội dung hoặc ngày đăng (VD: 15/05/2026)..." style="padding-left: 40px; background: white;" oninput="filterQABySearch()"></div>
-                                <button class="btn btn-outline" onclick="resetQASearch()" style="background: white; padding: 10px 15px;" title="Xóa tìm kiếm"><i class="fa-solid fa-rotate-right"></i></button>
+                                <div style="flex: 1; position: relative;"><i class="fa-solid fa-magnifying-glass"
+                                        style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b;"></i><input
+                                        type="text" id="qa_search_keyword" class="form-control"
+                                        placeholder="Tìm kiếm theo tiêu đề, nội dung hoặc ngày đăng (VD: 15/05/2026)..."
+                                        style="padding-left: 40px; background: white;" oninput="filterQABySearch()">
+                                </div>
+                                <button class="btn btn-outline" onclick="resetQASearch()"
+                                    style="background: white; padding: 10px 15px;" title="Xóa tìm kiếm"><i
+                                        class="fa-solid fa-rotate-right"></i></button>
                             </div>
                             <div class="qa-filters">
                                 <div class="qa-filter-pills" id="qa_filter_pills"></div>
-                                <select class="form-control qa-filter-select" onchange="filterQAByStatus(this.value)"><option value="all">Tất cả trạng thái</option><option value="answered">Đã trả lời</option><option value="pending">Chờ phản hồi</option></select>
+                                <select class="form-control qa-filter-select" onchange="filterQAByStatus(this.value)">
+                                    <option value="all">Tất cả trạng thái</option>
+                                    <option value="answered">Đã trả lời</option>
+                                    <option value="pending">Chờ phản hồi</option>
+                                </select>
                             </div>
-                            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; font-weight: 500;">Cộng đồng có <span id="qa_count">0</span> câu hỏi</p>
+                            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; font-weight: 500;">Cộng đồng
+                                có <span id="qa_count">0</span> câu hỏi</p>
                             <div id="community_qa_list"></div>
-                            <div id="qa_pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 30px; margin-bottom: 30px;"></div>
+                            <div id="qa_pagination"
+                                style="display: flex; justify-content: center; gap: 8px; margin-top: 30px; margin-bottom: 30px;">
+                            </div>
                         </div>
-                        <div class="qa-sidebar" style="position: sticky; top: 100px; z-index: 50; pointer-events: auto;">
-                            <div class="qa-form-box" style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-                                <h3 class="qa-form-header"><i class="fa-solid fa-pen-to-square" style="color: #0284c7;"></i> Đặt câu hỏi</h3>
-                                <p class="qa-form-desc">Bác sĩ sẽ giải đáp thắc mắc của bạn trong thời gian sớm nhất.</p>
+                        <div class="qa-sidebar"
+                            style="position: sticky; top: 100px; z-index: 50; pointer-events: auto;">
+                            <div class="qa-form-box"
+                                style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                                <h3 class="qa-form-header"><i class="fa-solid fa-pen-to-square"
+                                        style="color: #0284c7;"></i> Đặt câu hỏi</h3>
+                                <p class="qa-form-desc">Bác sĩ sẽ giải đáp thắc mắc của bạn trong thời gian sớm nhất.
+                                </p>
                                 <form id="qaForm" onsubmit="submitQuestion(event)">
-                                    <div class="input-group mb-15"><label class="form-label qa-input-label">Chuyên khoa</label><select id="qa_chuyen_khoa" required class="form-control qa-input-field"><option value="">Chọn chuyên khoa</option></select></div>
-                                    <div class="input-group mb-15"><label class="form-label qa-input-label">Tiêu đề</label><input type="text" id="qa_tieu_de" required class="form-control qa-input-field" placeholder="Nhập tiêu đề ngắn gọn..."></div>
-                                    <div class="input-group mb-15"><label class="form-label qa-input-label">Chi tiết</label><textarea id="qa_noi_dung" rows="4" required class="form-control textarea-resize qa-input-field" placeholder="Mô tả chi tiết triệu chứng hoặc câu hỏi của bạn..."></textarea></div>
-                                    <div class="qa-anonym-box"><input type="checkbox" id="qa_an_danh" class="qa-anonym-checkbox"><label for="qa_an_danh" class="qa-anonym-label"><i class="fa-solid fa-user-secret"></i> Gửi câu hỏi dưới dạng Ẩn danh</label></div>
-                                    <button type="submit" class="btn btn-primary btn-full qa-submit-btn"><i class="fa-solid fa-paper-plane"></i> Gửi câu hỏi ngay</button>
+                                    <div class="input-group mb-15"><label class="form-label qa-input-label">Chuyên
+                                            khoa</label><select id="qa_chuyen_khoa" required
+                                            class="form-control qa-input-field">
+                                            <option value="">Chọn chuyên khoa</option>
+                                        </select></div>
+                                    <div class="input-group mb-15"><label class="form-label qa-input-label">Tiêu
+                                            đề</label><input type="text" id="qa_tieu_de" required
+                                            class="form-control qa-input-field" placeholder="Nhập tiêu đề ngắn gọn...">
+                                    </div>
+                                    <div class="input-group mb-15"><label class="form-label qa-input-label">Chi
+                                            tiết</label><textarea id="qa_noi_dung" rows="4" required
+                                            class="form-control textarea-resize qa-input-field"
+                                            placeholder="Mô tả chi tiết triệu chứng hoặc câu hỏi của bạn..."></textarea>
+                                    </div>
+                                    <div class="qa-anonym-box"><input type="checkbox" id="qa_an_danh"
+                                            class="qa-anonym-checkbox"><label for="qa_an_danh"
+                                            class="qa-anonym-label"><i class="fa-solid fa-user-secret"></i> Gửi câu hỏi
+                                            dưới dạng Ẩn danh</label></div>
+                                    <button type="submit" class="btn btn-primary btn-full qa-submit-btn"><i
+                                            class="fa-solid fa-paper-plane"></i> Gửi câu hỏi ngay</button>
                                 </form>
                             </div>
                         </div>
@@ -373,7 +635,7 @@
                 </div>
             </div>
         </div>
-        
+
         <footer class="saas-footer-dark">
             <div class="footer-grid-dark">
                 <div class="footer-col-dark">
@@ -381,21 +643,25 @@
                         <img src="../../assets/images/logo.png" alt="Logo">
                         <span>TT Medical</span>
                     </div>
-                    <p>Hồ sơ Sức khỏe Điện tử - Đồng hành cùng Bệnh nhân. Chăm sóc sức khỏe của bạn mọi lúc, mọi nơi.</p>
+                    <p>Hồ sơ Sức khỏe Điện tử - Đồng hành cùng Bệnh nhân. Chăm sóc sức khỏe của bạn mọi lúc, mọi nơi.
+                    </p>
                 </div>
                 <div class="footer-col-dark">
                     <h3>Dịch vụ</h3>
                     <ul>
                         <li><a href="#" onclick="switchTab(event, 'tab-dat-lich')">Đặt lịch khám</a></li>
                         <li><a href="#" onclick="switchTab(event, 'tab-hoi-dap-bac-si')">Hỏi đáp trực tuyến</a></li>
-                        <li><a href="#" onclick="switchTab(event, 'tab-trang-chu'); switchProfileTab('record');">Lịch sử khám bệnh</a></li>
+                        <li><a href="#" onclick="switchTab(event, 'tab-trang-chu'); switchProfileTab('record');">Lịch sử
+                                khám bệnh</a></li>
                     </ul>
                 </div>
                 <div class="footer-col-dark">
                     <h3>Liên kết</h3>
                     <ul>
                         <li><a href="#" onclick="switchTab(event, 'tab-ho-so')">Hồ sơ của tôi</a></li>
-                        <li><a href="#" onclick="event.preventDefault(); const cb = document.querySelector('.chatbot-toggle'); if(cb && !cb.classList.contains('active')) cb.click();">Hướng dẫn sử dụng</a></li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); const cb = document.querySelector('.chatbot-toggle'); if(cb && !cb.classList.contains('active')) cb.click();">Hướng
+                                dẫn sử dụng</a></li>
                     </ul>
                 </div>
                 <div class="footer-col-dark">
@@ -408,7 +674,8 @@
                 </div>
             </div>
             <div class="footer-bottom-dark">
-                <span>&copy; 2026 TT Medical. Đã đăng ký bản quyền.<br>Phát triển bởi: Tống Xuân Thọ, Nguyễn Văn Thiệu.</span>
+                <span>&copy; 2026 TT Medical. Đã đăng ký bản quyền.<br>Phát triển bởi: Tống Xuân Thọ, Nguyễn Văn
+                    Thiệu.</span>
                 <div class="footer-bottom-links">
                     <a href="#">Bảo mật thông tin</a>
                     <a href="#">Điều khoản</a>
@@ -418,49 +685,78 @@
     </main>
 
     <div id="doctorDetailModal" class="modal-overlay">
-        <div class="auth-card" style="max-height: 90vh; overflow-y: auto; width: 95%; max-width: 900px; background: white; border-radius: 24px; padding: 40px;">
-            <span class="close-btn" onclick="closeDoctorDetailsModal()" style="font-size: 30px; cursor: pointer;">&times;</span>
-            <div class="card-header" style="text-align: center; margin-bottom: 20px;"><h1 class="title">Thông tin Bác sĩ</h1></div>
+        <div class="auth-card"
+            style="max-height: 90vh; overflow-y: auto; width: 95%; max-width: 900px; background: white; border-radius: 24px; padding: 40px;">
+            <span class="close-btn" onclick="closeDoctorDetailsModal()"
+                style="font-size: 30px; cursor: pointer;">&times;</span>
+            <div class="card-header" style="text-align: center; margin-bottom: 20px;">
+                <h1 class="title">Thông tin Bác sĩ</h1>
+            </div>
             <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-                <img id="detail_doc_img" src="" alt="Avatar" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f3f4f6;">
+                <img id="detail_doc_img" src="" alt="Avatar"
+                    style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #f3f4f6;">
                 <h2 id="detail_doc_name" style="color: #1f2937; margin: 0; font-size: 24px;"></h2>
                 <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
-                    <span style="background: #e0f2fe; color: #0369a1; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i class="fa-solid fa-stethoscope"></i> <span id="detail_doc_spec"></span></span>
-                    <span style="background: #f3f4f6; color: #4b5563; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i class="fa-solid fa-briefcase-medical"></i> <span id="detail_doc_exp"></span></span>
-                    <span style="background: #fee2e2; color: #991b1b; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i class="fa-solid fa-money-bill-wave"></i> <span id="detail_doc_price"></span></span>
+                    <span
+                        style="background: #e0f2fe; color: #0369a1; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i
+                            class="fa-solid fa-stethoscope"></i> <span id="detail_doc_spec"></span></span>
+                    <span
+                        style="background: #f3f4f6; color: #4b5563; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i
+                            class="fa-solid fa-briefcase-medical"></i> <span id="detail_doc_exp"></span></span>
+                    <span
+                        style="background: #fee2e2; color: #991b1b; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 14px;"><i
+                            class="fa-solid fa-money-bill-wave"></i> <span id="detail_doc_price"></span></span>
                 </div>
             </div>
             <div style="margin-top: 25px;">
-                <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">Tiểu sử & Kinh nghiệm</h3>
-                <p id="detail_doc_bio" style="color: #4b5563; line-height: 1.6; font-size: 15px; white-space: pre-wrap;"></p>
+                <h3
+                    style="font-size: 18px; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">
+                    Tiểu sử & Kinh nghiệm</h3>
+                <p id="detail_doc_bio"
+                    style="color: #4b5563; line-height: 1.6; font-size: 15px; white-space: pre-wrap;"></p>
             </div>
             <div style="margin-top: 25px;">
-                <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">Đánh giá từ Bệnh nhân</h3>
-                <div id="detail_doc_reviews" style="display: flex; flex-direction: column; gap: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
+                <h3
+                    style="font-size: 18px; color: #1f2937; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">
+                    Đánh giá từ Bệnh nhân</h3>
+                <div id="detail_doc_reviews"
+                    style="display: flex; flex-direction: column; gap: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                </div>
             </div>
             <div style="margin-top: 30px; display: flex; gap: 15px;">
-                <button onclick="closeDoctorDetailsModal()" class="btn btn-outline" style="flex: 1; padding: 12px; border-radius: 12px;">Đóng</button>
-                <button id="btn-book-modal" class="btn btn-primary" style="flex: 1; padding: 12px; border-radius: 12px;">Đặt lịch khám</button>
+                <button onclick="closeDoctorDetailsModal()" class="btn btn-outline"
+                    style="flex: 1; padding: 12px; border-radius: 12px;">Đóng</button>
+                <button id="btn-book-modal" class="btn btn-primary"
+                    style="flex: 1; padding: 12px; border-radius: 12px;">Đặt lịch khám</button>
             </div>
         </div>
     </div>
 
     <div id="ratingModal" class="modal-overlay">
         <div class="auth-card" style="max-width: 450px; padding: 30px; border-radius: 24px; background: white;">
-            <span class="close-btn" onclick="closeRatingModal()" style="font-size: 24px; cursor: pointer;">&times;</span>
-            <div class="card-header" style="text-align: center; margin-bottom: 10px;"><h2 class="title" style="font-size: 22px;">Đánh giá Bác sĩ</h2></div>
-            <p style="text-align: center; color: #64748b; font-size: 14px; margin-bottom: 20px;">Chia sẻ trải nghiệm khám của bạn với <strong id="rate_doc_name" style="color: #0f172a;">...</strong></p>
-            
-            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; font-size: 32px; color: #cbd5e1; cursor: pointer;" id="star-container">
+            <span class="close-btn" onclick="closeRatingModal()"
+                style="font-size: 24px; cursor: pointer;">&times;</span>
+            <div class="card-header" style="text-align: center; margin-bottom: 10px;">
+                <h2 class="title" style="font-size: 22px;">Đánh giá Bác sĩ</h2>
+            </div>
+            <p style="text-align: center; color: #64748b; font-size: 14px; margin-bottom: 20px;">Chia sẻ trải nghiệm
+                khám của bạn với <strong id="rate_doc_name" style="color: #0f172a;">...</strong></p>
+
+            <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; font-size: 32px; color: #cbd5e1; cursor: pointer;"
+                id="star-container">
                 <i class="fa-solid fa-star star-rating" data-val="1"></i>
                 <i class="fa-solid fa-star star-rating" data-val="2"></i>
                 <i class="fa-solid fa-star star-rating" data-val="3"></i>
                 <i class="fa-solid fa-star star-rating" data-val="4"></i>
                 <i class="fa-solid fa-star star-rating" data-val="5"></i>
             </div>
-            
-            <textarea id="rate_comment" rows="3" class="form-control textarea-resize" placeholder="Để lại nhận xét của bạn (Không bắt buộc)..." style="background: #f8fafc; pointer-events: auto; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; outline: none;"></textarea>
-            <button class="btn btn-primary btn-full" style="margin-top: 20px; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: bold; width: 100%; border: none; background: #10b981; color: white; cursor: pointer;" onclick="submitRating()"><i class="fa-solid fa-paper-plane"></i> Gửi đánh giá</button>
+
+            <textarea id="rate_comment" rows="3" class="form-control textarea-resize"
+                placeholder="Để lại nhận xét của bạn (Không bắt buộc)..."
+                style="background: #f8fafc; pointer-events: auto; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; outline: none;"></textarea>
+            <button class="btn btn-primary btn-full"
+                style="margin-top: 20px; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: bold; width: 100%; border: none; background: #10b981; color: white; cursor: pointer;"
+                onclick="submitRating()"><i class="fa-solid fa-paper-plane"></i> Gửi đánh giá</button>
         </div>
     </div>
 
@@ -473,4 +769,5 @@
     <link rel="stylesheet" href="../../assets/css/chatbot.css">
     <script src="../../assets/js/chatbot.js"></script>
 </body>
+
 </html>

@@ -32,7 +32,8 @@ const getAllAppointments = async (req, res) => {
                    ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan, 
                    ISNULL(nd.so_dien_thoai, 'Chưa cập nhật') as so_dien_thoai,
                    ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si,
-                   STT_Table.so_thu_tu
+                   STT_Table.so_thu_tu,
+                   lk.benh_nhan_id
             FROM LichKham lk
             JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
             JOIN TaiKhoan tk ON lk.benh_nhan_id = tk.id

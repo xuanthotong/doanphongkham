@@ -65,8 +65,37 @@ function confirmLogout(event) {
 }
 
 // 4. NGHIỆP VỤ: KHÁM BỆNH & KÊ ĐƠN (FETCH THUỐC TỪ DATABASE)
-async function openMedicalRecord(maLK, tenBN) {
+async function openMedicalRecord(maLK, tenBN, isEdit = false) {
     let currentPrescriptions = [];
+    let parsedChanDoan = "";
+    
+    if (isEdit) {
+        const app = currentAppointments.find(a => a.id == maLK);
+        let oldNote = app ? (app.ghi_chu_cua_bac_si || '') : '';
+        if (oldNote.includes("Chẩn đoán:")) {
+            let parts = oldNote.split("Đơn thuốc:");
+            parsedChanDoan = parts[0].replace("Chẩn đoán:", "").trim();
+            if (parts.length > 1) {
+                let thuocLines = parts[1].split("\n");
+                thuocLines.forEach(line => {
+                    let m = line.match(/^\d+\.\s+(.*?)\s+\((.*?)\)\s+x(\d+)\s+-\s+HDSD:\s+(.*?)\s+-\s+([0-9.,]+)đ/);
+                    if(m) {
+                        let totalTien = parseFloat(m[5].replace(/\./g, '').replace(/,/g, ''));
+                        let sl = parseInt(m[3]);
+                        currentPrescriptions.push({
+                            ten: m[1],
+                            donVi: m[2],
+                            soLuong: sl,
+                            lieu: m[4],
+                            gia: totalTien / sl
+                        });
+                    }
+                });
+            }
+        } else {
+             parsedChanDoan = oldNote;
+        }
+    }
     
     // Fetch danh sách thuốc từ Database (chỉ lấy thuốc đang hoạt động)
     let danhSachThuocDB = [];
@@ -90,13 +119,13 @@ async function openMedicalRecord(maLK, tenBN) {
     }
 
     Swal.fire({
-        title: `Khám bệnh: ${tenBN} (#LK${maLK})`,
+        title: isEdit ? `Sửa hồ sơ: ${tenBN} (#LK${maLK})` : `Khám bệnh: ${tenBN} (#LK${maLK})`,
         html: `
             <div style="text-align: left; margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 20px;">
                 <!-- Khu vực 1: Chẩn đoán -->
                 <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                     <label style="font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px; font-size: 15px;"><i class="fa-solid fa-stethoscope" style="color: #0ea5e9;"></i> Chẩn đoán bệnh (*):</label>
-                    <textarea id="chan_doan" class="swal2-textarea" placeholder="Nhập chẩn đoán lâm sàng..." style="width: 100%; margin: 0; height: 80px; box-sizing: border-box; font-size: 14px; padding: 12px; border-radius: 8px; border-color: #cbd5e1;"></textarea>
+                    <textarea id="chan_doan" class="swal2-textarea" placeholder="Nhập chẩn đoán lâm sàng..." style="width: 100%; margin: 0; height: 80px; box-sizing: border-box; font-size: 14px; padding: 12px; border-radius: 8px; border-color: #cbd5e1;">${parsedChanDoan}</textarea>
                 </div>
                 
                 <!-- Khu vực 2: Kê đơn thuốc từ Database -->
@@ -146,7 +175,7 @@ async function openMedicalRecord(maLK, tenBN) {
         `,
         width: '800px', 
         showCancelButton: true, 
-        confirmButtonText: '<i class="fa-solid fa-check"></i> Hoàn tất khám', 
+        confirmButtonText: isEdit ? '<i class="fa-solid fa-check"></i> Lưu thay đổi' : '<i class="fa-solid fa-check"></i> Hoàn tất khám', 
         cancelButtonText: 'Hủy', 
         confirmButtonColor: '#0284C7',
         didOpen: () => {
@@ -202,6 +231,10 @@ async function openMedicalRecord(maLK, tenBN) {
                 currentPrescriptions.splice(index, 1);
                 renderThuoc();
             };
+
+            if (isEdit) {
+                renderThuoc();
+            }
 
             // Thêm thuốc mới
             btnAdd.addEventListener('click', () => {
@@ -275,16 +308,18 @@ async function openMedicalRecord(maLK, tenBN) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`${window.API_BASE}/api/appointments/${maLK}/status`, {
+                const url = isEdit ? `${window.API_BASE}/api/appointments/${maLK}/note` : `${window.API_BASE}/api/appointments/${maLK}/status`;
+                const body = isEdit ? { ghi_chu_cua_bac_si: result.value.ghi_chu } : { trang_thai: 'Done', ghi_chu_cua_bac_si: result.value.ghi_chu };
+                const res = await fetch(url, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ trang_thai: 'Done', ghi_chu_cua_bac_si: result.value.ghi_chu })
+                    body: JSON.stringify(body)
                 });
                 if(res.ok) {
-                    Swal.fire('Hoàn thành!', 'Hồ sơ bệnh án đã được lưu.', 'success');
+                    Swal.fire('Thành công!', isEdit ? 'Ghi chú đã được cập nhật.' : 'Hồ sơ bệnh án đã được lưu.', 'success');
                     fetchAppointments(); // Gọi lại hàm load dữ liệu
                 } else {
-                    Swal.fire('Lỗi', 'Không thể lưu hồ sơ bệnh án', 'error');
+                    Swal.fire('Lỗi', 'Không thể lưu', 'error');
                 }
             } catch(e) { console.error(e); }
         }
@@ -608,35 +643,7 @@ function cancelAppointment(maLK) {
 function editMedicalRecord(maLK) {
     const app = currentAppointments.find(a => a.id == maLK);
     if (!app) return;
-
-    Swal.fire({
-        title: `Sửa hồ sơ: ${app.ten_benh_nhan} (#${maLK})`,
-        html: `
-            <div style="text-align: left; margin-top: 15px;">
-                <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px;">Cập nhật Kê đơn / Ghi chú</label>
-                    <textarea id="edit_don_thuoc" class="swal2-textarea" style="width: 90%; margin: 0; height: 120px;">${app.ghi_chu_cua_bac_si || ''}</textarea>
-                </div>
-            </div>
-        `,
-        width: '600px', showCancelButton: true, confirmButtonText: 'Lưu thay đổi', cancelButtonText: 'Hủy', confirmButtonColor: '#f59e0b',
-        preConfirm: () => {
-            const donThuoc = document.getElementById('edit_don_thuoc').value;
-            return { ghi_chu: donThuoc };
-        }
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(`${window.API_BASE}/api/appointments/${maLK}/note`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ghi_chu_cua_bac_si: result.value.ghi_chu })
-                });
-                if(res.ok) { Swal.fire('Thành công!', 'Ghi chú đã được cập nhật.', 'success'); fetchAppointments(); } 
-                else { Swal.fire('Lỗi', 'Không thể cập nhật ghi chú', 'error'); }
-            } catch(e) { console.error(e); Swal.fire('Lỗi', 'Lỗi kết nối', 'error'); }
-        }
-    });
+    openMedicalRecord(maLK, app.ten_benh_nhan, true);
 }
 
 // 6. NGHIỆP VỤ: TRẢ LỜI CÂU HỎI Q&A
@@ -1319,14 +1326,37 @@ function renderAppointments(filterStatus) {
         const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
         const safeName = app.ten_benh_nhan ? app.ten_benh_nhan.replace(/'/g, "\\'") : '';
         
+        // LOGIC CHẶN KHÁM BỆNH KHI CHƯA ĐẾN GIỜ
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localDateStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+        const currentTimeStr = now.toTimeString().substring(0, 5); // "HH:MM"
+        
+        const appDateStr = app.ngay_lam_viec ? app.ngay_lam_viec.split('T')[0] : '';
+        const timeStr = app.gio_kham || app.khung_gio || '';
+        const startTimeStr = timeStr.split(' - ')[0]; // Lấy giờ bắt đầu
+
+        let isFuture = false;
+        if (appDateStr > localDateStr) {
+            isFuture = true;
+        } else if (appDateStr === localDateStr && startTimeStr > currentTimeStr) {
+            isFuture = true;
+        }
+
         if (status === 'pending') {
             statusHtml = `<span class="badge badge-pending" style="background:#fef3c7; color:#d97706; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;"><span class="dot" style="background:#f59e0b; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;"></span>Chờ khám</span>`;
-            actionHtml = `
-                <button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${safeName}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>
-            `;
+            if (isFuture) {
+                actionHtml = `<button class="action-btn btn-primary" style="opacity: 0.5; cursor: not-allowed;" title="Chưa đến giờ khám"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
+            } else {
+                actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${safeName}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
+            }
         } else if (status === 'approved') {
             statusHtml = `<span class="badge badge-approved" style="background:#dcfce7; color:#166534; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;"><i class="fa-solid fa-circle-check" style="font-size: 14px; margin-right: 2px;"></i> Chờ khám</span>`;
-            actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${safeName}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
+            if (isFuture) {
+                actionHtml = `<button class="action-btn btn-primary" style="opacity: 0.5; cursor: not-allowed;" title="Chưa đến giờ khám"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
+            } else {
+                actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${safeName}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
+            }
         } else if (status === 'cancelled') {
             statusHtml = `<span class="badge" style="background:#fee2e2; color:#991b1b; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã hủy</span>`;
             actionHtml = `<span style="font-size: 12px; color: #ef4444;"><i class="fa-solid fa-xmark"></i> Lịch đã bị hủy</span>`;

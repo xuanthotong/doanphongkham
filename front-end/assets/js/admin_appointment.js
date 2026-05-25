@@ -1,3 +1,5 @@
+window.API_BASE = window.API_BASE || ((window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:3000' : 'https://doanphongkham.onrender.com');
+
 const appointmentTbody = document.getElementById('appointmentTableBody');
 let allAdminAppointments = [];
 let currentAdminAppointmentPage = 1;
@@ -6,7 +8,7 @@ const adminAppointmentItemsPerPage = 10;
 async function fetchAdminAppointments() {
     if (!appointmentTbody) return;
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/appointments');
+        const response = await fetch(`${window.API_BASE}/api/appointments`);
         allAdminAppointments = await response.json();
         renderAppointmentTable();
     } catch (error) {
@@ -187,7 +189,7 @@ function editAdminAppointmentNote(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const res = await fetch(`https://doanphongkham.onrender.com/api/appointments/${id}/note`, {
+                const res = await fetch(`${window.API_BASE}/api/appointments/${id}/note`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ghi_chu_cua_bac_si: result.value })
@@ -209,7 +211,7 @@ function deleteAdminAppointment(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`https://doanphongkham.onrender.com/api/appointments/${id}`, { method: 'DELETE' });
+                const response = await fetch(`${window.API_BASE}/api/appointments/${id}`, { method: 'DELETE' });
                 const data = await response.json();
                 if (response.ok) { Swal.fire('Thành công!', data.message || 'Hủy lịch hẹn thành công!', 'success'); fetchAdminAppointments(); } 
                 else { Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra khi hủy lịch hẹn!', 'error'); }

@@ -77,7 +77,7 @@ const adminShiftItemsPerPage = 20;
 async function fetchAdminShifts() {
     if (!shiftTbody) return;
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/doctors/shifts/admin/all');
+        const response = await fetch(`${window.API_BASE}/api/doctors/shifts/admin/all`);
         allAdminShifts = await response.json();
         renderAdminShiftTable();
     } catch (error) {
@@ -262,7 +262,7 @@ function deleteAdminShift(id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`https://doanphongkham.onrender.com/api/doctors/shifts/${id}`, { method: 'DELETE' });
+                const response = await fetch(`${window.API_BASE}/api/doctors/shifts/${id}`, { method: 'DELETE' });
                 const data = await response.json();
                 if (response.ok) { 
                     Swal.fire('Đã xóa!', data.message, 'success'); 
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
                 ? 'http://localhost:3000/api' 
-                : 'https://doanphongkham.onrender.com/api';
+                : `${window.API_BASE}/api`;
 
             const response = await fetch(`${API_URL}/dashboard/stats`);
             if (response.ok) {
@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') 
                     ? 'http://localhost:3000/api' 
-                    : 'https://doanphongkham.onrender.com/api';
+                    : `${window.API_BASE}/api`;
 
                 const response = await fetch(`${API_URL}/dashboard/revenue?mode=${currentChartMode}&date=${dateParam}`);
                 if (response.ok) {

@@ -9,9 +9,9 @@ const patientItemsPerPage = 10;
 // 1. FETCH DỮ LIỆU TỪ API (Tái sử dụng API appointments nhưng chỉ lấy trạng thái 'done')
 async function fetchAdminPatients() {
     try {
-        const response = await fetch('https://doanphongkham.onrender.com/api/appointments');
+        const response = await fetch(`${window.API_BASE}/api/appointments`);
         const data = await response.json();
-        
+
         // Chỉ lấy các hồ sơ đã khám xong
         allPatients = data.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === 'done');
         renderPatientTable();
@@ -38,7 +38,7 @@ function renderPatientTable() {
     tbody.innerHTML = '';
 
     // Chưa có ô search riêng cho bệnh nhân, tạm thời bỏ qua hoặc gắn nếu user yêu cầu
-    
+
     if (allPatients.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #6b7280; padding: 20px;">Không có hồ sơ y tế nào.</td></tr>`;
         return;
@@ -61,7 +61,7 @@ function renderPatientTable() {
         while ((match = imgRegex.exec(trieuChungText)) !== null) {
             extractedImages.push(match[1]);
         }
-        
+
         // Loại bỏ phần HTML ra khỏi chuỗi triệu chứng để hiển thị text thuần
         trieuChungText = trieuChungText.replace(/<br><div class="symptom-images-wrapper".*?<\/div>/g, '').trim();
         trieuChungText = trieuChungText.replace(/<[^>]*>?/gm, ''); // Xóa thẻ HTML còn sót
@@ -69,7 +69,7 @@ function renderPatientTable() {
         // Hình ảnh triệu chứng
         let imgBtnHtml = '';
         if (app.hinh_anh_benh_ly) {
-            const imgUrl = app.hinh_anh_benh_ly.startsWith('http') ? app.hinh_anh_benh_ly : `https://doanphongkham.onrender.com/uploads/${app.hinh_anh_benh_ly}`;
+            const imgUrl = app.hinh_anh_benh_ly.startsWith('http') ? app.hinh_anh_benh_ly : `${window.API_BASE}/uploads/${app.hinh_anh_benh_ly}`;
             imgBtnHtml = `<button class="action-btn" onclick="openPatientImage('${imgUrl}')" title="Xem hình ảnh" style="background-color: #0ea5e9; color: white;"><i class="fa-solid fa-image"></i> Xem</button>`;
         } else if (extractedImages.length > 0) {
             imgBtnHtml = `<button class="action-btn" onclick="openPatientImage('${extractedImages[0]}')" title="Xem hình ảnh" style="background-color: #0ea5e9; color: white;"><i class="fa-solid fa-image"></i> Xem</button>`;
@@ -81,10 +81,13 @@ function renderPatientTable() {
         const diagnosis = extractDiagnosis(app.ghi_chu_cua_bac_si);
         let note = app.ghi_chu_cua_bac_si || 'Không có';
         if (note.length > 30) note = note.substring(0, 30) + '...';
-
+        let patientCode = "Chưa rõ";
+        if (app.benh_nhan_id) {
+            patientCode = "#BN" + app.benh_nhan_id.toString().padStart(5, '0');
+        }
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><strong style="color: var(--primary-color);">#LK${app.id}</strong></td>
+           <td><strong style="color: var(--primary-color);" title="Mã Lịch Khám: #LK${app.id}">${patientCode}</strong></td>
             <td style="font-weight: 600;">${app.ten_benh_nhan}</td>
             <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${trieuChungText}">${trieuChungText || '<span style="color:#9ca3af;">Không nhập</span>'}</td>
             <td>${imgBtnHtml}</td>
@@ -170,7 +173,7 @@ function viewMedicalRecordDetail(id) {
 }
 
 // 5. HÀM XEM ẢNH BẰNG SWEETALERT
-window.openPatientImage = function(imgSrc) {
+window.openPatientImage = function (imgSrc) {
     Swal.fire({
         title: 'Hình ảnh triệu chứng',
         imageUrl: imgSrc,
