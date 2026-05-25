@@ -105,7 +105,7 @@ function renderAppointmentTable() {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><strong>#LK${app.id}</strong></td>
+            <td><strong style="color: #0ea5e9; font-size: 14px;">STT: ${String(app.so_thu_tu || 1).padStart(2, '0')}</strong><br><span style="font-size: 12px; color: #64748b;">Mã LK: ${app.id}</span></td>
             <td><b>${app.ten_benh_nhan}</b><br><span style="color:#64748b; font-size:12px;">${app.so_dien_thoai}</span></td>
             <td>BS. ${app.ten_bac_si}</td>
             <td>${ngayKhamStr}</td>

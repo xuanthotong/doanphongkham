@@ -31,7 +31,8 @@ const getAllAppointments = async (req, res) => {
                    llv.ngay_lam_viec, llv.khung_gio,
                    ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan, 
                    ISNULL(nd.so_dien_thoai, 'Chưa cập nhật') as so_dien_thoai,
-                   ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si
+                   ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si,
+                   STT_Table.so_thu_tu
             FROM LichKham lk
             JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
             JOIN TaiKhoan tk ON lk.benh_nhan_id = tk.id
@@ -39,6 +40,11 @@ const getAllAppointments = async (req, res) => {
             JOIN TaiKhoan bs_tk ON llv.bac_si_id = bs_tk.id
             LEFT JOIN HoSoNguoiDung bs_nd ON bs_tk.id = bs_nd.tai_khoan_id
             LEFT JOIN ThanhToan tt ON lk.id = tt.lich_kham_id
+            LEFT JOIN (
+                SELECT id, ROW_NUMBER() OVER(PARTITION BY lich_lam_viec_id ORDER BY gio_kham ASC, ngay_tao ASC) as so_thu_tu
+                FROM LichKham
+                WHERE trang_thai != 'Cancelled'
+            ) STT_Table ON lk.id = STT_Table.id
             WHERE tt.phuong_thuc_thanh_toan = 'cash' OR tt.trang_thai_thanh_toan = 1 OR tt.id IS NULL
             ORDER BY lk.ngay_tao DESC
         `);
@@ -60,15 +66,26 @@ const getAppointmentsByPatient = async (req, res) => {
                 SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, lk.ngay_tao, lk.gio_kham,
                        llv.ngay_lam_viec, llv.khung_gio,
                        ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si,
+                       ck.ten_chuyen_khoa,
+                       tt.so_tien,
+                       tt.phuong_thuc_thanh_toan,
                        dg.so_sao as diem_danh_gia,
                        dg.id as danh_gia_id,
-                       dg.noi_dung as nhan_xet
+                       dg.noi_dung as nhan_xet,
+                       STT_Table.so_thu_tu
                 FROM LichKham lk
                 JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
                 JOIN TaiKhoan bs_tk ON llv.bac_si_id = bs_tk.id
                 LEFT JOIN HoSoNguoiDung bs_nd ON bs_tk.id = bs_nd.tai_khoan_id
+                LEFT JOIN HoSoBacSi hsbs ON bs_tk.id = hsbs.tai_khoan_id
+                LEFT JOIN ChuyenKhoa ck ON hsbs.chuyen_khoa_id = ck.id
                 LEFT JOIN DanhGia dg ON lk.id = dg.lich_kham_id
                 LEFT JOIN ThanhToan tt ON lk.id = tt.lich_kham_id
+                LEFT JOIN (
+                    SELECT id, ROW_NUMBER() OVER(PARTITION BY lich_lam_viec_id ORDER BY gio_kham ASC, ngay_tao ASC) as so_thu_tu
+                    FROM LichKham
+                    WHERE trang_thai != 'Cancelled'
+                ) STT_Table ON lk.id = STT_Table.id
                 WHERE lk.benh_nhan_id = @benh_nhan_id
                   AND (tt.phuong_thuc_thanh_toan = 'cash' OR tt.trang_thai_thanh_toan = 1 OR tt.id IS NULL)
                 ORDER BY lk.ngay_tao DESC, llv.ngay_lam_viec DESC
@@ -91,12 +108,18 @@ const getAppointmentsByDoctor = async (req, res) => {
                 SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, lk.ngay_tao, lk.gio_kham,
                        llv.ngay_lam_viec, llv.khung_gio,
                        ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan, 
-                       ISNULL(nd.so_dien_thoai, 'Chưa cập nhật') as so_dien_thoai
+                       ISNULL(nd.so_dien_thoai, 'Chưa cập nhật') as so_dien_thoai,
+                       STT_Table.so_thu_tu
                 FROM LichKham lk
                 JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
                 JOIN TaiKhoan tk ON lk.benh_nhan_id = tk.id
                 LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
                 LEFT JOIN ThanhToan tt ON lk.id = tt.lich_kham_id
+                LEFT JOIN (
+                    SELECT id, ROW_NUMBER() OVER(PARTITION BY lich_lam_viec_id ORDER BY gio_kham ASC, ngay_tao ASC) as so_thu_tu
+                    FROM LichKham
+                    WHERE trang_thai != 'Cancelled'
+                ) STT_Table ON lk.id = STT_Table.id
                 WHERE llv.bac_si_id = @bac_si_id
                   AND (tt.phuong_thuc_thanh_toan = 'cash' OR tt.trang_thai_thanh_toan = 1 OR tt.id IS NULL)
                 ORDER BY llv.ngay_lam_viec DESC, llv.khung_gio ASC

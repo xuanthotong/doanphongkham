@@ -72,17 +72,22 @@ async function openMedicalRecord(maLK, tenBN) {
     let danhSachThuocDB = [];
     try {
         const res = await fetch(`${window.API_BASE}/api/thuoc/active`);
-        danhSachThuocDB = await res.json();
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) danhSachThuocDB = data;
+        }
     } catch (err) {
         console.error('Lỗi fetch danh sách thuốc:', err);
     }
 
     // Tạo HTML options cho dropdown chọn thuốc
     let thuocOptionsHtml = '<option value="" disabled selected>-- Chọn thuốc --</option>';
-    danhSachThuocDB.forEach(t => {
-        const gia = Number(t.gia_thuoc || 0).toLocaleString('vi-VN');
-        thuocOptionsHtml += `<option value="${t.id}" data-lieu="${t.lieu_dung_mac_dinh || ''}" data-don-vi="${t.don_vi}" data-gia="${t.gia_thuoc || 0}" data-ten="${t.ten_thuoc}">${t.ten_thuoc} (${t.don_vi}) - ${gia}đ</option>`;
-    });
+    if (Array.isArray(danhSachThuocDB)) {
+        danhSachThuocDB.forEach(t => {
+            const gia = Number(t.gia_thuoc || 0).toLocaleString('vi-VN');
+            thuocOptionsHtml += `<option value="${t.id}" data-lieu="${t.lieu_dung_mac_dinh || ''}" data-don-vi="${t.don_vi}" data-gia="${t.gia_thuoc || 0}" data-ten="${t.ten_thuoc}">${t.ten_thuoc} (${t.don_vi}) - ${gia}đ</option>`;
+        });
+    }
 
     Swal.fire({
         title: `Khám bệnh: ${tenBN} (#LK${maLK})`,
@@ -301,9 +306,20 @@ function exportPrescriptionPDF(tenBenhNhan, maLK, chanDoan, danhSachThuoc) {
     const generatePDF = async () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
+        const isFormOpen = !!document.getElementById('chan_doan'); // Kiểm tra form khám bệnh có đang mở
         
         try {
-            Swal.showLoading();
+            if (!isFormOpen) {
+                Swal.fire({
+                    title: 'Đang tạo Đơn thuốc PDF',
+                    html: 'Hệ thống đang tải font chữ tiếng Việt, vui lòng chờ...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+            } else {
+                Swal.showLoading(); // Load nhẹ nếu in từ bên trong form khám
+            }
+
             // Tải font Roboto Regular
             const resReg = await fetch('https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf');
             const bufReg = await resReg.arrayBuffer();
@@ -323,10 +339,16 @@ function exportPrescriptionPDF(tenBenhNhan, maLK, chanDoan, danhSachThuoc) {
             doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
             
             doc.setFont('Roboto', 'normal');
-            Swal.hideLoading();
+            if (isFormOpen) Swal.hideLoading();
         } catch(e) {
             console.error('Lỗi nhúng font tiếng Việt:', e);
-            Swal.hideLoading();
+            if (!isFormOpen) {
+                Swal.fire('Lỗi', 'Không thể tải font chữ. Vui lòng kiểm tra kết nối mạng!', 'error');
+            } else {
+                Swal.hideLoading();
+                Swal.showValidationMessage('Lỗi tải font chữ tiếng Việt!');
+            }
+            return;
         }
 
         const pageWidth = doc.internal.pageSize.getWidth();
@@ -445,22 +467,54 @@ function exportPrescriptionPDF(tenBenhNhan, maLK, chanDoan, danhSachThuoc) {
 
         // Lưu file PDF
         doc.save(`Don_Thuoc_LK${maLK}_${tenBenhNhan.replace(/\s+/g, '_')}.pdf`);
+        
+        // Hiển thị thông báo thành công đẹp mắt
+        if (!isFormOpen) {
+            Swal.fire({
+                title: 'Xuất file thành công!',
+                text: `Đơn thuốc của bệnh nhân ${tenBenhNhan} đã được lưu về máy.`,
+                icon: 'success',
+                confirmButtonColor: '#10b981',
+                confirmButtonText: '<i class="fa-solid fa-check"></i> Đóng'
+            });
+        } else {
+            const btnExportPdf = document.getElementById('btn_export_pdf');
+            if (btnExportPdf) {
+                const originalText = btnExportPdf.innerHTML;
+                btnExportPdf.innerHTML = '<i class="fa-solid fa-check"></i> Đã tải xong!';
+                setTimeout(() => { btnExportPdf.innerHTML = originalText; }, 3000);
+            }
+        }
     };
 
     // Load thư viện jsPDF nếu chưa có
     if (typeof window.jspdf === 'undefined') {
-        Swal.showLoading();
+        const isFormOpen = !!document.getElementById('chan_doan');
+        if (!isFormOpen) {
+            Swal.fire({
+                title: 'Đang tải thư viện PDF...',
+                text: 'Lần đầu xuất file có thể mất vài giây.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        } else {
+            Swal.showLoading();
+        }
+
         Promise.all([
             loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
         ]).then(() => {
             return loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js');
         }).then(() => {
-            Swal.hideLoading();
             generatePDF();
         }).catch(err => {
-            Swal.hideLoading();
             console.error('Lỗi tải thư viện PDF:', err);
-            Swal.fire('Lỗi', 'Không thể tải thư viện xuất PDF. Vui lòng kiểm tra kết nối mạng!', 'error');
+            if (!isFormOpen) {
+                Swal.fire('Lỗi', 'Không thể tải thư viện xuất PDF. Vui lòng kiểm tra kết nối mạng!', 'error');
+            } else {
+                Swal.hideLoading();
+                Swal.showValidationMessage('Lỗi tải thư viện PDF!');
+            }
         });
     } else {
         generatePDF();
@@ -588,18 +642,39 @@ function editMedicalRecord(maLK) {
 // 6. NGHIỆP VỤ: TRẢ LỜI CÂU HỎI Q&A
 function replyQA(maCH) {
     const question = currentQA.find(q => q.id === maCH);
+    if (!question) return;
     const currentReply = question && question.tra_loi ? question.tra_loi : '';
     const isEditing = !!currentReply;
 
     Swal.fire({
         title: isEditing ? 'Sửa câu trả lời' : 'Phản hồi bệnh nhân', 
-        input: 'textarea', 
-        inputValue: currentReply,
-        inputPlaceholder: 'Nhập câu trả lời của Bác sĩ...',
+        width: '600px',
+        customClass: {
+            popup: 'saas-modal',
+            container: 'saas-backdrop',
+            confirmButton: 'saas-btn-primary',
+            cancelButton: 'saas-btn-outline'
+        },
+        html: `
+            <div class="qa-reply-container">
+                <div class="qa-question-box">
+                    <p class="qa-question-text"><strong><i class="fa-solid fa-circle-question qa-icon-question"></i> Câu hỏi:</strong> <br><span class="qa-question-content">${question.noi_dung ? question.noi_dung.replace(/\n/g, '<br>') : ''}</span></p>
+                </div>
+                <label class="saas-label qa-reply-label"><i class="fa-solid fa-user-doctor qa-icon-doctor"></i> Câu trả lời của Bác sĩ (*)</label>
+                <textarea id="qa_reply_content" class="saas-input qa-reply-textarea" placeholder="Nhập nội dung tư vấn chi tiết...">${currentReply}</textarea>
+            </div>
+        `,
         showCancelButton: true, 
-        confirmButtonColor: '#0284C7', 
-        confirmButtonText: isEditing ? 'Cập nhật' : 'Gửi phản hồi',
-        inputValidator: (value) => { if (!value) return 'Vui lòng nhập nội dung trả lời!' }
+        confirmButtonText: isEditing ? '<i class="fa-solid fa-check"></i> Cập nhật' : '<i class="fa-solid fa-paper-plane"></i> Gửi phản hồi',
+        cancelButtonText: 'Hủy',
+        preConfirm: () => {
+            const replyContent = document.getElementById('qa_reply_content').value.trim();
+            if (!replyContent) {
+                Swal.showValidationMessage('Vui lòng nhập nội dung trả lời!');
+                return false;
+            }
+            return replyContent;
+        }
     }).then(async (result) => {
         if (result.isConfirmed && result.value) {
             try {
@@ -665,6 +740,22 @@ async function fetchDoctorQA() {
                 };
             }
         }
+
+        // Cập nhật badge thông báo trên thanh menu cho tab Hỏi đáp
+        const navHoiDapLinks = document.querySelectorAll('.nav-links a[onclick*="tab-hoi-dap"]');
+        navHoiDapLinks.forEach(link => {
+            let badge = link.querySelector('.badge-noti');
+            if (pendingQA > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'badge-noti';
+                    link.appendChild(badge);
+                }
+                badge.innerText = pendingQA > 99 ? '99+' : pendingQA;
+            } else if (badge) {
+                badge.remove();
+            }
+        });
 
         renderDoctorQA(docSpecialtyId);
     } catch (error) { console.error('Lỗi khi lấy hỏi đáp:', error); }
@@ -831,22 +922,22 @@ function openShiftModal(shiftId = null) {
             cancelButton: 'saas-btn-outline'
         },
         html: `
-            <div style="text-align: left; margin-top: 15px;">
+            <div style="text-align: left;">
                 <label class="saas-label"><i class="fa-regular fa-calendar" style="color: #0ea5e9; margin-right: 5px;"></i> Ngày làm việc (*)</label>
                 <input type="date" id="shift_date" class="saas-input" value="${defaultDate}" min="${localTodayStr}" style="cursor: pointer;">
                 
-                <div style="display: flex; gap: 20px;">
+                <div style="display: flex; gap: 20px; margin-top: 15px;">
                     <div style="flex: 1;">
-                        <label class="saas-label"><i class="fa-regular fa-clock" style="color: #10b981; margin-right: 5px;"></i> Từ giờ (*)</label>
+                        <label class="saas-label" style="margin-top: 0;"><i class="fa-regular fa-clock" style="color: #10b981; margin-right: 5px;"></i> Từ giờ (*)</label>
                         <input type="time" id="shift_start" class="saas-input" value="${defaultStart}" step="1800" style="cursor: pointer;">
                     </div>
                     <div style="flex: 1;">
-                        <label class="saas-label"><i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b; margin-right: 5px;"></i> Đến giờ (*)</label>
+                        <label class="saas-label" style="margin-top: 0;"><i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b; margin-right: 5px;"></i> Đến giờ (*)</label>
                         <input type="time" id="shift_end" class="saas-input" value="${defaultEnd}" step="1800" style="cursor: pointer;">
                     </div>
                 </div>
 
-                <label class="saas-label" style="margin-top: 5px;"><i class="fa-solid fa-users" style="color: #8b5cf6; margin-right: 5px;"></i> Số lượng Bệnh nhân tối đa (*)</label>
+                <label class="saas-label"><i class="fa-solid fa-users" style="color: #8b5cf6; margin-right: 5px;"></i> Số lượng Bệnh nhân tối đa (*)</label>
                 <input type="number" id="shift_max" class="saas-input" value="${defaultMax}" min="1" max="50">
             </div>
         `,
@@ -1124,6 +1215,22 @@ async function fetchAppointments() {
             }
         }
 
+        // Cập nhật badge thông báo trên thanh menu cho tab Lịch khám
+        const navLichKhamLinks = document.querySelectorAll('.nav-links a[onclick*="tab-lich-kham"]');
+        navLichKhamLinks.forEach(link => {
+            let badge = link.querySelector('.badge-noti');
+            if (todayCount > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'badge-noti';
+                    link.appendChild(badge);
+                }
+                badge.innerText = todayCount > 99 ? '99+' : todayCount;
+            } else if (badge) {
+                badge.remove();
+            }
+        });
+
         renderAppointments('all');
     } catch (error) {
         console.error('Lỗi khi lấy lịch hẹn:', error);
@@ -1210,14 +1317,16 @@ function renderAppointments(filterStatus) {
         let actionHtml = '';
         
         const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
+        const safeName = app.ten_benh_nhan ? app.ten_benh_nhan.replace(/'/g, "\\'") : '';
+        
         if (status === 'pending') {
             statusHtml = `<span class="badge badge-pending" style="background:#fef3c7; color:#d97706; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;"><span class="dot" style="background:#f59e0b; display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;"></span>Chờ khám</span>`;
             actionHtml = `
-                <button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${app.ten_benh_nhan}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>
+                <button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${safeName}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>
             `;
         } else if (status === 'approved') {
             statusHtml = `<span class="badge badge-approved" style="background:#dcfce7; color:#166534; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;"><i class="fa-solid fa-circle-check" style="font-size: 14px; margin-right: 2px;"></i> Chờ khám</span>`;
-            actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${app.ten_benh_nhan}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
+            actionHtml = `<button class="action-btn btn-primary" onclick="openMedicalRecord('${app.id}', '${safeName}')"><i class="fa-solid fa-stethoscope"></i> Khám bệnh & Kê đơn</button>`;
         } else if (status === 'cancelled') {
             statusHtml = `<span class="badge" style="background:#fee2e2; color:#991b1b; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Đã hủy</span>`;
             actionHtml = `<span style="font-size: 12px; color: #ef4444;"><i class="fa-solid fa-xmark"></i> Lịch đã bị hủy</span>`;
@@ -1244,7 +1353,7 @@ function renderAppointments(filterStatus) {
 
         trHTML += `
             <tr>
-                <td><strong>#LK${app.id}</strong></td>
+                <td><strong style="color: #0ea5e9; font-size: 16px;">STT: ${String(app.so_thu_tu || 1).padStart(2, '0')}</strong><br><span style="font-size: 12px; color: #64748b;">Mã LK: ${app.id}</span></td>
                 <td><b>${app.ten_benh_nhan}</b><br><span style="color:var(--text-sub); font-size:12px;">${app.so_dien_thoai || 'Chưa cập nhật'}</span></td>
                 <td>${formattedDate}<br><span style="color:var(--primary); font-size:12px; font-weight: 600;">${app.gio_kham || app.khung_gio}</span></td>
                 <td style="max-width: 200px; white-space: normal;">${trieuChungText}</td>
@@ -1271,6 +1380,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const docName = userInfo.ho_ten || userInfo.ten_dang_nhap || "Bác sĩ";
         const elDoctorName = document.getElementById('doctorName');
         if (elDoctorName) elDoctorName.innerText = docName;
+
+        const docSpec = userInfo.ten_chuyen_khoa ? `Khoa: ${userInfo.ten_chuyen_khoa}` : "Chưa phân khoa";
+        const elDoctorSpecNav = document.getElementById('doctorSpecialtyNav');
+        if (elDoctorSpecNav) elDoctorSpecNav.innerText = docSpec;
 
         // XỬ LÝ AVATAR TRÁNH LỖI VỠ ẢNH
         const avatarImg = document.getElementById('nav_doctor_img');

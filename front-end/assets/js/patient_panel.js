@@ -789,6 +789,12 @@ async function fetchMedicalHistory() {
 
                     let reasonCancel = (status === 'cancelled' && app.ghi_chu_cua_bac_si) ? `<div style="margin-top: 15px; padding: 10px 15px; background: #fef2f2; border-radius: 8px; font-size: 13px; color: #b91c1c; border-left: 3px solid #ef4444;"><strong>Lý do hủy:</strong> ${app.ghi_chu_cua_bac_si}</div>` : '';
 
+                    // HIỆN NÚT XEM PHIẾU KHÁM NẾU LỊCH CHƯA KHÁM XONG
+                    let btnXemPhieu = '';
+                    if (status === 'pending' || status === 'approved') {
+                        btnXemPhieu = `<div style="margin-top: 15px;"><button onclick="viewAppointmentTicket(${app.id})" style="padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);" onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='#0ea5e9'"><i class="fa-solid fa-ticket"></i> Xem & Tải Phiếu Khám</button></div>`;
+                    }
+
                     lichSuHTML += `
                         <div style="border: 1px solid #e2e8f0; border-left: 4px solid ${borderColor}; border-radius: 12px; padding: 20px; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s; margin-bottom: 15px; display: flex; gap: 15px; align-items: flex-start;">
                             ${iconHtml}
@@ -806,6 +812,7 @@ async function fetchMedicalHistory() {
                                     <strong style="color: #334155;">Triệu chứng:</strong> ${app.mo_ta_trieu_chung || 'Không có ghi chú'}
                                 </div>
                                 ${reasonCancel}
+                                ${btnXemPhieu}
                             </div>
                         </div>
                     `;
@@ -883,6 +890,150 @@ async function fetchMedicalHistory() {
         if(containerLichSu) containerLichSu.innerHTML = '<p style="color: red; text-align: center;">Không thể tải lịch sử khám lúc này.</p>';
     }
 }
+
+// ==================================================
+// HÀM XEM VÀ TẢI PHIẾU KHÁM BỆNH (TICKET)
+// ==================================================
+window.viewAppointmentTicket = function(appId) {
+    const app = window.patientAppointments.find(a => a.id === appId);
+    if (!app) return;
+    
+    const d = new Date(app.ngay_lam_viec);
+    const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
+    const timeShow = app.gio_kham || app.khung_gio;
+    
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const patientName = userInfo.ho_ten || userInfo.ten_dang_nhap || 'Bệnh nhân';
+    const patientPhone = userInfo.so_dien_thoai || 'Chưa cập nhật';
+    
+    // Lấy Số thứ tự (STT) chuẩn xác nhất từ hệ thống
+    const stt = app.so_thu_tu || 1;
+    
+    // Tiền xử lý các trường dữ liệu bổ sung
+    let trieuChungText = app.mo_ta_trieu_chung || 'Không có';
+    trieuChungText = trieuChungText.replace(/<br><div class="symptom-images-wrapper".*?<\/div>/g, '').trim();
+    trieuChungText = trieuChungText.replace(/<[^>]*>?/gm, ''); // Xóa thẻ HTML còn sót
+
+    const chuyenKhoa = app.ten_chuyen_khoa || 'Đa khoa';
+    
+    // Sửa lỗi hiển thị tiền: Kiểm tra khác null để đảm bảo lấy được cả các ca khám 0đ
+    const soTien = (app.so_tien !== null && app.so_tien !== undefined) ? Number(app.so_tien).toLocaleString('vi-VN') + ' VNĐ' : 'Chưa cập nhật';
+    
+    let phuongThucTT = 'Chưa xác định';
+    if (app.phuong_thuc_thanh_toan) {
+        const ptt = app.phuong_thuc_thanh_toan.toLowerCase();
+        if (ptt === 'cash') phuongThucTT = 'Tiền mặt';
+        else if (ptt === 'transfer') phuongThucTT = 'Chuyển khoản Online';
+        else if (ptt === 'momo') phuongThucTT = 'Ví MoMo';
+    }
+    
+    const ticketHtml = `
+        <div id="appointment-ticket" style="background: white; padding: 25px; border-radius: 16px; border: 2px dashed #0ea5e9; width: 100%; max-width: 380px; margin: 0 auto; color: #334155; text-align: left; font-family: 'Plus Jakarta Sans', sans-serif; position: relative; box-sizing: border-box;">
+            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px dashed #e2e8f0; padding-bottom: 15px;">
+                <h3 style="margin: 0; color: #0284c7; font-size: 22px; font-weight: 900; letter-spacing: 1px;"><i class="fa-solid fa-notes-medical"></i> TT MEDICAL</h3>
+                <p style="margin: 5px 0 0 0; font-size: 15px; font-weight: 700; color: #475569;">PHIẾU KHÁM BỆNH</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #f0f9ff; padding: 15px; border-radius: 12px; border: 1px solid #bae6fd;">
+                <div style="font-size: 14px; font-weight: 800; color: #0369a1;">SỐ THỨ TỰ:</div>
+                <div style="font-size: 36px; font-weight: 900; color: #ef4444; line-height: 1;">${String(stt).padStart(3, '0')}</div>
+            </div>
+            
+            <div style="font-size: 14px; line-height: 1.8;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Mã lịch khám:</span>
+                    <strong style="color: #0f172a; text-align: right;">LK${app.id}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Cơ sở y tế:</span>
+                    <strong style="color: #0f172a; text-align: right;">Phòng khám TT Medical</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Bệnh nhân:</span>
+                    <strong style="color: #0f172a; text-align: right;">${patientName}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Bác sĩ:</span>
+                    <strong style="color: #0f172a; text-align: right;">BS. ${app.ten_bac_si || 'Chưa phân công'}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Chuyên khoa:</span>
+                    <strong style="color: #0f172a; text-align: right;">${chuyenKhoa}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Triệu chứng:</span>
+                    <strong style="color: #0f172a; text-align: right; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${trieuChungText}">${trieuChungText}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Ngày giờ:</span>
+                    <strong style="color: #0ea5e9; text-align: right;">${timeShow} (${dateStr})</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px;">
+                    <span style="color: #64748b; font-weight: 600;">Tổng tiền:</span>
+                    <strong style="color: #10b981; text-align: right;">${soTien}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b; font-weight: 600;">Thanh toán:</span>
+                    <strong style="color: #f59e0b; text-align: right;">${phuongThucTT}</strong>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; background: #f8fafc; padding: 12px; border-radius: 8px; text-align: center; font-size: 13px; color: #64748b; font-style: italic; border: 1px solid #e2e8f0;">
+                <i class="fa-solid fa-circle-info" style="color: #f59e0b;"></i> Vui lòng có mặt trước 15 phút và đưa ảnh này cho nhân viên tiếp đón.
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        html: ticketHtml,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-download"></i> Tải ảnh phiếu',
+        cancelButtonText: 'Đóng',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#64748b',
+        customClass: { popup: 'saas-modal' },
+        preConfirm: () => {
+            Swal.showLoading();
+            return new Promise((resolve) => {
+                const element = document.getElementById('appointment-ticket');
+                if (!element) { resolve(false); return; }
+                
+                const loadScript = (src) => new Promise((res, rej) => {
+                    if (typeof html2canvas !== 'undefined') { res(); return; }
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = res;
+                    script.onerror = rej;
+                    document.head.appendChild(script);
+                });
+
+                loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')
+                .then(() => {
+                    html2canvas(element, { scale: 2, backgroundColor: '#ffffff', logging: false }).then(canvas => {
+                        resolve(canvas.toDataURL('image/png'));
+                    });
+                })
+                .catch(() => {
+                    Swal.showValidationMessage('Lỗi tải thư viện tạo ảnh. Vui lòng kiểm tra mạng!');
+                    resolve(false);
+                });
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            const link = document.createElement('a');
+            link.download = `PhieuKham_LK${app.id}_${patientName.replace(/\s+/g, '')}.png`;
+            link.href = result.value;
+            link.click();
+            Swal.fire({
+                title: 'Tải xuống thành công!',
+                text: 'Hãy đưa hình ảnh này cho lễ tân khi bạn đến phòng khám nhé.',
+                icon: 'success',
+                confirmButtonColor: '#0ea5e9'
+            });
+        }
+    });
+};
 
 // ==================================================
 // 6.5. HỆ THỐNG THÔNG BÁO (NOTIFICATIONS)

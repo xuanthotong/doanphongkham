@@ -373,6 +373,48 @@
                 </div>
             </div>
         </div>
+        
+        <footer class="saas-footer-dark">
+            <div class="footer-grid-dark">
+                <div class="footer-col-dark">
+                    <div class="logo-dark">
+                        <img src="../../assets/images/logo.png" alt="Logo">
+                        <span>TT Medical</span>
+                    </div>
+                    <p>Hồ sơ Sức khỏe Điện tử - Đồng hành cùng Bệnh nhân. Chăm sóc sức khỏe của bạn mọi lúc, mọi nơi.</p>
+                </div>
+                <div class="footer-col-dark">
+                    <h3>Dịch vụ</h3>
+                    <ul>
+                        <li><a href="#" onclick="switchTab(event, 'tab-dat-lich')">Đặt lịch khám</a></li>
+                        <li><a href="#" onclick="switchTab(event, 'tab-hoi-dap-bac-si')">Hỏi đáp trực tuyến</a></li>
+                        <li><a href="#" onclick="switchTab(event, 'tab-trang-chu'); switchProfileTab('record');">Lịch sử khám bệnh</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col-dark">
+                    <h3>Liên kết</h3>
+                    <ul>
+                        <li><a href="#" onclick="switchTab(event, 'tab-ho-so')">Hồ sơ của tôi</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); const cb = document.querySelector('.chatbot-toggle'); if(cb && !cb.classList.contains('active')) cb.click();">Hướng dẫn sử dụng</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col-dark">
+                    <h3>Liên hệ</h3>
+                    <ul>
+                        <li>Hà Nội, Việt Nam</li>
+                        <li><a href="tel:19006868" style="color: inherit; text-decoration: none;">1900 6868</a></li>
+                        <li>contact@ttmedical.vn</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom-dark">
+                <span>&copy; 2026 TT Medical. Đã đăng ký bản quyền.<br>Phát triển bởi: Tống Xuân Thọ, Nguyễn Văn Thiệu.</span>
+                <div class="footer-bottom-links">
+                    <a href="#">Bảo mật thông tin</a>
+                    <a href="#">Điều khoản</a>
+                </div>
+            </div>
+        </footer>
     </main>
 
     <div id="doctorDetailModal" class="modal-overlay">

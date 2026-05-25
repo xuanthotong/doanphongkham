@@ -397,11 +397,16 @@ async function loadTimeSlotsForCard(docId, dateStr) {
         let html = '<p class="bdc-timeslots-title"><i class="fa-regular fa-clock"></i> Chọn giờ khám:</p>';
         html += '<div class="bdc-timeslots-grid">';
 
+        // Tính toán số người tối đa cho mỗi 30 phút (Slot)
+        const maxPerSlot = Math.ceil(shift.so_luong_toi_da / Math.max(1, allSlots.length));
+        const isShiftFull = (shift.so_luong_hien_tai >= shift.so_luong_toi_da) || (shift.trang_thai === 'Stopped');
+
         allSlots.forEach(slot => {
             const slotStart = slot.split(' - ')[0];
             const isPast = (dateStr === todayStr && slotStart < currentTime);
+            const countBookedInSlot = bookedSlots.filter(s => s === slot).length;
 
-            if (bookedSlots.includes(slot)) {
+            if (isShiftFull || countBookedInSlot >= maxPerSlot) {
                 html += `<div class="bdc-time-slot slot-booked">${slot} (Kín)</div>`;
             } else if (isPast) {
                 html += `<div class="bdc-time-slot slot-past" title="Đã qua giờ">${slot}</div>`;
@@ -906,5 +911,3 @@ function renderSymptomImages() {
         previewContainer.appendChild(div);
     });
 }
-
-

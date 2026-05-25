@@ -3,99 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bác sĩ Dashboard - TT Medical</title>
+    <title>Bác sĩ Dashboard - SaaS 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="../../assets/css/home.css">
     <link rel="stylesheet" href="../../assets/css/doctor.css">
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="container">
-            <div class="top-bar-left">
-                <a href="tel:19006868"><i class="fa-solid fa-phone"></i> Hotline: 1900 6868</a>
-                <span style="margin-left: 20px;">Thứ 2 - CN: 7:00 - 20:00</span>
+    <div class="nav-wrapper">
+        <nav class="navbar saas-navbar">
+            <div class="nav-left">
+                <a href="#" class="logo">
+                   <img src="../../assets/images/logo.png" alt="TT Medical">
+                   <div class="logo-text">TT Medical</div>
+                </a>
             </div>
-            <div class="top-bar-right">
-                <a href="https://www.facebook.com/tongtho308">Liên hệ</a>
-                <a href="https://www.facebook.com/nguyen.thieu.983134">Hỗ trợ</a>
-            </div>
-        </div>
-    </div>
 
-    <nav class="navbar">
-        <div class="container">
-            <a href="#" class="logo">
-                <img src="../../assets/images/logo.png" alt="Logo" style="height: 75px; transform: scale(1.1); margin-left: 10px; object-fit: contain;">
-            </a>
             
-            <ul class="nav-links">
-                <li><a href="#" class="tab-link active" onclick="switchTab(event, 'tab-lich-kham')"><i class="fa-solid fa-calendar-check"></i> Lịch hẹn</a></li>
-                <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-lich-lam-viec')"><i class="fa-solid fa-clock"></i> Ca làm việc</a></li>
-                <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-hoi-dap')"><i class="fa-solid fa-comments"></i> Hỏi đáp</a></li>
-                <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-ho-so')"><i class="fa-solid fa-user-doctor"></i> Hồ sơ</a></li>
-            </ul>
+            <div class="nav-center">
+                <ul class="nav-links">
+                    <li><a href="#" class="tab-link active" onclick="switchTab(event, 'tab-lich-kham')"><i class="fa-regular fa-calendar-check"></i> Lịch hẹn</a></li>
+                    <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-lich-lam-viec')"><i class="fa-regular fa-clock"></i> Ca làm việc</a></li>
+                    <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-hoi-dap')"><i class="fa-regular fa-comments"></i> Hỏi đáp <span class="badge-noti">2</span></a></li>
+                    <li><a href="#" class="tab-link" onclick="switchTab(event, 'tab-ho-so')"><i class="fa-regular fa-address-card"></i> Hồ sơ</a></li>
+                </ul>
+            </div>
             
-            <div class="user-menu" onclick="confirmLogout(event)">
-                <div class="user-dropdown-btn">
-                    <img id="nav_doctor_img" src="../../assets/images/doctors/default-avatar.png" alt="Avatar">
-                    <span class="doc-name">BS. <span id="doctorName">Đang tải...</span></span>
-                    <i class="fa-solid fa-caret-down" style="color: var(--primary); margin-left: 5px;"></i>
+            <div class="nav-right">
+                <div class="user-menu" onclick="confirmLogout(event)">
+                    <div class="user-dropdown-btn">
+                        <img id="nav_doctor_img" src="../../assets/images/doctors/default-avatar.png" alt="Avatar">
+                        <div class="doc-info-nav">
+                            <span class="doc-name">BS. <span id="doctorName">Đang tải...</span></span>
+                            <span class="doc-spec" id="doctorSpecialtyNav">Đang tải...</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-muted"></i>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </div>
 
     <div class="dashboard-wrapper">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#e0f2fe; color:#0284C7;"><i class="fa-solid fa-calendar-day"></i></div>
-                <div class="stat-info"><p>Khám hôm nay</p><h3 id="stat_today">00</h3></div>
+        
+        <div class="page-greeting">
+            <div>
+                <h1>Tổng quan phòng khám 👋</h1>
+                <p>Thông tin cập nhật mới nhất ngày <span id="current_date_text">Đang tải...</span>.</p>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-bell"></i></div>
-                <div class="stat-info"><p>Chờ khám</p><h3 id="stat_pending">00</h3></div>
+            <button class="btn-sync" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Đồng bộ dữ liệu</button>
+        </div>
+
+        <div class="stats-grid saas-stats">
+            <div class="stat-card border-bottom-blue" onclick="switchTab(event, 'tab-lich-kham')">
+                <div class="stat-icon icon-blue"><i class="fa-regular fa-calendar"></i></div>
+                <div class="stat-info">
+                    <p>Khám hôm nay</p>
+                    <h3 id="stat_today">00</h3>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#dcfce7; color:#166534;"><i class="fa-solid fa-check-double"></i></div>
-                <div class="stat-info"><p>Đã khám xong</p><h3 id="stat_done">00</h3></div>
+            <div class="stat-card border-bottom-yellow" onclick="switchTab(event, 'tab-lich-kham')">
+                <div class="stat-icon icon-yellow"><i class="fa-solid fa-hourglass-half"></i></div>
+                <div class="stat-info">
+                    <p>Đang chờ khám</p>
+                    <h3 id="stat_pending">00</h3>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background:#f3e8ff; color:#9333ea;"><i class="fa-solid fa-question"></i></div>
-                <div class="stat-info"><p>Hỏi đáp mới</p><h3 id="stat_qa">00</h3></div>
+            <div class="stat-card border-bottom-green" onclick="switchTab(event, 'tab-lich-kham')">
+                <div class="stat-icon icon-green"><i class="fa-solid fa-check"></i></div>
+                <div class="stat-info">
+                    <p>Đã khám xong</p>
+                    <h3 id="stat_done">00</h3>
+                </div>
+            </div>
+            <div class="stat-card border-bottom-purple" onclick="switchTab(event, 'tab-hoi-dap')">
+                <div class="stat-icon icon-purple"><i class="fa-regular fa-circle-question" style="opacity: 0.3; font-size: 60px; position: absolute; right: 10px; top: 10px;"></i></div>
+                <div class="stat-info" style="position: relative; z-index: 2;">
+                    <p>Hỏi đáp mới</p>
+                    <h3 id="stat_qa">00</h3>
+                </div>
             </div>
         </div>
 
         <div class="main-content-card">
             
             <div id="tab-lich-kham" class="tab-content active">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                    <h2 style="font-size:22px; margin:0;">Danh sách Lịch hẹn</h2>
-                    <input type="text" id="searchAppointment" oninput="renderAppointments()" placeholder="Tìm theo tên, mã, SĐT..." style="padding:10px 15px; border:1px solid #e2e8f0; border-radius:8px; width: 250px;">
-                </div>
                 
-                <div class="filter-tabs">
-                    <button class="filter-btn active" onclick="filterAppointments(event, 'all')">Tất cả</button>
-                    <button class="filter-btn" onclick="filterAppointments(event, 'pending')">Chờ duyệt (5)</button>
-                    <button class="filter-btn" onclick="filterAppointments(event, 'approved')">Đã duyệt (8)</button>
-                    <button class="filter-btn" onclick="filterAppointments(event, 'done')">Đã khám</button>
+                <div class="table-controls-row">
+                    <h2 class="table-title"><i class="fa-solid fa-list-ul"></i> Danh sách Lịch hẹn</h2>
+                    
+                    <div class="filter-tabs saas-filters">
+                        <button class="filter-btn active" onclick="filterAppointments(event, 'all')">Tất cả (3)</button>
+                        <button class="filter-btn" onclick="filterAppointments(event, 'pending')">Chờ khám (2)</button>
+                        <button class="filter-btn" onclick="filterAppointments(event, 'done')">Đã khám (1)</button>
+                    </div>
+
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchAppointment" oninput="renderAppointments()" placeholder="Tìm tên, mã, SĐT...">
+                    </div>
                 </div>
 
-                <table class="custom-table">
-                    <thead><tr><th>Mã LK</th><th>Bệnh nhân</th><th>Thời gian</th><th>Lý do khám</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
-                    <tbody id="appointmentTableBody">
-                        <tr><td colspan="6" style="text-align: center; color: #64748B;">Đang tải danh sách lịch hẹn...</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="custom-table saas-table">
+                        <thead>
+                            <tr>
+                                <th>STT / Mã LK</th>
+                                <th>Bệnh nhân</th>
+                                <th>Thời gian</th>
+                                <th>Lý do khám</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointmentTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: #64748B;">Đang tải danh sách lịch hẹn...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="tab-lich-lam-viec" class="tab-content">
-                <div style="display:flex; justify-content:space-between; margin-bottom: 20px;">
-                    <h2 style="font-size:22px; margin:0;">Ca làm việc của tôi</h2>
-                    <button class="btn btn-primary" onclick="openShiftModal()"><i class="fa-solid fa-plus"></i> Đăng ký ca</button>
+                <div class="table-controls-row" style="margin-bottom: 20px;">
+                    <h2 class="table-title">Ca làm việc của tôi</h2>
+                    <button class="btn-dark" onclick="openShiftModal()"><i class="fa-solid fa-plus"></i> Đăng ký ca</button>
                 </div>
-                <table class="custom-table">
+                <table class="custom-table saas-table">
                     <thead><tr><th>Ngày làm việc</th><th>Khung giờ</th><th>Số lượng tối đa</th><th>Tình trạng đặt</th><th>Thao tác</th></tr></thead>
                     <tbody id="shiftTableBody">
                         <tr><td colspan="5" style="text-align: center; color: #64748B;">Đang tải danh sách ca làm việc...</td></tr>
@@ -104,15 +138,15 @@
             </div>
 
             <div id="tab-hoi-dap" class="tab-content">
-                <h2 style="font-size:22px; margin:0;">Hỏi đáp từ Bệnh nhân</h2>
+                <h2 class="table-title" style="margin-bottom: 20px;">Hỏi đáp từ Bệnh nhân</h2>
                 <div class="qa-list" id="doctorQaListContainer">
                     <p style="text-align: center; color: #64748B;">Đang tải danh sách câu hỏi...</p>
                 </div>
             </div>
 
             <div id="tab-ho-so" class="tab-content">
-                <h2 style="font-size:22px; margin-bottom:10px;">Hồ sơ cá nhân & Chuyên môn</h2>
-                <p style="color: var(--text-sub); margin-bottom: 20px; font-size: 14px;"><i class="fa-solid fa-lock" style="color: #94a3b8;"></i> Dữ liệu hồ sơ chỉ được xem, không thể chỉnh sửa.</p>
+                <h2 class="table-title" style="margin-bottom:10px;">Hồ sơ cá nhân & Chuyên môn</h2>
+                <p style="color: #64748b; margin-bottom: 20px; font-size: 14px;"><i class="fa-solid fa-lock"></i> Dữ liệu hồ sơ chỉ được xem, không thể chỉnh sửa.</p>
                 
                 <div class="profile-avatar-container">
                      <img id="hs_avatar" src="" alt="Ảnh Bác sĩ">
@@ -135,43 +169,57 @@
         </div>
     </div>
 
-    <footer>
-        <div class="container footer-grid">
-            <div class="footer-col">
-                <a href="#" class="logo" style="color: white; margin-bottom: 20px;">
-                    <img src="../../assets/images/logo.png" alt="Logo" style="filter: brightness(0) invert(1); height: 65px; width: auto;">
-                </a>
-                <p>Hệ thống đặt lịch khám trực tuyến hàng đầu. Đồng hành cùng sức khỏe của bạn và gia đình.</p>
+    <footer class="saas-footer-dark">
+        <div class="footer-grid-dark">
+            <div class="footer-col-dark">
+                <div class="logo-dark">
+                    <img src="../../assets/images/logo.png" alt="Logo">
+                    <span>TT Medical</span>
+                </div>
+                <p>Hệ thống Quản lý Phòng khám TT Medical - Dành cho Bác sĩ. Đồng hành cùng sức khỏe của bệnh nhân.</p>
             </div>
-            <div class="footer-col">
-                <h3>Liên kết</h3>
-                <ul>
-                    <li><a href="#">Về TT Medical</a></li>
-                </ul>
+            <div class="footer-col-dark">
+                    <h3>Liên kết</h3>
+                    <ul>
+                        <li><a href="#">Về TT Medical</a></li>
+                    </ul>
+                </div>
+            <div class="footer-col-dark">
+               <h3>Các chức năng</h3>
+                    <ul>
+                        <li><a href="#" onclick="switchTab(event, 'tab-lich-kham')">Lịch hẹn</a></li>
+                        <li><a href="#" onclick="switchTab(event, 'tab-lich-lam-viec')">Ca làm việc</a></li>
+                        <li><a href="#" onclick="switchTab(event, 'tab-hoi-dap')">Hỏi đáp</a></li>
+                        <li><a href="#" onclick="switchTab(event, 'tab-ho-so')">Hồ sơ</a></li>
+                    </ul>
             </div>
-            <div class="footer-col">
-                <h3>Các chức năng</h3>
-                <ul id="footer-specialty-list">
-                    <li><a href="#tab-lich-kham" onclick="switchTab(event, 'tab-lich-kham')">Lịch hẹn</a></li>
-                    <li><a href="#tab-lich-lam-viec" onclick="switchTab(event, 'tab-lich-lam-viec')">Ca làm việc</a></li>
-                    <li><a href="#tab-hoi-dap" onclick="switchTab(event, 'tab-hoi-dap')">Hỏi đáp</a></li>
-                    <li><a href="#tab-ho-so" onclick="switchTab(event, 'tab-ho-so')">Hồ sơ</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
+            <div class="footer-col-dark">
                 <h3>Liên hệ</h3>
                 <ul>
-                    <li style="color: #94A3B8;">Hà Nội, Việt Nam</li>
-                    <li style="color: #94A3B8;"><a href="tel:19006868" style="color: inherit; text-decoration: none;">1900 6868</a></li>
-                    <li style="color: #94A3B8;">contact@ttmedical.vn</li>
+                    <li>Hà Nội, Việt Nam</li>
+                    <li><a href="tel:19006868" style="color: inherit; text-decoration: none;">1900 6868</a></li>
+                    <li>contact@ttmedical.vn</li>
                 </ul>
             </div>
         </div>
-        <div class="container footer-bottom">
-            <span>&copy; 2026 TT Medical <br>Desgine by: Tống Xuân Thọ, Nguyễn Văn Thiệu</span>
-            <div style="display: flex; gap: 20px;"><a href="#">Bảo mật</a><a href="#">Điều khoản</a></div>
+        <div class="footer-bottom-dark">
+            <span>&copy; 2026 TT Medical. Đã đăng ký bản quyền.<br>Phát triển bởi: Tống Xuân Thọ, Nguyễn Văn Thiệu.</span>
+            <div class="footer-bottom-links">
+                <a href="#">Bảo mật</a>
+                <a href="#">Điều khoản</a>
+            </div>
         </div>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateEl = document.getElementById('current_date_text');
+            if(dateEl) {
+                const now = new Date();
+                dateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+            }
+        });
+    </script>
 
     <script src="../../assets/js/doctor_panel.js"></script>
 </body>
