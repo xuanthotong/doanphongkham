@@ -29,11 +29,11 @@ function renderAppointmentTable() {
     const filterDate = dateInput ? dateInput.value : '';
 
     const statusInput = document.getElementById('filterAdminAppStatus');
-    const filterStatus = statusInput ? statusInput.value.toLowerCase() : '';
+    const filterStatus = statusInput ? statusInput.value : '';
 
-    if (window.lastAdminAppointmentKeyword !== keyword || window.lastAdminAppDate !== filterDate || window.lastAdminAppStatus !== filterStatus) {
+    if (window.lastAdminAppKeyword !== keyword || window.lastAdminAppDate !== filterDate || window.lastAdminAppStatus !== filterStatus) {
         currentAdminAppointmentPage = 1;
-        window.lastAdminAppointmentKeyword = keyword;
+        window.lastAdminAppKeyword = keyword;
         window.lastAdminAppDate = filterDate;
         window.lastAdminAppStatus = filterStatus;
     }
@@ -43,30 +43,24 @@ function renderAppointmentTable() {
     if (filterDate) {
         filteredList = filteredList.filter(app => {
             if (!app.ngay_lam_viec) return false;
-            const dKham = new Date(app.ngay_lam_viec);
-            const appDateStr = `${dKham.getFullYear()}-${String(dKham.getMonth() + 1).padStart(2, '0')}-${String(dKham.getDate()).padStart(2, '0')}`;
-            return appDateStr === filterDate;
+            return app.ngay_lam_viec.split('T')[0] === filterDate;
         });
     }
 
     if (filterStatus) {
-        filteredList = filteredList.filter(app => {
-            const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
-            return status === filterStatus;
-        });
+        filteredList = filteredList.filter(app => app.trang_thai && app.trang_thai.trim().toLowerCase() === filterStatus);
     }
 
     if (keyword) {
         filteredList = filteredList.filter(app => 
-            (app.ten_benh_nhan && app.ten_benh_nhan.toLowerCase().includes(keyword)) || 
-            `lk${app.id}`.includes(keyword) || 
+            (app.ten_benh_nhan && app.ten_benh_nhan.toLowerCase().includes(keyword)) ||
             (app.so_dien_thoai && app.so_dien_thoai.includes(keyword)) ||
-            (app.ten_bac_si && app.ten_bac_si.toLowerCase().includes(keyword))
+            `lh${app.id}`.includes(keyword)
         );
     }
 
     if (filteredList.length === 0) {
-        appointmentTbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy lịch hẹn phù hợp.</td></tr>`;
+        appointmentTbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #6b7280; padding: 20px;">Không tìm thấy lịch hẹn phù hợp.</td></tr>`;
         let paginationContainer = document.getElementById('admin_appointment_pagination');
         if (paginationContainer) paginationContainer.innerHTML = '';
         return;
@@ -83,7 +77,7 @@ function renderAppointmentTable() {
     paginatedAppointments.forEach(app => {
         let statusHtml = '';
         const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
-        
+
         if (status === 'pending') {
             statusHtml = `<span class="badge" style="background:#fef3c7; color:#d97706; padding: 4px 8px; border-radius: 12px; font-size: 12px;">Chờ duyệt</span>`;
         } else if (status === 'approved') {
@@ -98,7 +92,7 @@ function renderAppointmentTable() {
 
         const dKham = new Date(app.ngay_lam_viec);
         const ngayKhamStr = `${String(dKham.getDate()).padStart(2, '0')}/${String(dKham.getMonth() + 1).padStart(2, '0')}/${dKham.getFullYear()}`;
-        
+
         const dTao = new Date(app.ngay_tao);
         const ngayTaoStr = `${String(dTao.getDate()).padStart(2, '0')}/${String(dTao.getMonth() + 1).padStart(2, '0')}/${dTao.getFullYear()} ${String(dTao.getHours()).padStart(2, '0')}:${String(dTao.getMinutes()).padStart(2, '0')}`;
 
@@ -135,13 +129,13 @@ function renderAdminAppointmentPagination(totalPages) {
         paginationContainer = document.createElement('div');
         paginationContainer.id = 'admin_appointment_pagination';
         paginationContainer.style.cssText = 'display: flex; justify-content: center; gap: 8px; margin-top: 20px; width: 100%;';
-        
+
         const table = appointmentTbody.closest('table');
         if (table && table.parentNode) {
             table.parentNode.insertBefore(paginationContainer, table.nextSibling);
         }
     }
-    
+
     if (totalPages <= 1) {
         paginationContainer.innerHTML = '';
         return;
@@ -197,7 +191,7 @@ function editAdminAppointmentNote(id) {
                     body: JSON.stringify({ ghi_chu_cua_bac_si: result.value })
                 });
                 const data = await res.json();
-                if (res.ok) { Swal.fire('Thành công!', 'Cập nhật ghi chú thành công!', 'success'); fetchAdminAppointments(); } 
+                if (res.ok) { Swal.fire('Thành công!', 'Cập nhật ghi chú thành công!', 'success'); fetchAdminAppointments(); }
                 else { Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra!', 'error'); }
             } catch (error) { console.error(error); Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error'); }
         }
@@ -215,7 +209,7 @@ function deleteAdminAppointment(id) {
             try {
                 const response = await fetch(`${window.API_BASE}/api/appointments/${id}`, { method: 'DELETE' });
                 const data = await response.json();
-                if (response.ok) { Swal.fire('Thành công!', data.message || 'Hủy lịch hẹn thành công!', 'success'); fetchAdminAppointments(); } 
+                if (response.ok) { Swal.fire('Thành công!', data.message || 'Hủy lịch hẹn thành công!', 'success'); fetchAdminAppointments(); }
                 else { Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra khi hủy lịch hẹn!', 'error'); }
             } catch (error) { console.error('Lỗi API Hủy:', error); Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error'); }
         }
