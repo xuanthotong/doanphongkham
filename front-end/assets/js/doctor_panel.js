@@ -758,7 +758,7 @@ async function fetchDoctorQA() {
         }
 
         // Cập nhật badge thông báo trên thanh menu cho tab Hỏi đáp
-        const navHoiDapLinks = document.querySelectorAll('.nav-links a[onclick*="tab-hoi-dap"]');
+        const navHoiDapLinks = document.querySelectorAll('.nav-links a[onclick*="tab-hoi-dap"], .mobile-nav-links a[onclick*="tab-hoi-dap"]');
         navHoiDapLinks.forEach(link => {
             let badge = link.querySelector('.badge-noti');
             if (pendingQA > 0) {
@@ -821,23 +821,23 @@ function renderDoctorQA(docSpecialtyId) {
             const isAnswered = q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== '');
             const nguoiDaTraLoi = q.ten_nguoi_tra_loi ? (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên' ? 'Admin' : `BS. ${q.ten_nguoi_tra_loi}`) : 'Bác sĩ';
             const btnHtml = isAnswered 
-                ? `<div style="background: #F0F9FF; padding: 12px; border-radius: 8px; border-left: 4px solid #10B981;">
-                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-                       <span style="color: #10B981; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-check-double"></i> ${nguoiDaTraLoi} đã trả lời:</span>
-                       <button onclick="replyQA(${q.id})" style="background: none; border: none; color: #0284C7; cursor: pointer; font-size: 13px; font-weight: bold;"><i class="fa-solid fa-pen"></i> Sửa lại</button>
+                ? `<div style="background: #F0FDF4; padding: 16px; border-radius: 12px; border: 1px solid #A7F3D0; border-left: 5px solid #10B981; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px dashed #D1FAE5; padding-bottom: 8px;">
+                       <span style="color: #059669; font-size: 15px; font-weight: 700;"><i class="fa-solid fa-user-doctor"></i> ${nguoiDaTraLoi} phản hồi:</span>
+                       <button onclick="replyQA(${q.id})" style="background: white; border: 1px solid #E2E8F0; border-radius: 6px; padding: 4px 10px; color: #0284C7; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'"><i class="fa-solid fa-pen"></i> Sửa</button>
                      </div>
-                     <p style="margin: 0; color: #334155; font-size: 14px; margin-top: 5px; word-break: break-word; white-space: pre-wrap;">${q.tra_loi}</p>
+                     <p style="margin: 0; color: #1E293B; font-size: 15px; line-height: 1.6; word-break: break-word; white-space: pre-wrap;">${q.tra_loi}</p>
                    </div>` 
-                : `<button class="btn btn-primary" onclick="replyQA(${q.id})"><i class="fa-solid fa-reply"></i> Trả lời bệnh nhân</button>`;
+                : `<button class="btn btn-primary" onclick="replyQA(${q.id})" style="background: #0284C7; color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);" onmouseover="this.style.background='#0369A1'" onmouseout="this.style.background='#0284C7'"><i class="fa-solid fa-reply"></i> Phản hồi bệnh nhân</button>`;
 
             qaHTML += `
-                <div class="qa-item" style="word-break: break-word;">
-                    <div class="qa-header">
-                        <h4 style="word-break: break-word; line-height: 1.5; margin-bottom: 5px;">${displayTieuDe} (Mã CH: #${q.id})</h4>
-                        <span class="qa-date">${dateStr} | Người hỏi: ${nguoiHoi}</span>
+                <div class="qa-item" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 15px; transition: 0.2s;">
+                    <div class="qa-header" style="border-bottom: 1px solid #F1F5F9; padding-bottom: 12px; margin-bottom: 12px;">
+                        <h4 style="color: #0F172A; font-size: 17px; font-weight: 700; word-break: break-word; line-height: 1.5; margin: 0 0 5px 0;">${displayTieuDe} <span style="font-size: 13px; color: #94A3B8; font-weight: 500;">(Mã CH: #${q.id})</span></h4>
+                        <span class="qa-date" style="font-size: 13px; color: #64748B; font-weight: 500;"><i class="fa-regular fa-clock"></i> ${dateStr} <span style="margin: 0 8px;">|</span> <i class="fa-regular fa-user"></i> Người hỏi: <strong style="color: #475569;">${nguoiHoi}</strong></span>
                     </div>
-                    <div class="qa-content" style="word-break: break-word; white-space: pre-wrap; line-height: 1.6;">${q.noi_dung}</div>
-                    <div style="margin-top: 15px;">${btnHtml}</div>
+                    <div class="qa-content" style="color: #475569; font-size: 15px; word-break: break-word; white-space: pre-wrap; line-height: 1.6; margin-bottom: 15px;">${q.noi_dung}</div>
+                    <div>${btnHtml}</div>
                 </div>
             `;
         });
@@ -1178,6 +1178,13 @@ async function fetchAppointments() {
             return app.ngay_lam_viec.split('T')[0] === localDateStr;
         }).length;
 
+        // Đếm số ca khám trong ngày hôm nay nhưng CHƯA KHÁM (chỉ tính trạng thái pending và approved)
+        const todayPendingCount = currentAppointments.filter(app => {
+            if (!app.ngay_lam_viec) return false;
+            const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
+            return app.ngay_lam_viec.split('T')[0] === localDateStr && (status === 'pending' || status === 'approved');
+        }).length;
+
         // ĐỒNG BỘ THANH LỌC LỊCH KHÁM (CHỈ GIỮ LẠI 3 NÚT)
         const filterBtns = document.querySelectorAll('.filter-btn');
         if (filterBtns.length >= 3) {
@@ -1232,16 +1239,16 @@ async function fetchAppointments() {
         }
 
         // Cập nhật badge thông báo trên thanh menu cho tab Lịch khám
-        const navLichKhamLinks = document.querySelectorAll('.nav-links a[onclick*="tab-lich-kham"]');
+        const navLichKhamLinks = document.querySelectorAll('.nav-links a[onclick*="tab-lich-kham"], .mobile-nav-links a[onclick*="tab-lich-kham"]');
         navLichKhamLinks.forEach(link => {
             let badge = link.querySelector('.badge-noti');
-            if (todayCount > 0) {
+            if (todayPendingCount > 0) {
                 if (!badge) {
                     badge = document.createElement('span');
                     badge.className = 'badge-noti';
                     link.appendChild(badge);
                 }
-                badge.innerText = todayCount > 99 ? '99+' : todayCount;
+                badge.innerText = todayPendingCount > 99 ? '99+' : todayPendingCount;
             } else if (badge) {
                 badge.remove();
             }

@@ -22,10 +22,46 @@ async function sendEmailBrevo(toEmail, subject, htmlContent) {
     }
 }
 
+// Hàm tự động hủy lịch hẹn nếu quá giờ khám 1 tiếng
+const autoCancelExpiredAppointments = async (pool) => {
+    try {
+        await pool.request().query(`
+            DECLARE @Expired TABLE (id INT, lich_lam_viec_id INT);
+
+            INSERT INTO @Expired (id, lich_lam_viec_id)
+            SELECT lk.id, lk.lich_lam_viec_id
+            FROM LichKham lk
+            JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+            WHERE lk.trang_thai IN ('Pending', 'Approved')
+              AND lk.gio_kham IS NOT NULL AND LEN(lk.gio_kham) >= 5
+              AND DATEADD(minute, 60, CAST(CONVERT(VARCHAR(10), llv.ngay_lam_viec, 120) + ' ' + LEFT(lk.gio_kham, 5) AS DATETIME)) < DATEADD(hour, 7, GETUTCDATE());
+
+            IF EXISTS (SELECT 1 FROM @Expired)
+            BEGIN
+                -- Hoàn lại chỗ cho ca làm việc
+                UPDATE llv
+                SET so_luong_hien_tai = CASE WHEN so_luong_hien_tai > 0 THEN so_luong_hien_tai - 1 ELSE 0 END
+                FROM LichLamViec llv
+                JOIN @Expired e ON llv.id = e.lich_lam_viec_id;
+
+                -- Hủy lịch khám
+                UPDATE lk
+                SET trang_thai = 'Cancelled',
+                    ghi_chu_cua_bac_si = N'Hệ thống tự động hủy do bệnh nhân không đến khám đúng giờ'
+                FROM LichKham lk
+                JOIN @Expired e ON lk.id = e.id;
+            END
+        `);
+    } catch (err) {
+        console.error('Lỗi auto cancel lịch khám:', err);
+    }
+};
+
 // Lấy TẤT CẢ lịch hẹn cho Admin
 const getAllAppointments = async (req, res) => {
     try {
         const pool = await connectDB();
+        await autoCancelExpiredAppointments(pool); // Tự động dọn dẹp các lịch quá hạn
         const result = await pool.request().query(`
             SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, lk.ngay_tao, lk.gio_kham,
                    llv.ngay_lam_viec, llv.khung_gio,
@@ -61,6 +97,7 @@ const getAppointmentsByPatient = async (req, res) => {
     try {
         const { id } = req.params;
         const pool = await connectDB();
+        await autoCancelExpiredAppointments(pool); // Tự động dọn dẹp các lịch quá hạn
         const result = await pool.request()
             .input('benh_nhan_id', sql.Int, id)
             .query(`
@@ -103,6 +140,7 @@ const getAppointmentsByDoctor = async (req, res) => {
     try {
         const { id } = req.params;
         const pool = await connectDB();
+        await autoCancelExpiredAppointments(pool); // Tự động dọn dẹp các lịch quá hạn
         const result = await pool.request()
             .input('bac_si_id', sql.Int, id)
             .query(`

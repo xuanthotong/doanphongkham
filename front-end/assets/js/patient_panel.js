@@ -1050,6 +1050,7 @@ function toggleNotificationPopup(event) {
 
     if (popup.style.display === 'none' || popup.style.display === '') {
         popup.style.display = 'block';
+        markAllNotifAsRead(); // Tự động đánh dấu đã đọc khi mở popup chuông
     } else {
         popup.style.display = 'none';
     }
@@ -1068,8 +1069,13 @@ function markAllNotifAsRead() {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.id) return;
 
-    // Đánh dấu tất cả thông báo là đã đọc
-    localStorage.setItem(`lastSeenNotifId_${userInfo.id}`, '9999999');
+    let maxId = 0;
+    if (window.patientAppointments && window.patientAppointments.length > 0) {
+        maxId = Math.max(...window.patientAppointments.map(a => a.id));
+    }
+
+    // Đánh dấu tất cả thông báo là đã đọc với mốc ID lớn nhất hiện tại
+    localStorage.setItem(`lastSeenNotifId_${userInfo.id}`, maxId.toString());
 
     const dot = document.getElementById('notif-dot');
     if (dot) dot.style.display = 'none';
