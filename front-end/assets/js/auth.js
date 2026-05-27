@@ -201,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function requireLoginToBook(e) {
     if(e) e.preventDefault();
 
-    // KIỂM TRA: Nếu đã đăng nhập thì nhảy thẳng trang Đặt lịch, không bắt đăng nhập nữa
     let isLoggedIn = false;
     try {
         const userInfoString = localStorage.getItem('userInfo');
@@ -225,19 +224,165 @@ function requireLoginToBook(e) {
         text: 'Bạn cần đăng nhập hoặc tạo tài khoản mới để có thể đặt lịch khám bệnh!',
         icon: 'info',
         showCancelButton: true,
-        confirmButtonColor: '#10B981', // Nút Đăng ký màu Xanh lá
-        cancelButtonColor: '#0284C7',  // Nút Đăng nhập màu Xanh dương
+        confirmButtonColor: '#10B981',
+        cancelButtonColor: '#0284C7',
         confirmButtonText: '<i class="fa-solid fa-user-plus"></i> Đăng ký ngay',
         cancelButtonText: '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Người dùng bấm "Đăng ký ngay" -> Mở form Đăng ký
             openModal('registerModal');
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-            // Người dùng bấm "Đăng nhập" -> Mở form Đăng nhập
             openModal('loginModal');
         }
     });
 }
 
+// ==================================================
+// HÀM XỬ LÝ ĐĂNG NHẬP GOOGLE
+// ==================================================
+async function handleGoogleResponse(response) {
+    try {
+        const id_token = response.credential;
+        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.') || window.location.protocol === 'file:') 
+            ? 'http://localhost:3000/api' 
+            : window.API_BASE + '/api';
 
+        const res = await fetch(`${API_URL}/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_token })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // Lưu token và thông tin user
+            if (data.redirectUrl && data.redirectUrl.includes('doctor')) {
+                localStorage.setItem('doctorToken', data.token);
+                localStorage.setItem('doctorInfo', JSON.stringify(data.user));
+            } else if (data.redirectUrl && data.redirectUrl.includes('admin')) {
+                localStorage.setItem('adminToken', data.token);
+                localStorage.setItem('adminInfo', JSON.stringify(data.user));
+            } else {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userInfo', JSON.stringify(data.user));
+            }
+
+            // Kiểm tra hồ sơ có đầy đủ không
+            const user = data.user;
+            const isProfileIncomplete = !user.so_dien_thoai || !user.ngay_sinh || user.gioi_tinh === null || user.gioi_tinh === undefined;
+
+            if (isProfileIncomplete) {
+                await showCompleteProfilePopup(user, API_URL, data.redirectUrl);
+            } else {
+                Swal.fire({
+                    title: 'Thành công!',
+                    text: 'Đăng nhập Google thành công!',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = data.redirectUrl;
+                });
+            }
+        } else {
+            Swal.fire('Đăng nhập thất bại!', data.message || 'Lỗi xác thực Google.', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error');
+    }
+}
+
+// ==================================================
+// POPUP HOÀN THIỆN HỒ SƠ (CHỈ DÀNH CHO GOOGLE LOGIN)
+// ==================================================
+async function showCompleteProfilePopup(user, API_URL, redirectUrl) {
+    const provinces = [
+        "Hà Nội", "TP HCM", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "An Giang", "Bà Rịa - Vũng Tàu", "Bắc Giang", "Bắc Kạn", "Bạc Liêu", "Bắc Ninh", "Bến Tre", "Bình Định", "Bình Dương", "Bình Phước", "Bình Thuận", "Cà Mau", "Cao Bằng", "Đắk Lắk", "Đắk Nông", "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Giang", "Hà Nam", "Hà Tĩnh", "Hải Dương", "Hậu Giang", "Hòa Bình", "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", "Lâm Đồng", "Lạng Sơn", "Lào Cai", "Long An", "Nam Định", "Nghệ An", "Ninh Bình", "Ninh Thuận", "Phú Thọ", "Phú Yên", "Quảng Bình", "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên", "Thanh Hóa", "Thừa Thiên Huế", "Tiền Giang", "Trà Vinh", "Tuyên Quang", "Vĩnh Long", "Vĩnh Phúc", "Yên Bái"
+    ].sort();
+
+    const provinceOptions = provinces.map(p => `<option value="${p}">${p}</option>`).join('');
+
+    const result = await Swal.fire({
+        title: '<i class="fas fa-user-edit" style="color: #0284c7;"></i> Hoàn thiện hồ sơ',
+        html: `
+            <p style="font-size: 14px; color: #64748b; margin-bottom: 20px;">Xin chào <strong>${user.ho_ten}</strong>! Vui lòng bổ sung thông tin để hoàn tất đăng ký.</p>
+            <div style="text-align: left;">
+                <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px;">Số điện thoại <span style="color:red">*</span></label>
+                <input type="text" id="gg_phone" class="swal2-input" placeholder="Nhập số điện thoại" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0 0 12px 0;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px;">Giới tính <span style="color:red">*</span></label>
+                        <select id="gg_gender" class="swal2-select" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; margin: 0;">
+                            <option value="" disabled selected>-- Chọn --</option>
+                            <option value="1">Nam</option>
+                            <option value="0">Nữ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px;">Ngày sinh <span style="color:red">*</span></label>
+                        <input type="date" id="gg_birthday" class="swal2-input" style="width: 100%; max-width: 100%; box-sizing: border-box; margin: 0;">
+                    </div>
+                </div>
+                
+                <label style="font-weight: 600; font-size: 13px; display: block; margin: 12px 0 4px 0;">Tỉnh / Thành phố <span style="color:red">*</span></label>
+                <select id="gg_province" class="swal2-select" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; margin: 0;">
+                    <option value="" disabled selected>-- Chọn tỉnh/thành --</option>
+                    ${provinceOptions}
+                </select>
+            </div>
+        `,
+        width: '480px',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showCancelButton: false,
+        confirmButtonText: '<i class="fas fa-check"></i> Xác nhận & Tiếp tục',
+        confirmButtonColor: '#0284C7',
+        preConfirm: () => {
+            const phone = document.getElementById('gg_phone').value.trim();
+            const gender = document.getElementById('gg_gender').value;
+            const birthday = document.getElementById('gg_birthday').value;
+            const province = document.getElementById('gg_province').value;
+
+            if (!phone) { Swal.showValidationMessage('Vui lòng nhập số điện thoại!'); return false; }
+            if (!/^(0[0-9]{9,10})$/.test(phone)) { Swal.showValidationMessage('Số điện thoại không hợp lệ!'); return false; }
+            if (gender === '' || gender === null) { Swal.showValidationMessage('Vui lòng chọn giới tính!'); return false; }
+            if (!birthday) { Swal.showValidationMessage('Vui lòng chọn ngày sinh!'); return false; }
+            if (!province) { Swal.showValidationMessage('Vui lòng chọn tỉnh/thành phố!'); return false; }
+
+            return { so_dien_thoai: phone, gioi_tinh: gender, ngay_sinh: birthday, dia_chi: province };
+        }
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const updateRes = await fetch(`${API_URL}/accounts/profile/${user.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(result.value)
+            });
+
+            if (updateRes.ok) {
+                const updatedUser = { ...user, ...result.value };
+                localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+
+                Swal.fire({
+                    title: 'Hoàn tất!',
+                    text: 'Hồ sơ đã được cập nhật. Chào mừng bạn đến TT Medical!',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = redirectUrl;
+                });
+            } else {
+                Swal.fire('Lỗi!', 'Không thể cập nhật hồ sơ. Vui lòng thử lại.', 'error');
+            }
+        } catch (err) {
+            console.error('Error updating profile:', err);
+            Swal.fire('Lỗi kết nối!', 'Không thể kết nối tới Server!', 'error');
+        }
+    }
+}

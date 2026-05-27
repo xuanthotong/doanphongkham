@@ -21,7 +21,8 @@
             border-radius: 4px !important;
         }
     </style>
-
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -381,6 +382,24 @@
                 <span>hoặc</span>
             </div>
 
+            <!-- Nút đăng nhập Google -->
+            <div id="g_id_onload"
+                data-client_id="826697274271-95q5792mqh3efujq2teahfhaperb6uic.apps.googleusercontent.com"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleGoogleResponse"
+                data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left"
+                style="display: flex; justify-content: center; margin-bottom: 20px;">
+            </div>
+
             <p class="switch-prompt">
                 Bạn chưa có tài khoản?
                 <a href="#" class="prompt-link" onclick="switchModal('loginModal', 'registerModal', event)">Đăng ký
@@ -390,7 +409,7 @@
     </div>
 
     <div id="registerModal" class="modal-overlay">
-        <div class="auth-card" style="max-height: 90vh; overflow-y: auto;">
+        <div class="auth-card" style="max-height: 90vh; overflow-y: auto; width: 700px; max-width: 95%;">
             <span class="close-btn" onclick="closeModal('registerModal')">&times;</span>
 
             <div class="card-header">
@@ -400,40 +419,39 @@
             </div>
 
             <form class="form-main" onsubmit="handleRegister(event)">
-                <div class="input-group">
-                    <label for="reg_fullname" class="input-label">Họ và tên</label>
-                    <div class="input-field">
-                        <i class="fas fa-user-circle"></i>
-                        <input type="text" id="reg_fullname" placeholder="Nhập họ và tên (VD: Nguyễn Văn A)" required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="reg_username" class="input-label">Tên đăng nhập</label>
-                    <div class="input-field">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="reg_username" placeholder="Nhập tên đăng nhập (VD: benhnhan123)"
-                            required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="reg_email" class="input-label">Email</label>
-                    <div class="input-field">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="reg_email" placeholder="Nhập địa chỉ email" required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="reg_phone" class="input-label">Số điện thoại</label>
-                    <div class="input-field">
-                        <i class="fas fa-phone"></i>
-                        <input type="text" id="reg_phone" placeholder="Nhập số điện thoại" required>
-                    </div>
-                </div>
-
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="input-group">
+                        <label for="reg_fullname" class="input-label">Họ và tên</label>
+                        <div class="input-field">
+                            <i class="fas fa-user-circle"></i>
+                            <input type="text" id="reg_fullname" placeholder="Họ và tên (VD: Nguyễn Văn A)" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="reg_username" class="input-label">Tên đăng nhập</label>
+                        <div class="input-field">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="reg_username" placeholder="Tên đăng nhập" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="reg_email" class="input-label">Email</label>
+                        <div class="input-field">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="reg_email" placeholder="Địa chỉ email" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="reg_phone" class="input-label">Số điện thoại</label>
+                        <div class="input-field">
+                            <i class="fas fa-phone"></i>
+                            <input type="text" id="reg_phone" placeholder="Số điện thoại" required>
+                        </div>
+                    </div>
+
                     <div class="input-group">
                         <label for="reg_gender" class="input-label">Giới tính</label>
                         <div class="input-field">
@@ -446,6 +464,7 @@
                             </select>
                         </div>
                     </div>
+
                     <div class="input-group">
                         <label for="reg_birthday" class="input-label">Ngày sinh</label>
                         <div class="input-field">
@@ -453,37 +472,48 @@
                             <input type="date" id="reg_birthday" required style="cursor: pointer;">
                         </div>
                     </div>
-                </div>
 
-                <div class="input-group">
-                    <label for="reg_province" class="input-label">Tỉnh / Thành phố</label>
-                    <div class="input-field">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <select id="reg_province" required
-                            style="width: 100%; padding: 0.9rem 0.4rem 0.9rem 0.2rem; border: none; outline: none; font-size: 1rem; font-weight: 450; background: transparent; color: #0f1e2c; font-family: 'Inter', sans-serif; cursor: pointer;">
-                            <option value="" disabled selected>-- Chọn tỉnh/thành --</option>
-                        </select>
+                    <div class="input-group">
+                        <label for="reg_province" class="input-label">Tỉnh / Thành phố</label>
+                        <div class="input-field">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <select id="reg_province" required
+                                style="width: 100%; padding: 0.9rem 0.4rem 0.9rem 0.2rem; border: none; outline: none; font-size: 1rem; font-weight: 450; background: transparent; color: #0f1e2c; font-family: 'Inter', sans-serif; cursor: pointer;">
+                                <option value="" disabled selected>-- Chọn tỉnh/thành --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="reg_password" class="input-label">Mật khẩu</label>
+                        <div class="input-field">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="reg_password" placeholder="Ít nhất 8 ký tự"
+                                autocomplete="new-password" required>
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword(this, 'reg_password')"
+                                title="Hiển thị mật khẩu"></i>
+                        </div>
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="reg_password" class="input-label">Mật khẩu</label>
-                    <div class="input-field">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="reg_password" placeholder="Ít nhất 8 ký tự"
-                            autocomplete="new-password" required>
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword(this, 'reg_password')"
-                            title="Hiển thị mật khẩu"></i>
-                    </div>
-                </div>
-
-                <button type="submit" class="auth-btn">
+                <button type="submit" class="auth-btn" style="margin-top: 20px;">
                     Đăng ký <i class="fas fa-user-plus" style="margin-left: 8px;"></i>
                 </button>
             </form>
 
             <div class="divider">
                 <span>hoặc</span>
+            </div>
+
+            <!-- Nút đăng nhập Google -->
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signup_with"
+                data-size="large"
+                data-logo_alignment="left"
+                style="display: flex; justify-content: center; margin-bottom: 20px;">
             </div>
 
             <p class="switch-prompt">

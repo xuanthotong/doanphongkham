@@ -8,7 +8,8 @@ const getAllAccounts = async (req, res) => {
         const result = await pool.request().query(`
             SELECT tk.id, tk.ten_dang_nhap, tk.email, tk.trang_thai,
                    nd.ho_ten, nd.so_dien_thoai, nd.gioi_tinh, nd.ngay_sinh, nd.anh_dai_dien, nd.dia_chi,
-                   vt.ten_vai_tro
+                   vt.ten_vai_tro,
+                   CASE WHEN EXISTS (SELECT 1 FROM LichKham lk WHERE lk.benh_nhan_id = tk.id) THEN 1 ELSE 0 END AS co_lich_kham
             FROM TaiKhoan tk
             LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
             JOIN VaiTro vt ON tk.vai_tro_id = vt.id
@@ -34,14 +35,19 @@ const deleteAccount = async (req, res) => {
         await transaction.begin();
 
         try {
-            // 1. Cập nhật bài viết (Nếu tài khoản này là Admin có viết bài)
+            // 1. Kiểm tra nếu có lịch khám thì chặn xóa
+            const checkLichKham = await transaction.request().input('id', sql.Int, id).query(`SELECT COUNT(*) as count FROM LichKham WHERE benh_nhan_id = @id`);
+            if (checkLichKham.recordset[0].count > 0) {
+                await transaction.rollback();
+                return res.status(400).json({ message: 'Không thể xóa tài khoản vì người này đã có lịch khám. Vui lòng sử dụng tính năng khóa tài khoản.' });
+            }
+
+            // 2. Cập nhật bài viết (Nếu tài khoản này là Admin có viết bài)
             await transaction.request().input('id', sql.Int, id).query(`UPDATE TinTuc SET tac_gia_id = NULL WHERE tac_gia_id = @id`);
             
-            // 2. Xóa các Đánh giá, Hỏi đáp, Thanh toán và Lịch khám (Nếu là Bệnh nhân)
+            // 3. Xóa các Đánh giá, Hỏi đáp (Nếu là Bệnh nhân)
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM DanhGia WHERE benh_nhan_id = @id`);
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoiDap WHERE benh_nhan_id = @id`);
-            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM ThanhToan WHERE lich_kham_id IN (SELECT id FROM LichKham WHERE benh_nhan_id = @id)`);
-            await transaction.request().input('id', sql.Int, id).query(`DELETE FROM LichKham WHERE benh_nhan_id = @id`);
             
             // 3. Xóa Hồ sơ và ChatBot
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM ChatBot WHERE tai_khoan_id = @id`);
@@ -140,7 +146,7 @@ const updateProfile = async (req, res) => {
     try {
         const pool = await connectDB();
         const id = req.params.id;
-        const { dia_chi, gioi_tinh } = req.body;
+        const { dia_chi, gioi_tinh, so_dien_thoai, ngay_sinh } = req.body;
 
         // Xử lý chuyển đổi giới tính (1: Nam, 0: Nữ)
         let gioi_tinh_bit = null;
@@ -151,17 +157,21 @@ const updateProfile = async (req, res) => {
             .input('id', sql.Int, id)
             .input('dia_chi', sql.NVarChar, dia_chi || null)
             .input('gioi_tinh', sql.Bit, gioi_tinh_bit)
+            .input('so_dien_thoai', sql.VarChar, so_dien_thoai || null)
+            .input('ngay_sinh', sql.Date, ngay_sinh || null)
             .query(`
                 UPDATE HoSoNguoiDung
                 SET dia_chi = @dia_chi, 
-                    gioi_tinh = @gioi_tinh
+                    gioi_tinh = @gioi_tinh,
+                    so_dien_thoai = @so_dien_thoai,
+                    ngay_sinh = @ngay_sinh
                 WHERE tai_khoan_id = @id;
 
                 -- CHỐNG LỖI: Nếu người dùng chưa có hồ sơ thì tự động tạo mới
                 IF @@ROWCOUNT = 0
                 BEGIN
-                    INSERT INTO HoSoNguoiDung (tai_khoan_id, dia_chi, gioi_tinh)
-                    VALUES (@id, @dia_chi, @gioi_tinh)
+                    INSERT INTO HoSoNguoiDung (tai_khoan_id, dia_chi, gioi_tinh, so_dien_thoai, ngay_sinh)
+                    VALUES (@id, @dia_chi, @gioi_tinh, @so_dien_thoai, @ngay_sinh)
                 END
             `);
 

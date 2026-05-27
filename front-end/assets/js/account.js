@@ -102,6 +102,14 @@ function renderAccountTable() {
                 <button class="action-btn edit" onclick="editAccount(${acc.id})" title="Sửa tài khoản"><i class="fa-solid fa-pen-to-square"></i></button>
                 <button class="action-btn" style="color: ${lockColor}; border-color: ${lockColor};" onclick="toggleLockAccount(${acc.id}, ${acc.trang_thai})" title="${lockTitle}">${lockIcon}</button>
             `;
+
+            if (acc.co_lich_kham === 0) {
+                actionButtons += `
+                    <button class="action-btn" style="color: #ef4444; border-color: #ef4444;" onclick="deleteAccount(${acc.id})" title="Xóa tài khoản">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+            }
         }
 
         const tr = document.createElement('tr');

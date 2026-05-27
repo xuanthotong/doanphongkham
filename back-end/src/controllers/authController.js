@@ -1,6 +1,8 @@
 const { sql, connectDB } = require('../config/db');
 const bcrypt = require('bcrypt'); // Yêu cầu chạy: npm install bcrypt jsonwebtoken
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // 1. API ĐĂNG KÝ (Chỉ dành cho Bệnh nhân)
 const registerPatient = async (req, res) => {
@@ -148,4 +150,143 @@ const login = async (req, res) => {
         res.status(500).json({ message: 'Lỗi server khi đăng nhập' });
     }
 };
-module.exports = { registerPatient, login };
+// 3. API ĐĂNG NHẬP GOOGLE
+const googleLogin = async (req, res) => {
+    try {
+        const { id_token } = req.body;
+        if (!id_token) return res.status(400).json({ message: 'Không có token Google!' });
+
+        const ticket = await client.verifyIdToken({
+            idToken: id_token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        const { email, name, picture } = payload; 
+
+        const pool = await connectDB();
+        
+        // Kiểm tra user qua email
+        const checkUser = await pool.request()
+            .input('email', sql.VarChar, email)
+            .query(`
+                SELECT 
+                    tk.id, tk.ten_dang_nhap, tk.email, tk.mat_khau, tk.trang_thai, tk.vai_tro_id,
+                    vt.ten_vai_tro,
+                    hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien, hsnd.gioi_tinh, hsnd.dia_chi, hsnd.ngay_sinh,
+                    hsbs.nam_kinh_nghiem, hsbs.phi_kham, hsbs.tieu_su, hsbs.chuyen_khoa_id,
+                    ck.ten_chuyen_khoa
+                FROM TaiKhoan tk
+                JOIN VaiTro vt ON tk.vai_tro_id = vt.id
+                LEFT JOIN HoSoNguoiDung hsnd ON tk.id = hsnd.tai_khoan_id
+                LEFT JOIN HoSoBacSi hsbs ON tk.id = hsbs.tai_khoan_id
+                LEFT JOIN ChuyenKhoa ck ON hsbs.chuyen_khoa_id = ck.id
+                WHERE tk.email = @email
+            `);
+
+        let user = checkUser.recordset[0];
+
+        if (!user) {
+            // Tạo tài khoản mới nếu chưa tồn tại
+            const roleResult = await pool.request()
+                .input('ten_vai_tro', sql.VarChar, 'BenhNhan')
+                .query('SELECT id FROM VaiTro WHERE ten_vai_tro = @ten_vai_tro');
+            const vai_tro_id = roleResult.recordset[0].id;
+
+            const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(randomPassword, salt);
+            const ten_dang_nhap = email.split('@')[0] + Math.floor(Math.random() * 10000);
+
+            const transaction = new sql.Transaction(pool);
+            await transaction.begin();
+
+            try {
+                const insertAccount = await transaction.request()
+                    .input('vai_tro_id', sql.Int, vai_tro_id)
+                    .input('ten_dang_nhap', sql.VarChar, ten_dang_nhap)
+                    .input('mat_khau', sql.VarChar, hashedPassword)
+                    .input('email', sql.VarChar, email)
+                    .query(`
+                        INSERT INTO TaiKhoan (vai_tro_id, ten_dang_nhap, mat_khau, email) 
+                        OUTPUT INSERTED.id
+                        VALUES (@vai_tro_id, @ten_dang_nhap, @mat_khau, @email)
+                    `);
+                const accountId = insertAccount.recordset[0].id;
+
+                await transaction.request()
+                    .input('tai_khoan_id', sql.Int, accountId)
+                    .input('ho_ten', sql.NVarChar, name)
+                    .input('anh_dai_dien', sql.VarChar, picture)
+                    .query(`
+                        INSERT INTO HoSoNguoiDung (tai_khoan_id, ho_ten, anh_dai_dien) 
+                        VALUES (@tai_khoan_id, @ho_ten, @anh_dai_dien)
+                    `);
+
+                await transaction.request()
+                    .input('tai_khoan_id', sql.Int, accountId)
+                    .query('INSERT INTO HoSoBenhNhan (tai_khoan_id) VALUES (@tai_khoan_id)');
+
+                await transaction.commit();
+
+                // Truy vấn lại thông tin user vừa tạo
+                const newUserResult = await pool.request()
+                    .input('email', sql.VarChar, email)
+                    .query(`
+                        SELECT 
+                            tk.id, tk.ten_dang_nhap, tk.email, tk.mat_khau, tk.trang_thai, tk.vai_tro_id,
+                            vt.ten_vai_tro,
+                            hsnd.ho_ten, hsnd.so_dien_thoai, hsnd.anh_dai_dien, hsnd.gioi_tinh, hsnd.dia_chi, hsnd.ngay_sinh
+                        FROM TaiKhoan tk
+                        JOIN VaiTro vt ON tk.vai_tro_id = vt.id
+                        LEFT JOIN HoSoNguoiDung hsnd ON tk.id = hsnd.tai_khoan_id
+                        WHERE tk.email = @email
+                    `);
+                user = newUserResult.recordset[0];
+            } catch (err) {
+                await transaction.rollback();
+                throw err;
+            }
+        }
+
+        if (!user.trang_thai) return res.status(403).json({ message: 'Tài khoản của bạn đã bị khóa!' });
+
+        const token = jwt.sign(
+            { id: user.id, vai_tro_id: user.vai_tro_id, ten_vai_tro: user.ten_vai_tro },
+            process.env.JWT_SECRET || 'ttmedical_secret_key',
+            { expiresIn: '1d' }
+        );
+
+        let redirectUrl = '../pages/patient/patient.html'; 
+        if (user.ten_vai_tro === 'Admin') redirectUrl = '../pages/admin/dashboard.html';
+        else if (user.ten_vai_tro === 'BacSi') redirectUrl = '../pages/doctor/doctor.html';
+
+        res.json({ 
+            message: 'Đăng nhập Google thành công', 
+            token, 
+            user: { 
+                id: user.id, 
+                ten_dang_nhap: user.ten_dang_nhap, 
+                role: user.ten_vai_tro,
+                email: user.email,
+                ho_ten: user.ho_ten,
+                gioi_tinh: user.gioi_tinh,
+                dia_chi: user.dia_chi,
+                ngay_sinh: user.ngay_sinh,
+                so_dien_thoai: user.so_dien_thoai,
+                anh_dai_dien: user.anh_dai_dien,
+                nam_kinh_nghiem: user.nam_kinh_nghiem,
+                phi_kham: user.phi_kham,
+                tieu_su: user.tieu_su,
+                chuyen_khoa_id: user.chuyen_khoa_id,
+                ten_chuyen_khoa: user.ten_chuyen_khoa
+            }, 
+            redirectUrl 
+        });
+
+    } catch (error) {
+        console.error('Lỗi đăng nhập Google:', error);
+        res.status(500).json({ message: 'Lỗi server khi xác thực bằng Google' });
+    }
+};
+
+module.exports = { registerPatient, login, googleLogin };
