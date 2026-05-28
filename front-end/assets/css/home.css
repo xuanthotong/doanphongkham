@@ -1309,6 +1309,7 @@ footer {
         padding: 30px 24px !important;
         max-height: 90vh;
         overflow-y: auto;
+        overflow-x: hidden;
         animation: popIn 0.3s ease forwards;
         transform: none;
     }
@@ -1341,5 +1342,11 @@ footer {
         flex-direction: column;
         text-align: center;
         gap: 15px;
+    }
+
+    /* Thu nhỏ nút Google trên mobile để không bị tràn viền */
+    .g_id_signin {
+        transform: scale(0.85);
+        transform-origin: center top;
     }
 }

@@ -49,9 +49,13 @@
             <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active')"
                 style="display: none; background: none; border: none; font-size: 24px; color: #0f172a; cursor: pointer; margin-right: 15px;"><i
                     class="fa-solid fa-bars"></i></button>
-            <div class="search-bar">
+            <div class="search-bar" style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass" style="color: #64748b;"></i>
-                <input type="text" placeholder="Tìm kiếm bác sĩ, dịch vụ, bài viết...">
+                <input type="text" id="globalSearchInput" placeholder="Tìm kiếm nhanh bác sĩ, câu hỏi..." oninput="handleGlobalSearch()" autocomplete="off">
+                <!-- Dropdown kết quả tìm kiếm nhanh -->
+                <div id="globalSearchResults" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; margin-top: 10px; z-index: 1000; max-height: 400px; overflow-y: auto;">
+                    <!-- JS đổ kết quả vào đây -->
+                </div>
             </div>
             <div class="user-profile" onclick="switchTab(event, 'tab-ho-so')" style="cursor: pointer;">
                 <div class="notification-btn" onclick="toggleNotificationPopup(event); event.stopPropagation()"

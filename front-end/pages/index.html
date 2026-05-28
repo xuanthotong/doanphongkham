@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="../assets/css/home.css">
     <style>
         .input-field,
-        .auth-btn,
         .swal2-input,
         .swal2-select,
         .swal2-textarea,
@@ -392,11 +391,12 @@
             </div>
             <div class="g_id_signin"
                 data-type="standard"
-                data-shape="rectangular"
+                data-shape="pill"
                 data-theme="outline"
                 data-text="signin_with"
                 data-size="large"
-                data-logo_alignment="left"
+                data-width="340"
+                data-logo_alignment="center"
                 style="display: flex; justify-content: center; margin-bottom: 20px;">
             </div>
 
@@ -496,9 +496,11 @@
                     </div>
                 </div>
 
-                <button type="submit" class="auth-btn" style="margin-top: 20px;">
-                    Đăng ký <i class="fas fa-user-plus" style="margin-left: 8px;"></i>
-                </button>
+                <div style="display: flex; justify-content: center; width: 100%;">
+                    <button type="submit" class="auth-btn" style="margin-top: 20px; max-width: 340px;">
+                        Đăng ký <i class="fas fa-user-plus" style="margin-left: 8px;"></i>
+                    </button>
+                </div>
             </form>
 
             <div class="divider">
@@ -508,11 +510,12 @@
             <!-- Nút đăng nhập Google -->
             <div class="g_id_signin"
                 data-type="standard"
-                data-shape="rectangular"
+                data-shape="pill"
                 data-theme="outline"
                 data-text="signup_with"
                 data-size="large"
-                data-logo_alignment="left"
+                data-width="340"
+                data-logo_alignment="center"
                 style="display: flex; justify-content: center; margin-bottom: 20px;">
             </div>
 

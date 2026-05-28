@@ -66,11 +66,37 @@ function confirmLogout(event) {
 
 // 4. NGHIỆP VỤ: KHÁM BỆNH & KÊ ĐƠN (FETCH THUỐC TỪ DATABASE)
 async function openMedicalRecord(maLK, tenBN, isEdit = false) {
+    const app = currentAppointments.find(a => a.id == maLK);
+    let rawTrieuChung = app ? (app.mo_ta_trieu_chung || '') : '';
+    
+    let extractedImages = [];
+    const imgRegex = /<img[^>]+src="([^">]+)"/g;
+    let match;
+    while ((match = imgRegex.exec(rawTrieuChung)) !== null) {
+        extractedImages.push(match[1]);
+    }
+    
+    let textTrieuChung = rawTrieuChung.replace(/<br><div class="symptom-images-wrapper".*?<\/div>/g, '').trim();
+    textTrieuChung = textTrieuChung.replace(/<[^>]*>?/gm, '');
+    if (!textTrieuChung) textTrieuChung = '<span style="color:#94a3b8; font-style:italic;">Không có thông tin</span>';
+
+    let imageHtml = '';
+    if (extractedImages.length > 0) {
+        let imgTags = extractedImages.map(src => `
+            <div class="symptom-img-container" style="position: relative; display: inline-block; cursor: pointer;" onclick="Swal.fire({title: 'Hình ảnh chi tiết', imageUrl: '${src}', imageAlt: 'Triệu chứng', width: 'auto', showCloseButton: true, showConfirmButton: false})">
+                <img src="${src}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #fcd34d; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <div class="symptom-img-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); border-radius: 8px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s;">
+                    <span style="color: white; font-size: 11px; font-weight: bold; text-align: center;"><i class="fa-solid fa-magnifying-glass-plus"></i><br>Xem</span>
+                </div>
+            </div>
+        `).join('');
+        imageHtml = `<div style="display: flex; gap: 10px; margin-left: 20px; padding-left: 20px; border-left: 2px dashed #fcd34d; flex-wrap: wrap; justify-content: flex-end; max-width: 250px;">${imgTags}</div>`;
+    }
+
     let currentPrescriptions = [];
     let parsedChanDoan = "";
     
     if (isEdit) {
-        const app = currentAppointments.find(a => a.id == maLK);
         let oldNote = app ? (app.ghi_chu_cua_bac_si || '') : '';
         if (oldNote.includes("Chẩn đoán:")) {
             let parts = oldNote.split("Đơn thuốc:");
@@ -121,7 +147,19 @@ async function openMedicalRecord(maLK, tenBN, isEdit = false) {
     Swal.fire({
         title: isEdit ? `Sửa hồ sơ: ${tenBN} (#LK${maLK})` : `Khám bệnh: ${tenBN} (#LK${maLK})`,
         html: `
+            <style>.symptom-img-container:hover .symptom-img-overlay { opacity: 1 !important; }</style>
             <div style="text-align: left; margin-top: 15px; display: grid; grid-template-columns: 1fr; gap: 20px;">
+                <!-- Khu vực 0: Triệu chứng từ Bệnh nhân -->
+                <div style="background: #fffbeb; padding: 15px; border-radius: 12px; border: 1px solid #fde68a; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between;">
+                    <div style="flex: 1;">
+                        <label style="font-weight: 700; color: #d97706; display: block; margin-bottom: 8px; font-size: 15px;"><i class="fa-solid fa-clipboard-user" style="color: #f59e0b;"></i>Triệu chứng của bệnh nhân:</label>
+                        <div style="font-size: 14px; color: #334155; line-height: 1.6; word-break: break-word;">
+                            ${textTrieuChung}
+                        </div>
+                    </div>
+                    ${imageHtml}
+                </div>
+
                 <!-- Khu vực 1: Chẩn đoán -->
                 <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                     <label style="font-weight: 700; color: #0f172a; display: block; margin-bottom: 8px; font-size: 15px;"><i class="fa-solid fa-stethoscope" style="color: #0ea5e9;"></i> Chẩn đoán bệnh (*):</label>

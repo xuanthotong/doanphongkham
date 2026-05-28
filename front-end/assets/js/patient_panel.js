@@ -1434,3 +1434,100 @@ function enforceMobileProfileLayout() {
 // Chạy hàm ngay khi vừa tải trang và khi người dùng xoay ngang/dọc điện thoại
 document.addEventListener('DOMContentLoaded', () => { setTimeout(enforceMobileProfileLayout, 500); });
 window.addEventListener('resize', enforceMobileProfileLayout);
+
+// ==================================================
+// 8. TÌM KIẾM TOÀN CỤC (GLOBAL SEARCH)
+// ==================================================
+function handleGlobalSearch() {
+    const inputEl = document.getElementById('globalSearchInput');
+    const resultsContainer = document.getElementById('globalSearchResults');
+    if (!inputEl || !resultsContainer) return;
+
+    const keyword = inputEl.value.toLowerCase().trim();
+    
+    // Gõ ít nhất 2 ký tự mới bắt đầu tìm kiếm
+    if (keyword.length < 2) {
+        resultsContainer.style.display = 'none';
+        return;
+    }
+
+    let resultsHtml = '';
+    let hasResults = false;
+
+    // 1. Tìm Bác sĩ (Lấy từ biến homeDoctorsList bên file home_doctors.js)
+    if (typeof homeDoctorsList !== 'undefined' && homeDoctorsList.length > 0) {
+        const matchedDocs = homeDoctorsList.filter(doc => 
+            (doc.ho_ten && doc.ho_ten.toLowerCase().includes(keyword)) ||
+            (doc.ten_chuyen_khoa && doc.ten_chuyen_khoa.toLowerCase().includes(keyword))
+        ).slice(0, 3); // Lấy tối đa 3 kết quả để tránh dropdown quá dài
+
+        if (matchedDocs.length > 0) {
+            hasResults = true;
+            resultsHtml += `<div style="padding: 10px 15px; font-weight: 700; color: #64748b; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; background: #f8fafc; position: sticky; top: 0;">Bác sĩ & Chuyên khoa</div>`;
+            matchedDocs.forEach(doc => {
+                const defaultImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.ho_ten)}&background=random`;
+                const imgSrc = doc.anh_dai_dien && doc.anh_dai_dien.trim() !== "" ? (doc.anh_dai_dien.startsWith('http') || doc.anh_dai_dien.startsWith('data:') ? doc.anh_dai_dien : window.API_BASE + '/uploads/' + doc.anh_dai_dien) : defaultImg;
+                
+                // Khi click vào bác sĩ -> Chuyển sang Tab Đặt lịch và tự động điền tên vào ô tìm kiếm
+                resultsHtml += `
+                    <div onclick="document.getElementById('globalSearchResults').style.display='none'; switchTab(event, 'tab-dat-lich'); setTimeout(() => { const bookingInput = document.getElementById('booking_search_input'); if(bookingInput) { bookingInput.value = '${doc.ho_ten}'; onBookingSearchInput(); } }, 500);" style="padding: 10px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: 0.2s;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='white'">
+                        <img src="${imgSrc}" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0;" onerror="this.src='${defaultImg}'">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 700; color: #0f172a;">BS. ${doc.ho_ten}</div>
+                            <div style="font-size: 12px; color: #0284c7;">${doc.ten_chuyen_khoa || 'Chuyên khoa'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    // 2. Tìm Hỏi Đáp (Lấy từ biến window.allCommunityQA)
+    if (typeof window.allCommunityQA !== 'undefined' && window.allCommunityQA.length > 0) {
+        const matchedQA = window.allCommunityQA.filter(q => 
+            (q.tieu_de && q.tieu_de.toLowerCase().includes(keyword)) ||
+            (q.noi_dung && q.noi_dung.toLowerCase().includes(keyword))
+        ).slice(0, 3); // Lấy tối đa 3 kết quả
+
+        if (matchedQA.length > 0) {
+            hasResults = true;
+            resultsHtml += `<div style="padding: 10px 15px; font-weight: 700; color: #64748b; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; background: #f8fafc; position: sticky; top: 0;">Cộng đồng Hỏi Đáp</div>`;
+            matchedQA.forEach(q => {
+                let displayTieuDe = q.tieu_de || 'Câu hỏi';
+                if (displayTieuDe.startsWith('[Ẩn danh]')) {
+                    displayTieuDe = displayTieuDe.replace('[Ẩn danh] ', '').replace('[Ẩn danh]', '');
+                }
+                const nguoiDaTraLoi = q.ten_nguoi_tra_loi ? (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên' ? 'Quản trị viên' : 'BS. ' + q.ten_nguoi_tra_loi) : 'Bác sĩ';
+                const tieuDeEncoded = encodeURIComponent(displayTieuDe);
+                const noiDungEncoded = encodeURIComponent(q.noi_dung || '');
+                const traLoiEncoded = encodeURIComponent(q.tra_loi || '');
+                const nguoiTraLoiEncoded = encodeURIComponent(nguoiDaTraLoi);
+                const popupArgs = `decodeURIComponent('${tieuDeEncoded}'), decodeURIComponent('${noiDungEncoded}'), decodeURIComponent('${traLoiEncoded}'), decodeURIComponent('${nguoiTraLoiEncoded}')`;
+
+                resultsHtml += `
+                    <div onclick="document.getElementById('globalSearchResults').style.display='none'; openQADetailPopup(${popupArgs});" style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: 0.2s;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='white'">
+                        <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><i class="fa-solid fa-circle-question" style="color: #10b981;"></i> ${displayTieuDe}</div>
+                        <div style="font-size: 12px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${q.noi_dung}</div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    if (hasResults) {
+        resultsContainer.innerHTML = resultsHtml;
+        resultsContainer.style.display = 'block';
+    } else {
+        resultsContainer.innerHTML = `<div style="padding: 15px; text-align: center; color: #64748b; font-size: 14px;">Không tìm thấy kết quả phù hợp cho "<b>${document.getElementById('globalSearchInput').value}</b>"</div>`;
+        resultsContainer.style.display = 'block';
+    }
+}
+
+// Ẩn kết quả tìm kiếm khi click ra ngoài vùng search
+document.addEventListener('click', function(e) {
+    const searchBar = document.querySelector('.search-bar');
+    const resultsContainer = document.getElementById('globalSearchResults');
+    if (searchBar && !searchBar.contains(e.target) && resultsContainer) {
+        resultsContainer.style.display = 'none';
+    }
+});
