@@ -133,3 +133,15 @@ CREATE TABLE Thuoc (
     ngay_tao DATETIME DEFAULT GETDATE(),
     ngay_cap_nhat DATETIME DEFAULT GETDATE()
 );
+
+-- Bảng chi tiết đơn thuốc: Liên kết bảng Thuoc với LichKham (Quan hệ N-N)
+-- Mỗi lần khám (LichKham) bác sĩ có thể kê nhiều thuốc, mỗi thuốc có thể xuất hiện trong nhiều đơn
+CREATE TABLE DonThuoc (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    lich_kham_id INT NOT NULL FOREIGN KEY REFERENCES LichKham(id),
+    thuoc_id INT NOT NULL FOREIGN KEY REFERENCES Thuoc(id),
+    so_luong INT NOT NULL DEFAULT 1,
+    lieu_dung NVARCHAR(255),
+    ghi_chu NVARCHAR(MAX),
+    ngay_tao DATETIME DEFAULT GETDATE()
+);

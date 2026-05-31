@@ -89,7 +89,7 @@ body {
 .icon-blue { background: #f0f9ff; color: #38bdf8; }
 .icon-yellow { background: #fffbeb; color: #fbbf24; }
 .icon-green { background: #ecfdf5; color: #34d399; }
-.icon-purple { display: none; /* Ẩn icon góc trên, dùng icon chìm như design */ }
+.icon-purple { background: #faf5ff; color: #c084fc; }
 
 .stat-info p { color: var(--text-sub); font-size: 14px; font-weight: 600; margin-bottom: 5px; }
 .stat-info h3 { font-size: 36px; font-weight: 900; color: var(--text-main); line-height: 1; letter-spacing: -1px; }

@@ -81,7 +81,7 @@
                 </div>
             </div>
             <div class="stat-card border-bottom-purple" onclick="switchTab(event, 'tab-hoi-dap')">
-                <div class="stat-icon icon-purple"><i class="fa-regular fa-circle-question" style="opacity: 0.3; font-size: 60px; position: absolute; right: 10px; top: 10px;"></i></div>
+                <div class="stat-icon icon-purple"><i class="fa-regular fa-circle-question"></i></div>
                 <div class="stat-info" style="position: relative; z-index: 2;">
                     <p>Hỏi đáp mới</p>
                     <h3 id="stat_qa">00</h3>
@@ -100,6 +100,7 @@
                         <button class="filter-btn active" onclick="filterAppointments(event, 'all')">Tất cả (3)</button>
                         <button class="filter-btn" onclick="filterAppointments(event, 'pending')">Chờ khám (2)</button>
                         <button class="filter-btn" onclick="filterAppointments(event, 'done')">Đã khám (1)</button>
+                        <button class="filter-btn" onclick="filterAppointments(event, 'cancelled')">Đã hủy (0)</button>
                     </div>
 
                     <div class="search-box">

@@ -35,6 +35,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
 app.use('/api/chatbot', require('./src/routes/chatbotRoutes'));
 app.use('/api/thuoc', require('./src/routes/thuocRoutes'));
+app.use('/api/don-thuoc', require('./src/routes/donThuocRoutes'));
 
 app.listen(PORT, async () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);

@@ -842,10 +842,70 @@ async function fetchMedicalHistory() {
                 containerHoSo.innerHTML = '<div style="text-align: center; padding: 40px 20px; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;"><i class="fa-solid fa-notes-medical" style="font-size: 40px; color: #94a3b8; margin-bottom: 15px;"></i><p style="color: #64748b; font-size: 15px; margin: 0;">Bạn chưa có hồ sơ bệnh án nào được hoàn thành.</p></div>';
             } else {
                 let hoSoHTML = '';
-                donThuocList.forEach(app => {
+                // Fetch đơn thuốc cho tất cả lịch khám đã Done
+                const prescriptionPromises = donThuocList.map(app =>
+                    fetch(`${window.API_BASE}/api/don-thuoc/${app.id}`)
+                        .then(r => r.ok ? r.json() : [])
+                        .catch(() => [])
+                );
+                const allPrescriptions = await Promise.all(prescriptionPromises);
+
+                donThuocList.forEach((app, idx) => {
                     const d = new Date(app.ngay_lam_viec);
                     const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-                    const ghiChuFormat = app.ghi_chu_cua_bac_si ? app.ghi_chu_cua_bac_si.replace(/\n/g, '<br>') : '<span style="color:#94a3b8; font-style:italic;">Không có ghi chú hoặc đơn thuốc.</span>';
+                    
+                    // Lấy chẩn đoán từ ghi chú
+                    let chanDoan = app.ghi_chu_cua_bac_si || '';
+                    if (chanDoan.includes("Chẩn đoán:")) {
+                        chanDoan = chanDoan.replace("Chẩn đoán:", "").split("\n\nĐơn thuốc:")[0].trim();
+                    }
+                    const chanDoanHtml = chanDoan || '<span style="color:#94a3b8; font-style:italic;">Không có chẩn đoán.</span>';
+
+                    // Render đơn thuốc dạng bảng từ API
+                    const prescriptions = allPrescriptions[idx] || [];
+                    let donThuocHtml = '';
+                    if (prescriptions.length > 0) {
+                        let tongTien = 0;
+                        let rows = prescriptions.map((dt, i) => {
+                            const thanhTien = (parseFloat(dt.gia_thuoc) || 0) * (dt.so_luong || 1);
+                            tongTien += thanhTien;
+                            return `<tr>
+                                <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #64748b;">${i + 1}</td>
+                                <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #0f172a;">${dt.ten_thuoc} <span style="color:#64748b; font-weight:400; font-size:12px;">(${dt.don_vi})</span></td>
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: 600; color: #0284c7;">${dt.so_luong}</td>
+                                <td style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #334155;">${dt.lieu_dung || '-'}</td>
+                                <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600;">${Number(thanhTien).toLocaleString('vi-VN')}đ</td>
+                            </tr>`;
+                        }).join('');
+
+                        donThuocHtml = `
+                            <div style="margin-top: 20px;">
+                                <span style="color: #10b981; font-size: 13px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;"><i class="fa-solid fa-pills"></i> Đơn thuốc</span>
+                                <div style="margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                        <thead style="background: #f1f5f9;">
+                                            <tr>
+                                                <th style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569; font-weight: 600; width: 40px;">STT</th>
+                                                <th style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Tên thuốc</th>
+                                                <th style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569; font-weight: 600; width: 50px;">SL</th>
+                                                <th style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; color: #475569; font-weight: 600;">Liều dùng</th>
+                                                <th style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569; font-weight: 600; width: 100px;">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${rows}</tbody>
+                                        <tfoot>
+                                            <tr style="background: #f0fdf4;">
+                                                <td colspan="4" style="padding: 10px 12px; font-weight: 700; color: #166534; text-align: right;">Tổng tiền thuốc:</td>
+                                                <td style="padding: 10px 8px; font-weight: 700; color: #166534; text-align: right;">${Number(tongTien).toLocaleString('vi-VN')} đ</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        donThuocHtml = '<div style="margin-top: 15px; padding: 12px 15px; background: #f8fafc; border-radius: 8px; color: #94a3b8; font-style: italic; font-size: 14px;"><i class="fa-solid fa-pills" style="margin-right: 6px;"></i>Bác sĩ không kê đơn thuốc.</div>';
+                    }
 
                     // HIỂN THỊ NÚT ĐÁNH GIÁ HOẶC SỐ SAO ĐÃ ĐÁNH GIÁ
                     let ratingHtml = '';
@@ -870,11 +930,12 @@ async function fetchMedicalHistory() {
                                     <div style="flex: 2;"><span style="color: #64748b; font-size: 13px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Triệu chứng ban đầu</span><br><span style="color: #334155; font-size: 15px; display: inline-block; margin-top: 5px;">${app.mo_ta_trieu_chung || 'Không có'}</span></div>
                                 </div>
                                 <div>
-                                    <span style="color: #0284c7; font-size: 13px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;"><i class="fa-solid fa-clipboard-check"></i> Kết luận & Chỉ định</span>
+                                    <span style="color: #0284c7; font-size: 13px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;"><i class="fa-solid fa-clipboard-check"></i> Chẩn đoán</span>
                                     <div style="background: #F0F9FF; border-left: 4px solid #0284C7; padding: 15px 20px; border-radius: 0 8px 8px 0; font-size: 15px; color: #1e293b; line-height: 1.7; margin-top: 10px;">
-                                        ${ghiChuFormat}
+                                        ${chanDoanHtml}
                                     </div>
                                 </div>
+                                ${donThuocHtml}
                                 <div style="margin-top: 20px; text-align: right; border-top: 1px solid #f1f5f9; padding-top: 15px;">
                                     ${ratingHtml}
                                 </div>
@@ -887,6 +948,7 @@ async function fetchMedicalHistory() {
         } else {
             console.warn("⚠️ HTML bị thiếu: Không tìm thấy thẻ div nào có id='ho_so_suc_khoe_list'");
         }
+
 
         // ===========================================
         // 3. XỬ LÝ THÔNG BÁO (NOTIFICATIONS)
