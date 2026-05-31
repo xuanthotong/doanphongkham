@@ -25,6 +25,28 @@ async function sendEmailBrevo(toEmail, subject, htmlContent) {
 // Hàm tự động hủy lịch hẹn nếu quá giờ khám 1 tiếng
 const autoCancelExpiredAppointments = async (pool) => {
     try {
+        // Bước 1: Lấy danh sách lịch hẹn hết hạn kèm thông tin bệnh nhân để gửi email
+        const expiredResult = await pool.request().query(`
+            SELECT lk.id, lk.lich_lam_viec_id, lk.gio_kham,
+                   llv.ngay_lam_viec,
+                   tk.email as email_benh_nhan,
+                   ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan,
+                   ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si
+            FROM LichKham lk
+            JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+            JOIN TaiKhoan tk ON lk.benh_nhan_id = tk.id
+            LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
+            JOIN TaiKhoan bs_tk ON llv.bac_si_id = bs_tk.id
+            LEFT JOIN HoSoNguoiDung bs_nd ON bs_tk.id = bs_nd.tai_khoan_id
+            WHERE lk.trang_thai IN ('Pending', 'Approved')
+              AND lk.gio_kham IS NOT NULL AND LEN(lk.gio_kham) >= 5
+              AND DATEADD(minute, 60, CAST(CONVERT(VARCHAR(10), llv.ngay_lam_viec, 120) + ' ' + LEFT(lk.gio_kham, 5) AS DATETIME)) < DATEADD(hour, 7, GETUTCDATE())
+        `);
+
+        const expiredList = expiredResult.recordset;
+        if (expiredList.length === 0) return; // Không có lịch nào hết hạn
+
+        // Bước 2: Hủy lịch và hoàn slot trong DB (bulk SQL)
         await pool.request().query(`
             DECLARE @Expired TABLE (id INT, lich_lam_viec_id INT);
 
@@ -52,6 +74,45 @@ const autoCancelExpiredAppointments = async (pool) => {
                 JOIN @Expired e ON lk.id = e.id;
             END
         `);
+
+        // Bước 3: Gửi email thông báo hủy cho từng bệnh nhân
+        for (const info of expiredList) {
+            if (!info.email_benh_nhan) continue;
+            try {
+                const d = new Date(info.ngay_lam_viec);
+                const ngay_kham_str = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+                const cancelHtml = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
+                        <div style="background-color: #EF4444; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                            <h2>Thông Báo Hủy Lịch Khám</h2>
+                        </div>
+                        <div style="padding: 20px; line-height: 1.6; color: #334155;">
+                            <p>Xin chào <strong>${info.ten_benh_nhan}</strong>,</p>
+                            <p>Chúng tôi rất tiếc phải thông báo rằng lịch khám của bạn đã bị <strong style="color: #EF4444;">HỦY TỰ ĐỘNG</strong> bởi hệ thống do bạn không đến khám đúng giờ. Dưới đây là thông tin chi tiết:</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Mã lịch khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#${info.id}</td></tr>
+                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ phụ trách:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${info.ten_bac_si}</td></tr>
+                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày hẹn:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${ngay_kham_str}</td></tr>
+                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ hẹn:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${info.gio_kham || 'Chưa cập nhật'}</td></tr>
+                                <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Lý do hủy:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #EF4444;">Hệ thống tự động hủy do bệnh nhân không đến khám đúng giờ</td></tr>
+                            </table>
+                            <p style="margin-top: 20px;">Nếu bạn muốn đặt lịch khám mới, vui lòng truy cập lại hệ thống để chọn ngày giờ phù hợp.</p>
+                            <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
+                        </div>
+                    </div>
+                `;
+
+                sendEmailBrevo(
+                    info.email_benh_nhan,
+                    `[TT Medical] Thông báo HỦY lịch khám tự động - Lịch khám #${info.id}`,
+                    cancelHtml
+                );
+                console.log(`📧 Đã gửi email hủy tự động cho: ${info.email_benh_nhan} (LK#${info.id})`);
+            } catch (emailErr) {
+                console.error(`❌ Lỗi gửi email hủy tự động cho LK#${info.id}:`, emailErr.message);
+            }
+        }
     } catch (err) {
         console.error('Lỗi auto cancel lịch khám:', err);
     }
@@ -862,9 +923,16 @@ const patientCancelAppointment = async (req, res) => {
         // 1. Lấy thông tin lịch hẹn + kiểm tra quyền sở hữu
         const appInfo = await pool.request().input('id', sql.Int, id).query(`
             SELECT lk.id, lk.lich_lam_viec_id, lk.trang_thai, lk.benh_nhan_id,
-                   llv.ngay_lam_viec, lk.gio_kham
+                   llv.ngay_lam_viec, lk.gio_kham,
+                   tk.email as email_benh_nhan,
+                   ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan,
+                   ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si
             FROM LichKham lk
             JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+            JOIN TaiKhoan tk ON lk.benh_nhan_id = tk.id
+            LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
+            JOIN TaiKhoan bs_tk ON llv.bac_si_id = bs_tk.id
+            LEFT JOIN HoSoNguoiDung bs_nd ON bs_tk.id = bs_nd.tai_khoan_id
             WHERE lk.id = @id
         `);
 
@@ -934,6 +1002,38 @@ const patientCancelAppointment = async (req, res) => {
             .input('id', sql.Int, id)
             .input('ghi_chu', sql.NVarChar, lyDoHuy)
             .query("UPDATE LichKham SET trang_thai = 'Cancelled', ghi_chu_cua_bac_si = @ghi_chu WHERE id = @id");
+
+        // 5. Gửi email xác nhận hủy cho bệnh nhân
+        if (rowInfo.email_benh_nhan) {
+            const d = new Date(rowInfo.ngay_lam_viec);
+            const ngay_kham_str = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+            const cancelHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
+                    <div style="background-color: #EF4444; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h2>Xác Nhận Hủy Lịch Khám</h2>
+                    </div>
+                    <div style="padding: 20px; line-height: 1.6; color: #334155;">
+                        <p>Xin chào <strong>${rowInfo.ten_benh_nhan}</strong>,</p>
+                        <p>Bạn đã thực hiện <strong style="color: #EF4444;">HỦY</strong> lịch khám thành công trên hệ thống. Dưới đây là thông tin lịch khám đã hủy:</p>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                            <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Mã lịch khám:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#${rowInfo.id}</td></tr>
+                            <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Bác sĩ phụ trách:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${rowInfo.ten_bac_si}</td></tr>
+                            <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Ngày hẹn:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0284C7; font-weight: bold;">${ngay_kham_str}</td></tr>
+                            <tr><td style="padding: 10px; border-bottom: 1px solid #e2e8f0;"><strong>Giờ hẹn:</strong></td><td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #10B981; font-weight: bold;">${rowInfo.gio_kham || 'Chưa cập nhật'}</td></tr>
+                        </table>
+                        <p style="margin-top: 20px;">Nếu bạn cần hỗ trợ thêm, vui lòng liên hệ với chúng tôi.</p>
+                        <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
+                    </div>
+                </div>
+            `;
+
+            sendEmailBrevo(
+                rowInfo.email_benh_nhan,
+                `[TT Medical] Xác nhận HỦY lịch khám - Lịch khám #${rowInfo.id}`,
+                cancelHtml
+            );
+        }
 
         res.json({ message: 'Hủy lịch hẹn thành công!' });
 
