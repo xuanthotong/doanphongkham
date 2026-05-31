@@ -341,6 +341,8 @@ const deleteAppointment = async (req, res) => {
         }
 
         // Kiểm tra thời gian: Admin CHỈ được hủy nếu còn <= 30 phút trước giờ khám
+        // GIỜ KHÁM LƯU TRONG DB LÀ GIỜ VIỆT NAM (UTC+7)
+        // Server Render chạy UTC -> phải chuyển "now" sang giờ VN để so sánh chính xác
         const d = new Date(rowInfo.ngay_lam_viec);
         const year = d.getUTCFullYear();
         const month = d.getUTCMonth();
@@ -348,10 +350,12 @@ const deleteAppointment = async (req, res) => {
         
         const gioKhamStr = rowInfo.gio_kham ? rowInfo.gio_kham.split(' - ')[0] : '00:00';
         const [gio, phut] = gioKhamStr.split(':');
-        const localAppointmentDate = new Date(year, month, date, parseInt(gio), parseInt(phut), 0);
         
-        const now = new Date();
-        const diffInMinutes = (localAppointmentDate - now) / (1000 * 60);
+        // Tạo timestamp UTC cho giờ khám (VD: 14:00 VN = 07:00 UTC)
+        const appointmentUTC = Date.UTC(year, month, date, parseInt(gio) - 7, parseInt(phut), 0);
+        
+        const now = Date.now(); // UTC timestamp
+        const diffInMinutes = (appointmentUTC - now) / (1000 * 60);
 
         if (diffInMinutes > 30) {
             return res.status(400).json({ message: 'Chưa đến thời gian cho phép hủy lịch! Admin chỉ có quyền hủy lịch nếu bệnh nhân không đến khi còn cách giờ khám dưới 30 phút.' });
