@@ -794,10 +794,13 @@ async function fetchMedicalHistory() {
 
                     let reasonCancel = (status === 'cancelled' && app.ghi_chu_cua_bac_si) ? `<div style="margin-top: 15px; padding: 10px 15px; background: #fef2f2; border-radius: 8px; font-size: 13px; color: #b91c1c; border-left: 3px solid #ef4444;"><strong>Lý do hủy:</strong> ${app.ghi_chu_cua_bac_si}</div>` : '';
 
-                    // HIỆN NÚT XEM PHIẾU KHÁM NẾU LỊCH CHƯA KHÁM XONG
+                    // HIỆN NÚT XEM PHIẾU KHÁM + HỦY LỊCH NẾU LỊCH CHƯA KHÁM XONG
                     let btnXemPhieu = '';
                     if (status === 'pending' || status === 'approved') {
-                        btnXemPhieu = `<div style="margin-top: 15px;"><button onclick="viewAppointmentTicket(${app.id})" style="padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);" onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='#0ea5e9'"><i class="fa-solid fa-ticket"></i> Xem & Tải Phiếu Khám</button></div>`;
+                        btnXemPhieu = `<div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="viewAppointmentTicket(${app.id})" style="padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; box-shadow: 0 2px 5px rgba(14, 165, 233, 0.2);" onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='#0ea5e9'"><i class="fa-solid fa-ticket"></i> Xem & Tải Phiếu Khám</button>
+                            <button onclick="patientCancelAppointment(${app.id})" style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2);" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'"><i class="fa-solid fa-ban"></i> Hủy lịch hẹn</button>
+                        </div>`;
                     }
 
                     lichSuHTML += `
@@ -893,6 +896,109 @@ async function fetchMedicalHistory() {
     } catch (error) {
         console.error(error);
         if (containerLichSu) containerLichSu.innerHTML = '<p style="color: red; text-align: center;">Không thể tải lịch sử khám lúc này.</p>';
+    }
+}
+
+// ==================================================
+// HÀM BỆNH NHÂN TỰ HỦY LỊCH HẸN
+// ==================================================
+async function patientCancelAppointment(appId) {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!userInfo.id) {
+        Swal.fire('Lỗi', 'Vui lòng đăng nhập lại!', 'error');
+        return;
+    }
+
+    // Bước 1: Xác nhận hủy lần đầu
+    const confirmResult = await Swal.fire({
+        title: 'Xác nhận hủy lịch',
+        text: `Bạn có chắc chắn muốn hủy lịch hẹn #LK${appId} không?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Đồng ý hủy',
+        cancelButtonText: 'Giữ lịch'
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    try {
+        // Gọi API lần 1: Kiểm tra trạng thái thanh toán
+        const res = await fetch(`${window.API_BASE}/api/appointments/${appId}/patient-cancel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ benh_nhan_id: userInfo.id })
+        });
+
+        const data = await res.json();
+
+        // Trường hợp: Đã thanh toán online → Backend yêu cầu xác nhận mất phí
+        if (data.requireConfirm) {
+            const soTienFormat = Number(data.soTien).toLocaleString('vi-VN');
+            const confirmLoseFee = await Swal.fire({
+                title: '⚠️ Cảnh báo mất phí!',
+                html: `
+                    <div style="text-align: left; font-size: 15px; line-height: 1.8; color: #334155;">
+                        <p>Lịch hẹn này đã được <strong style="color: #10b981;">thanh toán online</strong>.</p>
+                        <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <p style="margin: 0; color: #991b1b; font-weight: 700; font-size: 16px;">
+                                <i class="fa-solid fa-money-bill-wave"></i> Phí khám: ${soTienFormat} VNĐ
+                            </p>
+                            <p style="margin: 8px 0 0 0; color: #b91c1c; font-size: 14px;">
+                                Nếu hủy, bạn sẽ <strong>KHÔNG được hoàn lại</strong> số tiền đã thanh toán.
+                            </p>
+                        </div>
+                        <p style="color: #64748b; font-size: 13px;">Bạn có chắc chắn muốn hủy và chấp nhận mất phí không?</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#10b981',
+                confirmButtonText: '<i class="fa-solid fa-ban"></i> Đồng ý mất phí, hủy lịch',
+                cancelButtonText: '<i class="fa-solid fa-shield-halved"></i> Giữ lại lịch hẹn',
+                width: '500px'
+            });
+
+            if (!confirmLoseFee.isConfirmed) {
+                Swal.fire({
+                    title: 'Đã giữ lịch!',
+                    text: 'Lịch hẹn của bạn vẫn được giữ nguyên.',
+                    icon: 'info',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            // Gọi API lần 2: Hủy thật với xác nhận mất phí
+            const res2 = await fetch(`${window.API_BASE}/api/appointments/${appId}/patient-cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ benh_nhan_id: userInfo.id, acceptLoseFee: true })
+            });
+
+            const data2 = await res2.json();
+            if (res2.ok) {
+                Swal.fire('Đã hủy!', data2.message || 'Hủy lịch hẹn thành công.', 'success');
+                fetchMedicalHistory(); // Reload lại danh sách
+            } else {
+                Swal.fire('Lỗi!', data2.message || 'Có lỗi xảy ra!', 'error');
+            }
+            return;
+        }
+
+        // Trường hợp: Chưa thanh toán → Hủy thẳng thành công
+        if (res.ok) {
+            Swal.fire('Đã hủy!', data.message || 'Hủy lịch hẹn thành công.', 'success');
+            fetchMedicalHistory(); // Reload lại danh sách
+        } else {
+            Swal.fire('Lỗi!', data.message || 'Có lỗi xảy ra khi hủy lịch!', 'error');
+        }
+
+    } catch (error) {
+        console.error('Lỗi hủy lịch:', error);
+        Swal.fire('Lỗi kết nối!', 'Không thể kết nối đến Server!', 'error');
     }
 }
 

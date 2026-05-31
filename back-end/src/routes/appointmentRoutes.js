@@ -38,7 +38,10 @@ router.put('/:id/note', appointmentController.updateAppointmentNote);
 // 5. API Lấy TẤT CẢ lịch hẹn cho Admin
 router.get('/', appointmentController.getAllAppointments);
 
-// 6. API Xóa lịch hẹn
+// API Bệnh nhân tự hủy lịch hẹn
+router.post('/:id/patient-cancel', appointmentController.patientCancelAppointment);
+
+// 6. API Xóa lịch hẹn (Admin)
 router.delete('/:id', appointmentController.deleteAppointment);
 
 module.exports = router;

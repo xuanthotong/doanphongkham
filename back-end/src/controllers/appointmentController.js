@@ -845,4 +845,102 @@ const deleteUnpaidAppointment = async (req, res) => {
     }
 };
 
-module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1, createAppointment, getBookedSlots, rateAppointment, cassoWebhook, payosWebhook, checkPaymentStatus, deleteUnpaidAppointment };
+// =========================================================================
+// API: BỆNH NHÂN TỰ HỦY LỊCH HẸN
+// =========================================================================
+const patientCancelAppointment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { benh_nhan_id, acceptLoseFee } = req.body;
+
+        if (!benh_nhan_id) {
+            return res.status(400).json({ message: 'Thiếu thông tin bệnh nhân!' });
+        }
+
+        const pool = await connectDB();
+
+        // 1. Lấy thông tin lịch hẹn + kiểm tra quyền sở hữu
+        const appInfo = await pool.request().input('id', sql.Int, id).query(`
+            SELECT lk.id, lk.lich_lam_viec_id, lk.trang_thai, lk.benh_nhan_id,
+                   llv.ngay_lam_viec, lk.gio_kham
+            FROM LichKham lk
+            JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+            WHERE lk.id = @id
+        `);
+
+        if (appInfo.recordset.length === 0) {
+            return res.status(404).json({ message: 'Không tìm thấy lịch hẹn!' });
+        }
+
+        const rowInfo = appInfo.recordset[0];
+
+        // Kiểm tra quyền: Bệnh nhân chỉ được hủy lịch của chính mình
+        if (rowInfo.benh_nhan_id !== benh_nhan_id) {
+            return res.status(403).json({ message: 'Bạn không có quyền hủy lịch hẹn này!' });
+        }
+
+        const status = rowInfo.trang_thai.trim().toLowerCase();
+
+        // Không cho hủy lịch đã khám xong
+        if (status === 'done') {
+            return res.status(400).json({ message: 'Không thể hủy lịch đã khám xong!' });
+        }
+
+        // Không cho hủy lịch đã bị hủy rồi
+        if (status === 'cancelled') {
+            return res.status(400).json({ message: 'Lịch hẹn này đã bị hủy trước đó!' });
+        }
+
+        // 2. Kiểm tra trạng thái thanh toán
+        const paymentCheck = await pool.request().input('id', sql.Int, id).query(`
+            SELECT phuong_thuc_thanh_toan, trang_thai_thanh_toan, so_tien 
+            FROM ThanhToan WHERE lich_kham_id = @id
+        `);
+
+        let isPaidOnline = false;
+        let soTien = 0;
+
+        if (paymentCheck.recordset.length > 0) {
+            const payment = paymentCheck.recordset[0];
+            soTien = payment.so_tien || 0;
+            // Đã thanh toán online (transfer/momo) và tiền đã chuyển thành công
+            if ((payment.phuong_thuc_thanh_toan === 'transfer' || payment.phuong_thuc_thanh_toan === 'momo') 
+                && payment.trang_thai_thanh_toan === 1) {
+                isPaidOnline = true;
+            }
+        }
+
+        // 3. Nếu đã thanh toán online → Yêu cầu xác nhận mất phí
+        if (isPaidOnline && !acceptLoseFee) {
+            return res.status(200).json({ 
+                requireConfirm: true, 
+                message: `Lịch hẹn này đã được thanh toán online ${Number(soTien).toLocaleString('en-US')} VNĐ. Nếu hủy, bạn sẽ mất phí khám. Bạn có đồng ý?`,
+                soTien: soTien
+            });
+        }
+
+        // 4. Thực hiện hủy lịch
+        // Hoàn lại slot cho ca làm việc
+        await pool.request()
+            .input('lich_lam_viec_id', sql.Int, rowInfo.lich_lam_viec_id)
+            .query('UPDATE LichLamViec SET so_luong_hien_tai = CASE WHEN so_luong_hien_tai > 0 THEN so_luong_hien_tai - 1 ELSE 0 END WHERE id = @lich_lam_viec_id');
+
+        // Cập nhật trạng thái lịch khám thành Cancelled
+        const lyDoHuy = isPaidOnline 
+            ? 'Bệnh nhân tự hủy lịch (đã chấp nhận mất phí khám)' 
+            : 'Bệnh nhân tự hủy lịch';
+
+        await pool.request()
+            .input('id', sql.Int, id)
+            .input('ghi_chu', sql.NVarChar, lyDoHuy)
+            .query("UPDATE LichKham SET trang_thai = 'Cancelled', ghi_chu_cua_bac_si = @ghi_chu WHERE id = @id");
+
+        res.json({ message: 'Hủy lịch hẹn thành công!' });
+
+    } catch (error) {
+        console.error('Lỗi bệnh nhân hủy lịch:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
+module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1, createAppointment, getBookedSlots, rateAppointment, cassoWebhook, payosWebhook, checkPaymentStatus, deleteUnpaidAppointment, patientCancelAppointment };
