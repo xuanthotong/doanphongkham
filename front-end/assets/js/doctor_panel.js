@@ -158,7 +158,7 @@ async function openMedicalRecord(maLK, tenBN, isEdit = false) {
         if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data)) danhSachThuocDB = data;
-            
+
             // Map ID cho dữ liệu cũ (nếu có)
             if (currentPrescriptions.length > 0) {
                 currentPrescriptions.forEach(p => {

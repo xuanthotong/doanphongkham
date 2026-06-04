@@ -9,7 +9,7 @@ CREATE TABLE TaiKhoan (
     vai_tro_id INT NOT NULL FOREIGN KEY REFERENCES VaiTro(id),
     ten_dang_nhap VARCHAR(100) NOT NULL UNIQUE,
     mat_khau VARCHAR(255) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE, 
     trang_thai BIT DEFAULT 1, 
     ngay_tao DATETIME DEFAULT GETDATE(),
     ngay_cap_nhat DATETIME DEFAULT GETDATE()

@@ -372,16 +372,12 @@ async function loadTimeSlotsForCard(docId, dateStr) {
 
     container.innerHTML = '<p style="color: #64748b; font-size: 13px;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải giờ khám...</p>';
 
-    // Tìm ca làm việc
-    const shift = allShifts.find(s => s.bac_si_id == docId && s.ngay_lam_viec && s.ngay_lam_viec.startsWith(dateStr));
-    if (!shift) {
+    // FIX: Lấy TẤT CẢ ca làm việc trong ngày (thay vì chỉ lấy ca đầu tiên bằng find)
+    const shifts = allShifts.filter(s => s.bac_si_id == docId && s.ngay_lam_viec && s.ngay_lam_viec.startsWith(dateStr));
+    if (shifts.length === 0) {
         container.innerHTML = '<p style="color: #ef4444; font-size: 13px;">Bác sĩ không có lịch làm việc trong ngày này.</p>';
         return;
     }
-
-    // Chia nhỏ khung giờ
-    const [start, end] = shift.khung_gio.split(' - ');
-    const allSlots = generateTimeSlots(start, end);
 
     // Lấy giờ hiện tại
     const now = new Date();
@@ -394,14 +390,31 @@ async function loadTimeSlotsForCard(docId, dateStr) {
         let bookedSlots = [];
         if (res.ok) bookedSlots = await res.json();
 
+        // Gộp time slots từ TẤT CẢ các ca, kèm thông tin capacity của từng ca
+        const allSlotsWithInfo = [];
+        const addedSlots = new Set(); // Tránh trùng lặp nếu ca chồng giờ
+
+        shifts.forEach(shift => {
+            const [start, end] = shift.khung_gio.split(' - ');
+            const slotsOfShift = generateTimeSlots(start, end);
+            const maxPerSlot = Math.ceil(shift.so_luong_toi_da / Math.max(1, slotsOfShift.length));
+            const isShiftFull = (shift.so_luong_hien_tai >= shift.so_luong_toi_da) || (shift.trang_thai === 'Stopped');
+
+            slotsOfShift.forEach(slot => {
+                if (!addedSlots.has(slot)) {
+                    addedSlots.add(slot);
+                    allSlotsWithInfo.push({ slot, maxPerSlot, isShiftFull });
+                }
+            });
+        });
+
+        // Sắp xếp theo thời gian tăng dần
+        allSlotsWithInfo.sort((a, b) => a.slot.localeCompare(b.slot));
+
         let html = '<p class="bdc-timeslots-title"><i class="fa-regular fa-clock"></i> Chọn giờ khám:</p>';
         html += '<div class="bdc-timeslots-grid">';
 
-        // Tính toán số người tối đa cho mỗi 30 phút (Slot)
-        const maxPerSlot = Math.ceil(shift.so_luong_toi_da / Math.max(1, allSlots.length));
-        const isShiftFull = (shift.so_luong_hien_tai >= shift.so_luong_toi_da) || (shift.trang_thai === 'Stopped');
-
-        allSlots.forEach(slot => {
+        allSlotsWithInfo.forEach(({ slot, maxPerSlot, isShiftFull }) => {
             const slotStart = slot.split(' - ')[0];
             const isPast = (dateStr === todayStr && slotStart < currentTime);
             const countBookedInSlot = bookedSlots.filter(s => s === slot).length;
