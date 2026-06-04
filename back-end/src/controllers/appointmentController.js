@@ -494,12 +494,12 @@ const createAppointment = async (req, res) => {
         await transaction.begin();
 
         try {
-            // 1. Tìm lich_lam_viec_id tương ứng với bác sĩ và ngày
+            // 1. Tìm TẤT CẢ ca làm việc tương ứng với bác sĩ và ngày
             const shiftQuery = await new sql.Request(transaction)
                 .input('bac_si_id', sql.Int, bac_si_id)
                 .input('ngay_lam_viec', sql.Date, ngay_lam_viec)
                 .query(`
-                    SELECT llv.id, hsbs.phi_kham, ISNULL(hsnd.ho_ten, tk.ten_dang_nhap) as ten_bac_si
+                    SELECT llv.id, llv.khung_gio, hsbs.phi_kham, ISNULL(hsnd.ho_ten, tk.ten_dang_nhap) as ten_bac_si
                     FROM LichLamViec llv
                     LEFT JOIN HoSoBacSi hsbs ON llv.bac_si_id = hsbs.tai_khoan_id
                     LEFT JOIN HoSoNguoiDung hsnd ON llv.bac_si_id = hsnd.tai_khoan_id
@@ -511,9 +511,19 @@ const createAppointment = async (req, res) => {
                 await transaction.rollback();
                 return res.status(400).json({ message: 'Bác sĩ không có ca làm việc ngày này!' });
             }
-            const lich_lam_viec_id = shiftQuery.recordset[0].id;
-            const phi_kham = shiftQuery.recordset[0].phi_kham || 0;
-            const ten_bac_si = shiftQuery.recordset[0].ten_bac_si;
+
+            // FIX: Tìm đúng ca làm việc chứa khung giờ bệnh nhân đã chọn
+            // (thay vì luôn lấy recordset[0] khi có nhiều ca trong cùng 1 ngày)
+            const selectedStart = khung_gio.split(' - ')[0]; // VD: "09:00"
+            let matchedShift = shiftQuery.recordset.find(shift => {
+                const [shiftStart, shiftEnd] = shift.khung_gio.split(' - ');
+                return selectedStart >= shiftStart && selectedStart < shiftEnd;
+            });
+            if (!matchedShift) matchedShift = shiftQuery.recordset[0]; // Fallback
+
+            const lich_lam_viec_id = matchedShift.id;
+            const phi_kham = matchedShift.phi_kham || 0;
+            const ten_bac_si = matchedShift.ten_bac_si;
             const tong_tien = phi_kham ? Number(phi_kham).toLocaleString('en-US') : '0';
 
             // 2. Lưu vào CSDL Bảng LichKham
