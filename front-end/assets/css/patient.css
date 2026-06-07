@@ -375,3 +375,21 @@ body.patient-body {
     .saas-footer-dark .logo-dark { justify-content: center; }
     .saas-footer-dark .footer-bottom-dark { flex-direction: column; gap: 15px; align-items: center; text-align: center; }
 }
+
+/* ==============================================================
+   CSS CHO TÍNH NĂNG ẨN/HIỆN SIDEBAR (DESKTOP)
+============================================================== */
+.sidebar { transition: transform 0.3s ease, left 0.3s ease !important; }
+.main-content { transition: margin-left 0.3s ease, width 0.3s ease !important; }
+
+/* Ẩn hoàn toàn thanh menu bên trái */
+.sidebar.collapsed { transform: translateX(-100%) !important; }
+.main-content.expanded { margin-left: 0 !important; width: 100% !important; }
+
+.desktop-menu-toggle:hover { color: #0284c7 !important; }
+
+@media (max-width: 768px) {
+    .desktop-menu-toggle { display: none !important; }
+    .close-sidebar-btn { display: block !important; }
+    .sidebar.collapsed { transform: none !important; }
+}

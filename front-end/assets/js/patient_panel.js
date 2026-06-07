@@ -63,6 +63,18 @@ window.onclick = function (event) {
     }
 }
 
+// ==================================================
+// HÀM THU GỌN / MỞ RỘNG SIDEBAR (CHUNG MOBILE & DESKTOP)
+// ==================================================
+window.toggleSidebar = function() {
+    if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.toggle('active');
+    } else {
+        document.querySelector('.sidebar').classList.toggle('collapsed');
+        document.querySelector('.main-content').classList.toggle('expanded');
+    }
+};
+
 function showContactOptions(e) {
     if (e) e.preventDefault();
     Swal.fire({

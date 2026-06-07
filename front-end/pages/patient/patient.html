@@ -18,43 +18,53 @@
 <body class="patient-body">
 
     <aside class="sidebar">
-        <div class="logo" onclick="switchTab(event, 'tab-trang-chu')"
-            style="cursor: pointer; display: flex; align-items: center; font-size: 22px; font-weight: 800; color: #10b981; margin-bottom: 40px; padding: 0 10px;">
-            <img src="../../assets/images/logo.png" alt="Logo"
-                style="height: 40px; margin-right: 10px; object-fit: contain;">
-            <span>TT Medical</span>
+        <!-- Nút đóng menu trên mobile (Trượt ra) -->
+        <button class="close-sidebar-btn" onclick="document.querySelector('.sidebar').classList.remove('active')" style="display: none; position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: #64748b; cursor: pointer; z-index: 10;"><i class="fa-solid fa-xmark"></i></button>
+        
+        <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding: 0 10px;">
+            <div class="logo" onclick="switchTab(event, 'tab-trang-chu')"
+                style="cursor: pointer; display: flex; align-items: center; font-size: 22px; font-weight: 800; color: #10b981;">
+                <img src="../../assets/images/logo.png" alt="Logo"
+                    style="height: 40px; margin-right: 10px; object-fit: contain;">
+                <span>TT Medical</span>
+            </div>
         </div>
         <nav class="nav-group" style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
             <a href="#" class="nav-item tab-link active" onclick="switchTab(event, 'tab-trang-chu')"><i
-                    class="fa-solid fa-border-all"></i> Tổng quan</a>
+                    class="fa-solid fa-border-all"></i> <span class="nav-text">Tổng quan</span></a>
             <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-dat-lich')"><i
-                    class="fa-solid fa-calendar-plus"></i> Đặt lịch khám</a>
+                    class="fa-solid fa-calendar-plus"></i> <span class="nav-text">Đặt lịch khám</span></a>
             <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-ho-so')"><i
-                    class="fa-solid fa-address-card"></i> Hồ sơ cá nhân</a>
+                    class="fa-solid fa-address-card"></i> <span class="nav-text">Hồ sơ cá nhân</span></a>
             <a href="#" class="nav-item tab-link" onclick="switchTab(event, 'tab-hoi-dap-bac-si')"><i
-                    class="fa-solid fa-comments"></i> Hỏi Bác sĩ</a>
-            <a href="#bac-si" class="nav-item"
-                onclick="switchTab(event, 'tab-trang-chu'); setTimeout(() => scrollToSection('bac-si', event), 100);"><i
-                    class="fa-solid fa-user-doctor"></i> Bác sĩ của tôi</a>
+                    class="fa-solid fa-comments"></i> <span class="nav-text">Hỏi Bác sĩ</span></a>
+            <a href="#bac-si" class="nav-item" onclick="scrollToSection('bac-si', event)"><i
+                    class="fa-solid fa-user-doctor"></i> <span class="nav-text">Đội ngũ bác sĩ</span></a>
         </nav>
         <div class="sidebar-footer" onclick="confirmLogout(event)"
             style="cursor: pointer; background: #fee2e2; border: 1px solid #fca5a5; padding: 15px; border-radius: 16px; text-align: center; margin-top: auto; transition: 0.2s;">
-            <p style="color: #ef4444; margin: 0; font-weight: 700; font-size: 14px;"><i
-                    class="fa-solid fa-right-from-bracket"></i> Đăng xuất tài khoản</p>
+            <p style="color: #ef4444; margin: 0; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;"><i
+                    class="fa-solid fa-right-from-bracket"></i> <span class="footer-text">Đăng xuất tài khoản</span></p>
         </div>
     </aside>
 
     <main class="main-content">
         <header class="header">
-            <button class="mobile-menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active')"
-                style="display: none; background: none; border: none; font-size: 24px; color: #0f172a; cursor: pointer; margin-right: 15px;"><i
-                    class="fa-solid fa-bars"></i></button>
-            <div class="search-bar" style="position: relative;">
-                <i class="fa-solid fa-magnifying-glass" style="color: #64748b;"></i>
-                <input type="text" id="globalSearchInput" placeholder="Tìm kiếm nhanh bác sĩ, câu hỏi..." oninput="handleGlobalSearch()" autocomplete="off">
-                <!-- Dropdown kết quả tìm kiếm nhanh -->
-                <div id="globalSearchResults" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; margin-top: 10px; z-index: 1000; max-height: 400px; overflow-y: auto;">
-                    <!-- JS đổ kết quả vào đây -->
+            <div style="display: flex; align-items: center;">
+                <!-- Nút 3 gạch cho Desktop nằm ngoài thanh Sidebar, cạnh ô tìm kiếm -->
+                <button class="desktop-menu-toggle" onclick="toggleSidebar()"
+                    style="background: none; border: none; font-size: 24px; color: #64748b; cursor: pointer; margin-right: 20px; transition: color 0.3s;"><i
+                        class="fa-solid fa-bars"></i></button>
+                <button class="mobile-menu-toggle" onclick="toggleSidebar()"
+                    style="display: none; background: none; border: none; font-size: 24px; color: #0f172a; cursor: pointer; margin-right: 15px; transition: color 0.3s;"><i
+                        class="fa-solid fa-bars"></i></button>
+                <div class="search-bar" style="position: relative;">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #64748b;"></i>
+                    <input type="text" id="globalSearchInput" placeholder="Tìm kiếm nhanh bác sĩ, câu hỏi..." oninput="handleGlobalSearch()" autocomplete="off">
+                    <!-- Dropdown kết quả tìm kiếm nhanh -->
+                    <div id="globalSearchResults" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; margin-top: 10px; z-index: 1000; max-height: 400px; overflow-y: auto;">
+                        <!-- JS đổ kết quả vào đây -->
+                    </div>
                 </div>
             </div>
             <div class="user-profile" onclick="switchTab(event, 'tab-ho-so')" style="cursor: pointer;">
