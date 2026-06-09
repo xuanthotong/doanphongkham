@@ -802,7 +802,7 @@ window.openChatQA = function(identifier) {
     const nguoiHoi = isAnDanh ? 'Ẩn danh' : firstQ.nguoi_hoi;
     const avatarContent = isAnDanh ? '<i class="fa-solid fa-user-secret" style="font-size: 13px;"></i>' : nguoiHoi.charAt(0).toUpperCase();
 
-    let chatHtml = `<div id="qa_chat_body" style="height: 400px; overflow-y: auto; padding: 20px; background: #f1f5f9; border-radius: 8px 8px 0 0; border: 1px solid #e2e8f0; border-bottom: none; display: flex; flex-direction: column; gap: 20px;">`;
+    let chatHtml = `<div id="qa_chat_body" style="height: 450px; overflow-y: auto; padding: 20px 15px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px;">`;
 
     userQuestions.forEach(item => {
         const d = new Date(item.ngay_tao || Date.now());
@@ -815,18 +815,23 @@ window.openChatQA = function(identifier) {
 
         // --- Bệnh nhân hỏi (Bên trái) ---
         chatHtml += `
-            <div style="align-self: flex-start; max-width: 85%; display: flex; gap: 10px;">
-                <div style="min-width: 35px; height: 35px; background: #e2e8f0; color: #475569; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0; margin-top: auto;">
+            <div style="align-self: flex-start; max-width: 85%; display: flex; gap: 12px; margin-bottom: 5px;">
+                <div style="width: 36px; height: 36px; background: #e2e8f0; color: #475569; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0; margin-top: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     ${avatarContent}
                 </div>
-                <div style="text-align: left;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; margin-left: 5px;">${nguoiHoi} • ${timeStr}</div>
-                    <div style="background: #ffffff; padding: 12px 16px; border-radius: 16px; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <div style="font-weight: 700; color: #0f172a; font-size: 14px; margin-bottom: 5px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px;">${tieuDeDisplay}</div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 11px; color: #64748b; margin-bottom: 4px; margin-left: 4px;">${nguoiHoi} • ${timeStr}</span>
+                    <div style="background: #ffffff; padding: 12px 16px; border-radius: 20px; border-bottom-left-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #f1f5f9;">
+                        <div style="font-weight: 800; color: #0f172a; font-size: 14px; margin-bottom: 6px;">${tieuDeDisplay}</div>
                         <div style="color: #334155; font-size: 14px; line-height: 1.5; white-space: pre-wrap;">${item.noi_dung}</div>
                     </div>
                     ${!(item.trang_thai == 1 || (item.tra_loi && item.tra_loi.trim() !== '')) ? 
-                    `<div style="margin-top: 6px; margin-left: 5px;"><button onclick="replySpecificQA(${item.id}, '${encodeURIComponent(identifier)}')" style="background: #0284c7; color: white; border: none; padding: 5px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;" onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'"><i class="fa-solid fa-reply"></i> Trả lời ngay</button></div>` : ''}
+                    `<div style="margin-top: 8px; margin-left: 4px;">
+                        <button onclick="replySpecificQA(${item.id}, '${encodeURIComponent(identifier)}')" style="background: #ffffff; border: 1px solid #e2e8f0; color: #0284c7; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);" onmouseover="this.style.background='#f0f9ff'; this.style.borderColor='#bae6fd'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)';">
+                            <i class="fa-solid fa-reply" style="margin-right: 4px;"></i> Trả lời ngay
+                        </button>
+                    </div>` 
+                    : ''}
                 </div>
             </div>
         `;
@@ -835,16 +840,20 @@ window.openChatQA = function(identifier) {
         if (item.trang_thai == 1 || (item.tra_loi && item.tra_loi.trim() !== '')) {
             const bsTraLoi = item.ten_nguoi_tra_loi ? (item.vai_tro_tra_loi === 'Admin' || item.vai_tro_tra_loi === 'Quản trị viên' ? 'Admin' : `BS. ${item.ten_nguoi_tra_loi}`) : 'Bác sĩ';
             chatHtml += `
-                <div style="align-self: flex-end; max-width: 85%; display: flex; flex-direction: row-reverse; gap: 10px;">
-                    <div style="min-width: 35px; height: 35px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: auto; overflow: hidden; border: 1px solid #bae6fd;">
+                <div style="align-self: flex-end; max-width: 85%; display: flex; flex-direction: row-reverse; gap: 12px; margin-bottom: 5px;">
+                    <div style="width: 36px; height: 36px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: auto; overflow: hidden; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.08);">
                         <img src="${docAvatarSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='${defaultDocAvatar}'">
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; margin-right: 5px;">${bsTraLoi}</div>
-                        <div style="background: #0ea5e9; color: white; padding: 12px 16px; border-radius: 16px; border-bottom-right-radius: 4px; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <span style="font-size: 11px; color: #64748b; margin-bottom: 4px; margin-right: 4px;">${bsTraLoi}</span>
+                        <div style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: white; padding: 12px 16px; border-radius: 20px; border-bottom-right-radius: 4px; text-align: left; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);">
                             <div style="font-size: 14px; line-height: 1.5; white-space: pre-wrap;">${item.tra_loi}</div>
                         </div>
-                        <div style="margin-top: 6px; margin-right: 5px;"><button onclick="replySpecificQA(${item.id}, '${encodeURIComponent(identifier)}', true)" style="background: none; border: none; color: #0284c7; cursor: pointer; font-size: 12px; font-weight: 600; padding: 0;"><i class="fa-solid fa-pen"></i> Sửa trả lời</button></div>
+                        <div style="margin-top: 8px; margin-right: 4px;">
+                            <button onclick="replySpecificQA(${item.id}, '${encodeURIComponent(identifier)}', true)" style="background: rgba(255, 255, 255, 0.6); border: 1px solid #bae6fd; color: #0284c7; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" onmouseover="this.style.background='#e0f2fe'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.6)'; this.style.transform='translateY(0)';">
+                                <i class="fa-solid fa-pen" style="font-size: 11px; margin-right: 4px;"></i> Sửa
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -854,10 +863,12 @@ window.openChatQA = function(identifier) {
     chatHtml += `</div>`;
 
     chatHtml += `
-        <div style="padding: 15px; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; display: flex; gap: 10px; align-items: flex-end;">
-            <textarea id="qa_quick_reply_input" placeholder="Nhập tin nhắn..." style="flex: 1; min-height: 45px; max-height: 100px; resize: vertical; border: 1px solid #cbd5e1; border-radius: 20px; padding: 12px 15px; font-size: 14px; font-family: inherit; outline: none;"></textarea>
-            <button onclick="sendQuickReply(${lastQuestion.id}, '${encodeURIComponent(identifier)}')" style="background: #0ea5e9; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: 0.2s;" onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='#0ea5e9'">
-                <i class="fa-solid fa-paper-plane"></i>
+        <div style="padding: 15px 20px; background: #ffffff; border-top: 1px solid #e2e8f0; border-radius: 0 0 16px 16px; display: flex; gap: 12px; align-items: flex-end;">
+            <div style="flex: 1; position: relative;">
+                <textarea id="qa_quick_reply_input" placeholder="Nhập câu trả lời..." style="width: 100%; min-height: 44px; max-height: 120px; resize: none; border: 1px solid #cbd5e1; border-radius: 24px; padding: 12px 20px; font-size: 14px; font-family: inherit; outline: none; background: #f8fafc; box-sizing: border-box; overflow-y: hidden; line-height: 1.4; transition: 0.2s;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+            </div>
+            <button onclick="sendQuickReply(${lastQuestion.id}, '${encodeURIComponent(identifier)}')" style="background: #0ea5e9; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: 0.2s; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3); flex-shrink: 0;" onmouseover="this.style.background='#0284c7'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='#0ea5e9'; this.style.transform='scale(1)';">
+                <i class="fa-solid fa-paper-plane" style="margin-right: 2px; margin-top: 2px;"></i>
             </button>
         </div>
     `;
@@ -865,9 +876,10 @@ window.openChatQA = function(identifier) {
     Swal.fire({
         title: `<div style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div style="width: 30px; height: 30px; background: #e0f2fe; color: #0284c7; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center;">${avatarContent}</div> <span style="color: #0f172a; font-size: 18px;">${nguoiHoi}</span></div>`,
         html: chatHtml,
-        width: '700px',
+        width: '750px',
         showConfirmButton: false,
         showCloseButton: true,
+        padding: 0,
         customClass: {
             popup: 'saas-modal',
             container: 'saas-backdrop'
@@ -936,12 +948,12 @@ window.replySpecificQA = function(maCH, identifierEncoded, isEditing = false) {
         },
         html: `
             <div style="text-align: left;">
-                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; border-left: 4px solid #cbd5e1;">
-                    <div style="font-size: 12px; color: #64748b; margin-bottom: 5px;"><i class="fa-solid fa-quote-left"></i> Đang trả lời câu hỏi:</div>
-                    <div style="color: #334155; font-size: 14px; line-height: 1.5; font-style: italic;">"${question.noi_dung ? question.noi_dung.replace(/\n/g, ' ') : ''}"</div>
+                <div style="background: #f8fafc; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; border-left: 4px solid #94a3b8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 8px; font-weight: 600;"><i class="fa-solid fa-quote-left" style="color: #cbd5e1; margin-right: 5px;"></i> Bệnh nhân hỏi:</div>
+                    <div style="color: #334155; font-size: 14px; line-height: 1.6; font-style: italic;">"${question.noi_dung ? question.noi_dung.replace(/\n/g, ' ') : ''}"</div>
                 </div>
-                <label style="font-weight: bold; color: #0f172a; display: block; margin-bottom: 8px;"><i class="fa-solid fa-user-doctor" style="color: #0284c7;"></i> Nội dung trả lời (*)</label>
-                <textarea id="qa_reply_content" class="swal2-textarea" style="width: 100%; margin: 0; box-sizing: border-box; height: 120px; font-size: 14px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" placeholder="Nhập tư vấn chi tiết cho bệnh nhân...">${currentReply}</textarea>
+                <label style="font-weight: 800; color: #0f172a; display: block; margin-bottom: 10px; font-size: 14px;"><i class="fa-solid fa-user-doctor" style="color: #0284c7; margin-right: 5px;"></i> Nội dung trả lời (*)</label>
+                <textarea id="qa_reply_content" class="swal2-textarea" style="width: 100%; margin: 0; box-sizing: border-box; height: 140px; font-size: 14px; padding: 15px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; transition: 0.2s; line-height: 1.5; outline: none;" placeholder="Nhập tư vấn chi tiết cho bệnh nhân..." onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';">${currentReply}</textarea>
             </div>
         `,
         showCancelButton: true,

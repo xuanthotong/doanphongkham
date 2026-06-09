@@ -495,13 +495,14 @@ function openQADetailPopup(identifier, tenNguoiHoi, isAnDanhStr, ignoreFilters =
 
         const xId = x.benh_nhan_id ? `id_${x.benh_nhan_id}` : `name_${x.nguoi_hoi}`;
         return xId === identifier;
-    });
+    }).sort((a, b) => new Date(b.ngay_tao) - new Date(a.ngay_tao));
 
     let popupContent = '<div style="text-align: left; font-size: 15px; color: #334155; line-height: 1.6; max-height: 450px; overflow-y: auto; padding-right: 15px;">';
     
     userAllQuestions.forEach((item, index) => {
         const d = new Date(item.ngay_tao || Date.now());
-        const dtDisplay = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} - ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        const timeString = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        const dtDisplay = `${timeString} - ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         const bsTraLoi = item.ten_nguoi_tra_loi ? (item.vai_tro_tra_loi === 'Admin' || item.vai_tro_tra_loi === 'Quản trị viên' ? `Quản trị viên - ${item.ten_nguoi_tra_loi}` : `BS. ${item.ten_nguoi_tra_loi}`) : 'Bác sĩ';
         
         let tieuDeDisplay = item.tieu_de || 'Câu hỏi';
@@ -514,7 +515,6 @@ function openQADetailPopup(identifier, tenNguoiHoi, isAnDanhStr, ignoreFilters =
         }
 
         const displayAskerName = currentIsAnDanh ? "Ẩn danh" : (item.nguoi_hoi || "Ẩn danh");
-
         const isMyItem = (item.benh_nhan_id && item.benh_nhan_id == currentUserId);
         const itemTitleColor = isMyItem ? '#2563eb' : '#0ea5e9';
 
@@ -524,11 +524,11 @@ function openQADetailPopup(identifier, tenNguoiHoi, isAnDanhStr, ignoreFilters =
                     <span style="color: ${itemTitleColor}; font-weight: 700; font-size: 16px;">${displayAskerName}: ${tieuDeDisplay}</span><br>
                     <span style="color: #64748b; font-size: 12px;"><i class="fa-regular fa-clock"></i> ${dtDisplay}</span>
                 </div>
-                <p style="margin-bottom: 15px;"><strong>Nội dung hỏi:</strong><br>${item.noi_dung ? item.noi_dung.replace(/\n/g, '<br>') : ''}</p>
+                <p style="margin-bottom: 15px;"><strong>Nội dung hỏi:</strong><br>${item.noi_dung ? item.noi_dung.replace(/\\n/g, '<br>') : ''}</p>
                 ${item.tra_loi ? `
                 <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
                     <p style="margin: 0 0 10px 0; color: #166534; font-weight: 600;"><i class="fa-solid fa-user-doctor"></i> ${bsTraLoi} giải đáp:</p>
-                    <p style="margin: 0;">${item.tra_loi.replace(/\n/g, '<br>')}</p>
+                    <p style="margin: 0;">${item.tra_loi.replace(/\\n/g, '<br>')}</p>
                 </div>` : ''}
             </div>
         `;
@@ -545,8 +545,9 @@ function openQADetailPopup(identifier, tenNguoiHoi, isAnDanhStr, ignoreFilters =
         title: popupTitle,
         html: popupContent,
         width: '600px',
+        showCloseButton: true,
         confirmButtonText: 'Đóng',
-        confirmButtonColor: '#0284c7'
+        confirmButtonColor: '#0ea5e9',
     });
 }
 
@@ -1045,7 +1046,7 @@ async function fetchMedicalHistory() {
         // ===========================================
         // 3. XỬ LÝ THÔNG BÁO (NOTIFICATIONS)
         // ===========================================
-        processNotifications(history);
+        processNotifications(history, window.allCommunityQA || []);
 
     } catch (error) {
         console.error(error);
@@ -1329,13 +1330,23 @@ function markAllNotifAsRead() {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.id) return;
 
-    let maxId = 0;
-    if (window.patientAppointments && window.patientAppointments.length > 0) {
-        maxId = Math.max(...window.patientAppointments.map(a => a.id));
-    }
+    // Lấy danh sách ID đã xem từ localStorage
+    let seenNotifIds = new Set(JSON.parse(localStorage.getItem(`seenNotifIds_${userInfo.id}`) || '[]'));
 
-    // Đánh dấu tất cả thông báo là đã đọc với mốc ID lớn nhất hiện tại
-    localStorage.setItem(`lastSeenNotifId_${userInfo.id}`, maxId.toString());
+    // Thêm ID của các thông báo đang hiển thị vào danh sách đã xem
+    document.querySelectorAll('.notif-item').forEach(el => {
+        const notifId = el.getAttribute('data-notif-id');
+        if (notifId) {
+            seenNotifIds.add(notifId);
+        }
+    });
+
+    // Chuyển Set về Array, giới hạn 100 ID gần nhất để tránh đầy localStorage
+    let updatedSeenIds = Array.from(seenNotifIds);
+    if (updatedSeenIds.length > 100) {
+        updatedSeenIds = updatedSeenIds.slice(-100);
+    }
+    localStorage.setItem(`seenNotifIds_${userInfo.id}`, JSON.stringify(updatedSeenIds));
 
     const dot = document.getElementById('notif-dot');
     if (dot) dot.style.display = 'none';
@@ -1346,7 +1357,7 @@ function markAllNotifAsRead() {
     });
 }
 
-function processNotifications(history) {
+function processNotifications(history, allQA) {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.id) return;
 
@@ -1356,7 +1367,7 @@ function processNotifications(history) {
 
     let notifs = [];
 
-    history.forEach(app => {
+    (history || []).forEach(app => {
         const status = app.trang_thai ? app.trang_thai.trim().toLowerCase() : '';
         const dateStr = app.ngay_lam_viec ? new Date(app.ngay_lam_viec).toLocaleDateString('vi-VN') : '';
 
@@ -1364,7 +1375,8 @@ function processNotifications(history) {
         let desc = '';
         let icon = '';
         let bgColor = '';
-        let timeLabel = `Cập nhật gần đây`;
+        const notifDate = app.ngay_tao ? new Date(app.ngay_tao) : new Date();
+        const timeLabel = notifDate.toLocaleDateString('vi-VN');
 
         if (status === 'approved') {
             title = `Lịch hẹn đã được duyệt!`;
@@ -1384,32 +1396,77 @@ function processNotifications(history) {
         }
 
         if (title) {
-            notifs.push({ id: app.id, title, desc, icon, bgColor, timeLabel, status });
+            notifs.push({ 
+                uniqueId: `app_${app.id}`, 
+                id: app.id, 
+                type: 'appointment',
+                title, desc, icon, bgColor, timeLabel, status,
+                date: notifDate
+            });
         }
     });
 
-    notifs.sort((a, b) => b.id - a.id);
+    // Xử lý thông báo cho Hỏi đáp
+    const myQuestions = (allQA || []).filter(q => q.benh_nhan_id == userInfo.id);
+    myQuestions.forEach(q => {
+        const isAnswered = q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== '');
+        if (isAnswered) {
+            const title = `Bác sĩ đã trả lời câu hỏi`;
+            const shortTitle = (q.tieu_de || '').replace('[Ẩn danh] ', '');
+            const desc = `Câu hỏi "${shortTitle.substring(0, 30)}..." đã được BS. ${q.ten_nguoi_tra_loi || ''} giải đáp.`;
+            const icon = `<i class="fa-solid fa-comments-medical" style="color: #0ea5e9;"></i>`;
+            const bgColor = `#f0f9ff`;
+            const notifDate = q.ngay_tao ? new Date(q.ngay_tao) : new Date();
+            const timeLabel = notifDate.toLocaleDateString('vi-VN');
+
+            notifs.push({
+                uniqueId: `qa_${q.id}`,
+                id: q.id,
+                type: 'qa',
+                title, desc, icon, bgColor, timeLabel,
+                date: notifDate
+            });
+        }
+    });
+
+    // Sắp xếp tất cả thông báo theo ngày mới nhất
+    notifs.sort((a, b) => b.date - a.date);
     notifs = notifs.slice(0, 10);
 
     if (notifs.length === 0) {
         listEl.innerHTML = `<div style="text-align: center; padding: 30px 10px; color: #94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size: 30px; margin-bottom: 10px;"></i><br>Bạn chưa có thông báo nào.</div>`;
+        if (dot) dot.style.display = 'none';
         return;
     }
 
-    const lastSeenId = parseInt(localStorage.getItem(`lastSeenNotifId_${userInfo.id}`) || '0');
+    const seenNotifIds = new Set(JSON.parse(localStorage.getItem(`seenNotifIds_${userInfo.id}`) || '[]'));
     let hasUnread = false;
     let html = '';
 
     notifs.forEach(n => {
-        const isUnread = n.id > lastSeenId;
+        const isUnread = !seenNotifIds.has(n.uniqueId);
         if (isUnread) hasUnread = true;
 
         const itemBg = isUnread ? '#f8fafc' : '#ffffff';
         const borderColor = isUnread ? '#e2e8f0' : 'transparent';
-        const targetAction = n.status === 'done' ? "switchProfileTab('record')" : "switchProfileTab('history')";
+
+        let onclickAction = '';
+        if (n.type === 'appointment') {
+            const targetAction = n.status === 'done' ? "switchProfileTab('record')" : "switchProfileTab('history')";
+            onclickAction = `scrollToSection('btn-tab-history', event); ${targetAction}; toggleNotificationPopup(event);`;
+        } else if (n.type === 'qa') {
+            const q = myQuestions.find(item => item.id === n.id);
+            if (q) {
+                const identifier = q.benh_nhan_id ? `id_${q.benh_nhan_id}` : `name_${q.nguoi_hoi}`;
+                const tenNguoiHoi = q.nguoi_hoi || 'Ẩn danh';
+                const isAnDanh = (q.tieu_de || '').startsWith('[Ẩn danh]') || !q.nguoi_hoi;
+                const popupArgs = `decodeURIComponent('${encodeURIComponent(identifier)}'), decodeURIComponent('${encodeURIComponent(tenNguoiHoi)}'), '${isAnDanh ? 'true' : 'false'}', true`;
+                onclickAction = `toggleNotificationPopup(event); openQADetailPopup(${popupArgs});`;
+            }
+        }
 
         html += `
-            <div class="notif-item" onclick="scrollToSection('btn-tab-history', event); ${targetAction}; toggleNotificationPopup(event);" style="padding: 12px; margin-bottom: 8px; border-radius: 12px; background: ${itemBg}; display: flex; gap: 12px; cursor: pointer; transition: 0.2s; border: 1px solid ${borderColor};">
+            <div class="notif-item" onclick="${onclickAction}" data-notif-id="${n.uniqueId}" style="padding: 12px; margin-bottom: 8px; border-radius: 12px; background: ${itemBg}; display: flex; gap: 12px; cursor: pointer; transition: 0.2s; border: 1px solid ${borderColor};">
                 <div style="min-width: 40px; height: 40px; border-radius: 50%; background: ${n.bgColor}; display: flex; align-items: center; justify-content: center; font-size: 16px;">
                     ${n.icon}
                 </div>
