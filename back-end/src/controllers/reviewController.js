@@ -5,7 +5,7 @@ const getAllReviewsAdmin = async (req, res) => {
     try {
         const pool = await connectDB();
         const result = await pool.request().query(`
-            SELECT dg.id, dg.so_sao, dg.noi_dung, dg.ngay_danh_gia, dg.phan_hoi_cua_bac_si, dg.trang_thai_an,
+            SELECT dg.id, dg.so_sao, dg.noi_dung, CONVERT(varchar, dg.ngay_danh_gia, 126) as ngay_danh_gia, dg.phan_hoi_cua_bac_si, dg.trang_thai_an,
                    lk.id as lich_kham_id,
                    ISNULL(bn_nd.ho_ten, bn_tk.ten_dang_nhap) as ten_benh_nhan,
                    ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si
@@ -70,7 +70,7 @@ const editReview = async (req, res) => {
             .input('id', sql.Int, id)
             .input('so_sao', sql.Int, so_sao)
             .input('noi_dung', sql.NVarChar, noi_dung)
-            .query('UPDATE DanhGia SET so_sao = @so_sao, noi_dung = @noi_dung, ngay_danh_gia = GETDATE() WHERE id = @id');
+            .query('UPDATE DanhGia SET so_sao = @so_sao, noi_dung = @noi_dung, ngay_danh_gia = DATEADD(hour, 7, GETUTCDATE()) WHERE id = @id');
         res.json({ message: 'Cập nhật đánh giá thành công!' });
     } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
 };

@@ -35,7 +35,7 @@ const saveDonThuoc = async (req, res) => {
                 .input('ghi_chu', sql.NVarChar, thuoc.ghi_chu || '')
                 .query(`
                     INSERT INTO DonThuoc (lich_kham_id, thuoc_id, so_luong, lieu_dung, ghi_chu, ngay_tao)
-                    VALUES (@lich_kham_id, @thuoc_id, @so_luong, @lieu_dung, @ghi_chu, GETDATE())
+                    VALUES (@lich_kham_id, @thuoc_id, @so_luong, @lieu_dung, @ghi_chu, DATEADD(hour, 7, GETUTCDATE()))
                 `);
         }
 
@@ -55,7 +55,7 @@ const getDonThuocByLichKham = async (req, res) => {
         const result = await pool.request()
             .input('lich_kham_id', sql.Int, lichKhamId)
             .query(`
-                SELECT dt.id, dt.lich_kham_id, dt.thuoc_id, dt.so_luong, dt.lieu_dung, dt.ghi_chu, dt.ngay_tao,
+                SELECT dt.id, dt.lich_kham_id, dt.thuoc_id, dt.so_luong, dt.lieu_dung, dt.ghi_chu, CONVERT(varchar, dt.ngay_tao, 126) as ngay_tao,
                        t.ten_thuoc, t.don_vi, t.gia_thuoc, t.huong_dan_su_dung
                 FROM DonThuoc dt
                 JOIN Thuoc t ON dt.thuoc_id = t.id
@@ -97,7 +97,7 @@ const updateDonThuoc = async (req, res) => {
                 .input('ghi_chu', sql.NVarChar, thuoc.ghi_chu || '')
                 .query(`
                     INSERT INTO DonThuoc (lich_kham_id, thuoc_id, so_luong, lieu_dung, ghi_chu, ngay_tao)
-                    VALUES (@lich_kham_id, @thuoc_id, @so_luong, @lieu_dung, @ghi_chu, GETDATE())
+                    VALUES (@lich_kham_id, @thuoc_id, @so_luong, @lieu_dung, @ghi_chu, DATEADD(hour, 7, GETUTCDATE()))
                 `);
         }
 

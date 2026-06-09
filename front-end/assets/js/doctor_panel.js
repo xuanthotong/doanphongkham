@@ -774,11 +774,156 @@ function editMedicalRecord(maLK) {
 }
 
 // 6. NGHIỆP VỤ: TRẢ LỜI CÂU HỎI Q&A
-function replyQA(maCH) {
+window.openChatQA = function(identifier) {
+    const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
+    const docName = userInfo.ho_ten || userInfo.ten_dang_nhap || 'Bác sĩ';
+    const defaultDocAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=0284C7&color=fff&rounded=true&bold=true`;
+    let docAvatarSrc = defaultDocAvatar;
+    if (userInfo.anh_dai_dien) {
+        if (userInfo.anh_dai_dien.startsWith('data:image') || userInfo.anh_dai_dien.startsWith('http')) {
+            docAvatarSrc = userInfo.anh_dai_dien;
+        } else {
+            docAvatarSrc = `${window.API_BASE}/uploads/${userInfo.anh_dai_dien}`;
+        }
+    }
+
+    const userQuestions = currentQA.filter(x => {
+        const xId = x.benh_nhan_id ? `id_${x.benh_nhan_id}` : `name_${x.nguoi_hoi}`;
+        return xId === identifier;
+    }).sort((a, b) => new Date(a.ngay_tao) - new Date(b.ngay_tao)); // Sắp xếp cũ đến mới
+
+    if(userQuestions.length === 0) return;
+
+    const firstQ = userQuestions[0];
+    const lastQuestion = userQuestions[userQuestions.length - 1];
+    let isAnDanh = false;
+    if (firstQ.tieu_de && firstQ.tieu_de.startsWith('[Ẩn danh]')) isAnDanh = true;
+    else if (!firstQ.nguoi_hoi || firstQ.nguoi_hoi.trim() === '') isAnDanh = true;
+    const nguoiHoi = isAnDanh ? 'Ẩn danh' : firstQ.nguoi_hoi;
+    const avatarContent = isAnDanh ? '<i class="fa-solid fa-user-secret" style="font-size: 13px;"></i>' : nguoiHoi.charAt(0).toUpperCase();
+
+    let chatHtml = `<div id="qa_chat_body" style="height: 400px; overflow-y: auto; padding: 20px; background: #f1f5f9; border-radius: 8px 8px 0 0; border: 1px solid #e2e8f0; border-bottom: none; display: flex; flex-direction: column; gap: 20px;">`;
+
+    userQuestions.forEach(item => {
+        const d = new Date(item.ngay_tao || Date.now());
+        const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} - ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        
+        let tieuDeDisplay = item.tieu_de || 'Câu hỏi';
+        if (tieuDeDisplay.startsWith('[Ẩn danh]')) {
+            tieuDeDisplay = tieuDeDisplay.replace('[Ẩn danh] ', '').replace('[Ẩn danh]', '');
+        }
+
+        // --- Bệnh nhân hỏi (Bên trái) ---
+        chatHtml += `
+            <div style="align-self: flex-start; max-width: 85%; display: flex; gap: 10px;">
+                <div style="min-width: 35px; height: 35px; background: #e2e8f0; color: #475569; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0; margin-top: auto;">
+                    ${avatarContent}
+                </div>
+                <div style="text-align: left;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; margin-left: 5px;">${nguoiHoi} • ${timeStr}</div>
+                    <div style="background: #ffffff; padding: 12px 16px; border-radius: 16px; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-weight: 700; color: #0f172a; font-size: 14px; margin-bottom: 5px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px;">${tieuDeDisplay}</div>
+                        <div style="color: #334155; font-size: 14px; line-height: 1.5; white-space: pre-wrap;">${item.noi_dung}</div>
+                    </div>
+                    ${!(item.trang_thai == 1 || (item.tra_loi && item.tra_loi.trim() !== '')) ? 
+                    `<div style="margin-top: 6px; margin-left: 5px;"><button onclick="replySpecificQA(${item.id}, '${encodeURIComponent(identifier)}')" style="background: #0284c7; color: white; border: none; padding: 5px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s;" onmouseover="this.style.background='#0369a1'" onmouseout="this.style.background='#0284c7'"><i class="fa-solid fa-reply"></i> Trả lời ngay</button></div>` : ''}
+                </div>
+            </div>
+        `;
+
+        // --- Bác sĩ trả lời (Bên phải) ---
+        if (item.trang_thai == 1 || (item.tra_loi && item.tra_loi.trim() !== '')) {
+            const bsTraLoi = item.ten_nguoi_tra_loi ? (item.vai_tro_tra_loi === 'Admin' || item.vai_tro_tra_loi === 'Quản trị viên' ? 'Admin' : `BS. ${item.ten_nguoi_tra_loi}`) : 'Bác sĩ';
+            chatHtml += `
+                <div style="align-self: flex-end; max-width: 85%; display: flex; flex-direction: row-reverse; gap: 10px;">
+                    <div style="min-width: 35px; height: 35px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: auto; overflow: hidden; border: 1px solid #bae6fd;">
+                        <img src="${docAvatarSrc}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='${defaultDocAvatar}'">
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; margin-right: 5px;">${bsTraLoi}</div>
+                        <div style="background: #0ea5e9; color: white; padding: 12px 16px; border-radius: 16px; border-bottom-right-radius: 4px; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="font-size: 14px; line-height: 1.5; white-space: pre-wrap;">${item.tra_loi}</div>
+                        </div>
+                        <div style="margin-top: 6px; margin-right: 5px;"><button onclick="replySpecificQA(${item.id}, '${encodeURIComponent(identifier)}', true)" style="background: none; border: none; color: #0284c7; cursor: pointer; font-size: 12px; font-weight: 600; padding: 0;"><i class="fa-solid fa-pen"></i> Sửa trả lời</button></div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    chatHtml += `</div>`;
+
+    chatHtml += `
+        <div style="padding: 15px; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; display: flex; gap: 10px; align-items: flex-end;">
+            <textarea id="qa_quick_reply_input" placeholder="Nhập tin nhắn..." style="flex: 1; min-height: 45px; max-height: 100px; resize: vertical; border: 1px solid #cbd5e1; border-radius: 20px; padding: 12px 15px; font-size: 14px; font-family: inherit; outline: none;"></textarea>
+            <button onclick="sendQuickReply(${lastQuestion.id}, '${encodeURIComponent(identifier)}')" style="background: #0ea5e9; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: 0.2s;" onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='#0ea5e9'">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    `;
+
+    Swal.fire({
+        title: `<div style="display: flex; align-items: center; justify-content: center; gap: 10px;"><div style="width: 30px; height: 30px; background: #e0f2fe; color: #0284c7; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center;">${avatarContent}</div> <span style="color: #0f172a; font-size: 18px;">${nguoiHoi}</span></div>`,
+        html: chatHtml,
+        width: '700px',
+        showConfirmButton: false,
+        showCloseButton: true,
+        customClass: {
+            popup: 'saas-modal',
+            container: 'saas-backdrop'
+        },
+        didOpen: () => {
+            const container = document.getElementById('qa_chat_body');
+            if(container) container.scrollTop = container.scrollHeight;
+            
+            const inputEl = document.getElementById('qa_quick_reply_input');
+            if(inputEl) {
+                inputEl.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendQuickReply(lastQuestion.id, encodeURIComponent(identifier));
+                    }
+                });
+                inputEl.focus();
+            }
+        }
+    });
+};
+
+window.sendQuickReply = async function(maCH, identifierEncoded) {
+    const inputEl = document.getElementById('qa_quick_reply_input');
+    if (!inputEl) return;
+    const newText = inputEl.value.trim();
+    if (!newText) return;
+
+    const question = currentQA.find(q => q.id === maCH);
+    if (!question) return;
+
+    let finalReply = newText;
+    if (question.trang_thai == 1 || (question.tra_loi && question.tra_loi.trim() !== '')) {
+        finalReply = question.tra_loi.trim() + '\n\n' + newText;
+    }
+
+    try {
+        const userInfo = JSON.parse(localStorage.getItem('doctorInfo') || '{}');
+        const res = await fetch(`${window.API_BASE}/api/questions/${maCH}/reply`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tra_loi: finalReply, nguoi_tra_loi_id: userInfo.id })
+        });
+        if (res.ok) {
+            await fetchDoctorQA(); 
+            openChatQA(decodeURIComponent(identifierEncoded));
+        } else {
+            Swal.fire('Lỗi', 'Không thể gửi tin nhắn', 'error');
+        }
+    } catch (e) { console.error(e); }
+};
+
+window.replySpecificQA = function(maCH, identifierEncoded, isEditing = false) {
     const question = currentQA.find(q => q.id === maCH);
     if (!question) return;
     const currentReply = question && question.tra_loi ? question.tra_loi : '';
-    const isEditing = !!currentReply;
 
     Swal.fire({
         title: isEditing ? 'Sửa câu trả lời' : 'Phản hồi bệnh nhân',
@@ -790,17 +935,19 @@ function replyQA(maCH) {
             cancelButton: 'saas-btn-outline'
         },
         html: `
-            <div class="qa-reply-container">
-                <div class="qa-question-box">
-                    <p class="qa-question-text"><strong><i class="fa-solid fa-circle-question qa-icon-question"></i> Câu hỏi:</strong> <br><span class="qa-question-content">${question.noi_dung ? question.noi_dung.replace(/\n/g, '<br>') : ''}</span></p>
+            <div style="text-align: left;">
+                <div style="background: #f8fafc; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; border-left: 4px solid #cbd5e1;">
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 5px;"><i class="fa-solid fa-quote-left"></i> Đang trả lời câu hỏi:</div>
+                    <div style="color: #334155; font-size: 14px; line-height: 1.5; font-style: italic;">"${question.noi_dung ? question.noi_dung.replace(/\n/g, ' ') : ''}"</div>
                 </div>
-                <label class="saas-label qa-reply-label"><i class="fa-solid fa-user-doctor qa-icon-doctor"></i> Câu trả lời của Bác sĩ (*)</label>
-                <textarea id="qa_reply_content" class="saas-input qa-reply-textarea" placeholder="Nhập nội dung tư vấn chi tiết...">${currentReply}</textarea>
+                <label style="font-weight: bold; color: #0f172a; display: block; margin-bottom: 8px;"><i class="fa-solid fa-user-doctor" style="color: #0284c7;"></i> Nội dung trả lời (*)</label>
+                <textarea id="qa_reply_content" class="swal2-textarea" style="width: 100%; margin: 0; box-sizing: border-box; height: 120px; font-size: 14px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" placeholder="Nhập tư vấn chi tiết cho bệnh nhân...">${currentReply}</textarea>
             </div>
         `,
         showCancelButton: true,
         confirmButtonText: isEditing ? '<i class="fa-solid fa-check"></i> Cập nhật' : '<i class="fa-solid fa-paper-plane"></i> Gửi phản hồi',
-        cancelButtonText: 'Hủy',
+        cancelButtonText: 'Quay lại',
+        confirmButtonColor: '#0ea5e9',
         preConfirm: () => {
             const replyContent = document.getElementById('qa_reply_content').value.trim();
             if (!replyContent) {
@@ -822,15 +969,28 @@ function replyQA(maCH) {
                     })
                 });
                 if (res.ok) {
-                    Swal.fire('Đã gửi!', 'Câu trả lời đã được lưu trên hệ thống.', 'success');
-                    fetchDoctorQA(); // Load lại giao diện Hỏi đáp
+                    Swal.fire({
+                        title: 'Đã gửi!',
+                        text: 'Câu trả lời đã được lưu.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(async () => {
+                        await fetchDoctorQA(); // Load lại data ngầm
+                        openChatQA(decodeURIComponent(identifierEncoded)); // Mở lại khung chat
+                    });
                 } else {
-                    Swal.fire('Lỗi', 'Không thể gửi câu trả lời', 'error');
+                    Swal.fire('Lỗi', 'Không thể gửi câu trả lời', 'error').then(() => {
+                        openChatQA(decodeURIComponent(identifierEncoded));
+                    });
                 }
             } catch (e) { console.error(e); }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Nút "Quay lại" -> mở lại chat
+            openChatQA(decodeURIComponent(identifierEncoded));
         }
     });
-}
+};
 
 // ==========================================
 // HÀM FETCH VÀ RENDER HỎI ĐÁP CỦA BÁC SĨ
@@ -911,18 +1071,37 @@ function renderDoctorQA(docSpecialtyId) {
         return;
     }
 
-    const totalPages = Math.ceil(currentQA.length / qaPerPage);
+    // Gom nhóm theo tài khoản bệnh nhân
+    const uniqueUsers = new Set();
+    let groupedQA = [];
+    currentQA.forEach(q => {
+        const identifier = q.benh_nhan_id ? `id_${q.benh_nhan_id}` : `name_${q.nguoi_hoi}`;
+        if (!uniqueUsers.has(identifier)) {
+            uniqueUsers.add(identifier);
+            // Count unread for this user
+            const unreadCount = currentQA.filter(x => {
+                const xId = x.benh_nhan_id ? `id_${x.benh_nhan_id}` : `name_${x.nguoi_hoi}`;
+                return xId === identifier && !(x.trang_thai == 1 || (x.tra_loi && x.tra_loi.trim() !== ''));
+            }).length;
+            q.unreadCount = unreadCount;
+            q.identifier = identifier;
+            groupedQA.push(q);
+        }
+    });
+
+    const totalPages = Math.ceil(groupedQA.length / qaPerPage);
     if (currentQAPage > totalPages) currentQAPage = totalPages;
     if (currentQAPage < 1) currentQAPage = 1;
 
     const startIndex = (currentQAPage - 1) * qaPerPage;
     const endIndex = startIndex + qaPerPage;
-    const paginatedQA = currentQA.slice(startIndex, endIndex);
+    const paginatedQA = groupedQA.slice(startIndex, endIndex);
 
     let qaHTML = '';
     paginatedQA.forEach(q => {
         const date = new Date(q.ngay_tao || Date.now());
-        const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+        const timeString = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        const dateStr = `${timeString} - ${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
 
         // Xử lý tên người hỏi, Avatar và Tiêu đề ẩn danh
         let isAnDanh = false;
@@ -935,29 +1114,34 @@ function renderDoctorQA(docSpecialtyId) {
             isAnDanh = true;
         }
         const nguoiHoi = isAnDanh ? 'Ẩn danh' : q.nguoi_hoi;
+        
+        const avatarContent = isAnDanh ? '<i class="fa-solid fa-user-secret" style="font-size: 18px;"></i>' : nguoiHoi.charAt(0).toUpperCase();
 
-        const isAnswered = q.trang_thai == 1 || (q.tra_loi && q.tra_loi.trim() !== '');
-        const nguoiDaTraLoi = q.ten_nguoi_tra_loi ? (q.vai_tro_tra_loi === 'Admin' || q.vai_tro_tra_loi === 'Quản trị viên' ? 'Admin' : `BS. ${q.ten_nguoi_tra_loi}`) : 'Bác sĩ';
-        const btnHtml = isAnswered
-            ? `<div style="background: #F0FDF4; padding: 16px; border-radius: 12px; border: 1px solid #A7F3D0; border-left: 5px solid #10B981; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px dashed #D1FAE5; padding-bottom: 8px;">
-                       <span style="color: #059669; font-size: 15px; font-weight: 700;"><i class="fa-solid fa-user-doctor"></i> ${nguoiDaTraLoi} phản hồi:</span>
-                       <button onclick="replyQA(${q.id})" style="background: white; border: 1px solid #E2E8F0; border-radius: 6px; padding: 4px 10px; color: #0284C7; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'"><i class="fa-solid fa-pen"></i> Sửa</button>
-                     </div>
-                     <p style="margin: 0; color: #1E293B; font-size: 15px; line-height: 1.6; word-break: break-word; white-space: pre-wrap;">${q.tra_loi}</p>
-                   </div>`
-            : `<button class="btn btn-primary" onclick="replyQA(${q.id})" style="background: #0284C7; color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);" onmouseover="this.style.background='#0369A1'" onmouseout="this.style.background='#0284C7'"><i class="fa-solid fa-reply"></i> Phản hồi bệnh nhân</button>`;
+        const badgeHtml = q.unreadCount > 0 
+            ? `<span style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px;">${q.unreadCount} câu chưa TL</span>`
+            : `<span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px;"><i class="fa-solid fa-check"></i> Đã hoàn tất</span>`;
 
+        const identifierEncoded = encodeURIComponent(q.identifier);
+        
         qaHTML += `
-                <div class="qa-item" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 15px; transition: 0.2s;">
-                    <div class="qa-header" style="border-bottom: 1px solid #F1F5F9; padding-bottom: 12px; margin-bottom: 12px;">
-                        <h4 style="color: #0F172A; font-size: 17px; font-weight: 700; word-break: break-word; line-height: 1.5; margin: 0 0 5px 0;">${displayTieuDe} <span style="font-size: 13px; color: #94A3B8; font-weight: 500;">(Mã CH: #${q.id})</span></h4>
-                        <span class="qa-date" style="font-size: 13px; color: #64748B; font-weight: 500;"><i class="fa-regular fa-clock"></i> ${dateStr} <span style="margin: 0 8px;">|</span> <i class="fa-regular fa-user"></i> Người hỏi: <strong style="color: #475569;">${nguoiHoi}</strong></span>
-                    </div>
-                    <div class="qa-content" style="color: #475569; font-size: 15px; word-break: break-word; white-space: pre-wrap; line-height: 1.6; margin-bottom: 15px;">${q.noi_dung}</div>
-                    <div>${btnHtml}</div>
+            <div class="qa-item" onclick="openChatQA(decodeURIComponent('${identifierEncoded}'))" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 15px; transition: 0.2s; cursor: pointer; display: flex; align-items: center; gap: 15px;" onmouseover="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 4px 10px rgba(14, 165, 233, 0.1)';" onmouseout="this.style.borderColor='#E2E8F0'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.02)';">
+                <div style="min-width: 55px; height: 55px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 2px solid #bae6fd;">
+                    ${avatarContent}
                 </div>
-            `;
+                <div style="flex: 1; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <h4 style="color: #0F172A; font-size: 16px; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${nguoiHoi} ${badgeHtml}</h4>
+                        <span style="font-size: 12px; color: #64748B; white-space: nowrap;"><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                    </div>
+                    <div style="color: #475569; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
+                        <strong>${displayTieuDe}:</strong> ${q.noi_dung.replace(/\n/g, ' ')}
+                    </div>
+                </div>
+                <div style="color: #cbd5e1; font-size: 20px;">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </div>
+        `;
     });
     container.innerHTML = qaHTML;
 

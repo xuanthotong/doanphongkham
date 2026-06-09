@@ -8,7 +8,7 @@ const getShiftsByDoctor = async (req, res) => {
         const result = await pool.request()
             .input('bac_si_id', sql.Int, id)
             .query(`
-                SELECT * FROM LichLamViec 
+                SELECT id, bac_si_id, CONVERT(varchar, ngay_lam_viec, 126) as ngay_lam_viec, khung_gio, so_luong_toi_da, so_luong_hien_tai, trang_thai FROM LichLamViec 
                 WHERE bac_si_id = @bac_si_id 
                 ORDER BY ngay_lam_viec DESC, khung_gio ASC
             `);
@@ -125,7 +125,7 @@ const getAllShiftsAdmin = async (req, res) => {
     try {
         const pool = await connectDB();
         const result = await pool.request().query(`
-            SELECT llv.*, 
+            SELECT llv.id, llv.bac_si_id, CONVERT(varchar, llv.ngay_lam_viec, 126) as ngay_lam_viec, llv.khung_gio, llv.so_luong_toi_da, llv.so_luong_hien_tai, llv.trang_thai, 
                    ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_bac_si,
                    ck.ten_chuyen_khoa
             FROM LichLamViec llv
@@ -147,8 +147,8 @@ const getAllShifts = async (req, res) => {
     try {
         const pool = await connectDB();
         const result = await pool.request().query(`
-            SELECT * FROM LichLamViec 
-            WHERE CAST(ngay_lam_viec AS DATE) >= CAST(GETDATE() AS DATE)
+            SELECT id, bac_si_id, CONVERT(varchar, ngay_lam_viec, 126) as ngay_lam_viec, khung_gio, so_luong_toi_da, so_luong_hien_tai, trang_thai FROM LichLamViec 
+            WHERE CAST(ngay_lam_viec AS DATE) >= CAST(DATEADD(hour, 7, GETUTCDATE()) AS DATE)
             AND ISNULL(trang_thai, 'Active') = 'Active'
         `);
         res.json(result.recordset);

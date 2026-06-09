@@ -342,7 +342,8 @@ const sendMessage = async (req, res) => {
             .input('noi_dung', sql.NVarChar(sql.MAX), message)
             .query(`
                 INSERT INTO ChatBot (phien_id, tai_khoan_id, nguoi_gui, noi_dung, ngay_tao)
-                VALUES (@phien_id, @tai_khoan_id, @nguoi_gui, @noi_dung, GETDATE())
+                VALUES (@phien_id, @tai_khoan_id, @nguoi_gui, @noi_dung, DATEADD(hour, 7, GETUTCDATE()))
+                VALUES (@phien_id, @tai_khoan_id, @nguoi_gui, @noi_dung, DATEADD(hour, 7, GETUTCDATE()))
             `);
 
         // 2. Lấy CONTEXT CHUNG (cache) + CONTEXT RIÊNG (bệnh nhân đang đăng nhập)
@@ -392,7 +393,7 @@ const sendMessage = async (req, res) => {
             .input('noi_dung', sql.NVarChar(sql.MAX), botReply)
             .query(`
                 INSERT INTO ChatBot (phien_id, tai_khoan_id, nguoi_gui, noi_dung, ngay_tao)
-                VALUES (@phien_id, @tai_khoan_id, @nguoi_gui, @noi_dung, GETDATE())
+                VALUES (@phien_id, @tai_khoan_id, @nguoi_gui, @noi_dung, GETUTCDATE())
             `);
 
         // 9. Trả về cho frontend
@@ -436,7 +437,7 @@ const getChatHistory = async (req, res) => {
         const result = await pool.request()
             .input('phien_id', sql.VarChar(50), phien_id)
             .query(`
-                SELECT nguoi_gui, noi_dung, ngay_tao
+                SELECT nguoi_gui, noi_dung, CONVERT(varchar, ngay_tao, 126) as ngay_tao
                 FROM ChatBot
                 WHERE phien_id = @phien_id
                 ORDER BY ngay_tao ASC

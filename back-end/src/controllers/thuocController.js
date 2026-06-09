@@ -5,7 +5,7 @@ const getAllThuoc = async (req, res) => {
     try {
         const pool = await connectDB();
         const result = await pool.request().query(`
-            SELECT id, ten_thuoc, don_vi, gia_thuoc, lieu_dung_mac_dinh, huong_dan_su_dung, trang_thai, ngay_tao, ngay_cap_nhat
+            SELECT id, ten_thuoc, don_vi, gia_thuoc, lieu_dung_mac_dinh, huong_dan_su_dung, trang_thai, CONVERT(varchar, ngay_tao, 126) as ngay_tao, CONVERT(varchar, ngay_cap_nhat, 126) as ngay_cap_nhat
             FROM Thuoc
             ORDER BY ten_thuoc ASC
         `);
@@ -80,7 +80,7 @@ const createThuoc = async (req, res) => {
             .input('huong_dan_su_dung', sql.NVarChar(500), huong_dan_su_dung || '')
             .query(`
                 INSERT INTO Thuoc (ten_thuoc, don_vi, gia_thuoc, lieu_dung_mac_dinh, huong_dan_su_dung, trang_thai, ngay_tao, ngay_cap_nhat)
-                VALUES (@ten_thuoc, @don_vi, @gia_thuoc, @lieu_dung_mac_dinh, @huong_dan_su_dung, 1, GETDATE(), GETDATE())
+                VALUES (@ten_thuoc, @don_vi, @gia_thuoc, @lieu_dung_mac_dinh, @huong_dan_su_dung, 1, DATEADD(hour, 7, GETUTCDATE()), DATEADD(hour, 7, GETUTCDATE()))
             `);
 
         res.status(201).json({ message: 'Thêm thuốc thành công!' });
@@ -137,7 +137,7 @@ const updateThuoc = async (req, res) => {
                     lieu_dung_mac_dinh = @lieu_dung_mac_dinh,
                     huong_dan_su_dung = @huong_dan_su_dung,
                     trang_thai = @trang_thai,
-                    ngay_cap_nhat = GETDATE()
+                    ngay_cap_nhat = DATEADD(hour, 7, GETUTCDATE())
                 WHERE id = @id
             `);
 

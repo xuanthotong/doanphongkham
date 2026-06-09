@@ -124,8 +124,8 @@ const getAllAppointments = async (req, res) => {
         const pool = await connectDB();
         await autoCancelExpiredAppointments(pool); // Tự động dọn dẹp các lịch quá hạn
         const result = await pool.request().query(`
-            SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, lk.ngay_tao, lk.gio_kham,
-                   llv.ngay_lam_viec, llv.khung_gio,
+            SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, CONVERT(varchar, lk.ngay_tao, 126) as ngay_tao, lk.gio_kham,
+                   CONVERT(varchar, llv.ngay_lam_viec, 126) as ngay_lam_viec, llv.khung_gio,
                    ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan, 
                    ISNULL(nd.so_dien_thoai, 'Chưa cập nhật') as so_dien_thoai,
                    ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si,
@@ -162,8 +162,8 @@ const getAppointmentsByPatient = async (req, res) => {
         const result = await pool.request()
             .input('benh_nhan_id', sql.Int, id)
             .query(`
-                SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, lk.ngay_tao, lk.gio_kham,
-                       llv.ngay_lam_viec, llv.khung_gio,
+                SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, CONVERT(varchar, lk.ngay_tao, 126) as ngay_tao, lk.gio_kham,
+                       CONVERT(varchar, llv.ngay_lam_viec, 126) as ngay_lam_viec, llv.khung_gio,
                        ISNULL(bs_nd.ho_ten, bs_tk.ten_dang_nhap) as ten_bac_si,
                        ck.ten_chuyen_khoa,
                        tt.so_tien,
@@ -205,8 +205,8 @@ const getAppointmentsByDoctor = async (req, res) => {
         const result = await pool.request()
             .input('bac_si_id', sql.Int, id)
             .query(`
-                SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, lk.ngay_tao, lk.gio_kham,
-                       llv.ngay_lam_viec, llv.khung_gio,
+                SELECT lk.id, lk.mo_ta_trieu_chung, lk.trang_thai, lk.ghi_chu_cua_bac_si, CONVERT(varchar, lk.ngay_tao, 126) as ngay_tao, lk.gio_kham,
+                       CONVERT(varchar, llv.ngay_lam_viec, 126) as ngay_lam_viec, llv.khung_gio,
                        ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_benh_nhan, 
                        ISNULL(nd.so_dien_thoai, 'Chưa cập nhật') as so_dien_thoai,
                        STT_Table.so_thu_tu
@@ -362,7 +362,7 @@ const createAppointment1 = async (req, res) => {
             .input('mo_ta_trieu_chung', sql.NVarChar, mo_ta_trieu_chung)
             .query(`
                 INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao)
-                VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, 'Pending', GETDATE())
+                VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, 'Pending', DATEADD(hour, 7, GETUTCDATE()))
             `);
 
         await pool.request()
@@ -536,7 +536,7 @@ const createAppointment = async (req, res) => {
                 .query(`
                     INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao, gio_kham) 
                     OUTPUT inserted.id
-                    VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, @trang_thai, GETDATE(), @gio_kham);
+                    VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, @trang_thai, DATEADD(hour, 7, GETUTCDATE()), @gio_kham);
                 `);
 
             const appointmentId = result.recordset[0].id;
@@ -557,7 +557,7 @@ const createAppointment = async (req, res) => {
                 .input('trang_thai_tt', sql.Int, trang_thai_tt)
                 .query(`
                     INSERT INTO ThanhToan (lich_kham_id, so_tien, phuong_thuc_thanh_toan, trang_thai_thanh_toan, ngay_tao)
-                    VALUES (@lich_kham_id, @so_tien, @phuong_thuc, @trang_thai_tt, GETDATE());
+                    VALUES (@lich_kham_id, @so_tien, @phuong_thuc, @trang_thai_tt, DATEADD(hour, 7, GETUTCDATE()));
                 `);
 
             // GỌI API PAYOS TẠO MÃ QR NẾU LÀ THANH TOÁN MOMO 
@@ -659,7 +659,7 @@ const rateAppointment = async (req, res) => {
         await pool.request()
             .input('lich_kham_id', sql.Int, lich_kham_id).input('benh_nhan_id', sql.Int, benh_nhan_id).input('bac_si_id', sql.Int, bac_si_id)
             .input('so_sao', sql.Int, diem_danh_gia).input('noi_dung', sql.NVarChar, nhan_xet)
-            .query(`INSERT INTO DanhGia (lich_kham_id, benh_nhan_id, bac_si_id, so_sao, noi_dung, ngay_danh_gia) VALUES (@lich_kham_id, @benh_nhan_id, @bac_si_id, @so_sao, @noi_dung, GETDATE())`);
+            .query(`INSERT INTO DanhGia (lich_kham_id, benh_nhan_id, bac_si_id, so_sao, noi_dung, ngay_danh_gia) VALUES (@lich_kham_id, @benh_nhan_id, @bac_si_id, @so_sao, @noi_dung, DATEADD(hour, 7, GETUTCDATE()))`);
 
         res.json({ message: 'Cảm ơn bạn đã đánh giá Bác sĩ!' });
     } catch (error) {
@@ -789,7 +789,7 @@ const cassoWebhook = async (req, res) => {
                         console.log("✅ Đủ tiền! Tiến hành cập nhật Database...");
 
                         await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
-                            UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = GETDATE() WHERE lich_kham_id = @lich_kham_id;
+                            UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = DATEADD(hour, 7, GETUTCDATE()) WHERE lich_kham_id = @lich_kham_id;
                             UPDATE LichKham SET trang_thai = 'Approved' WHERE id = @lich_kham_id;
                             DECLARE @lich_lam_viec_id INT;
                             SELECT @lich_lam_viec_id = lich_lam_viec_id FROM LichKham WHERE id = @lich_kham_id;
@@ -852,7 +852,7 @@ const payosWebhook = async (req, res) => {
 
             if (amountPaid >= soTienCanThu || amountPaid >= 2000) {
                 await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
-                    UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = GETDATE() WHERE lich_kham_id = @lich_kham_id;
+                    UPDATE ThanhToan SET trang_thai_thanh_toan = 1, ngay_thanh_toan = DATEADD(hour, 7, GETUTCDATE()) WHERE lich_kham_id = @lich_kham_id;
                     UPDATE LichKham SET trang_thai = 'Approved' WHERE id = @lich_kham_id;
                     DECLARE @lich_lam_viec_id INT;
                     SELECT @lich_lam_viec_id = lich_lam_viec_id FROM LichKham WHERE id = @lich_kham_id;
