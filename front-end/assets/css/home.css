@@ -1141,6 +1141,14 @@ footer {
 /* ==============================================================
    RESPONSIVE CHUẨN (GIỮ NGUYÊN THIẾT KẾ MÁY TÍNH, CHỈ THU GỌN VỪA MÀN HÌNH)
 ============================================================== */
+
+/* Tablet: 2 cột cho bác sĩ */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .doctors-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .top-bar {
         display: none;

@@ -25,7 +25,7 @@ function generateDoctorCardHTML(doc) {
         : `<span style="color: #94a3b8; font-size: 12px; font-weight: 500;">Chưa có đánh giá</span>`;
 
     return `
-        <div class="doctor-card" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 15px; width: 280px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); background: #fff; transition: 0.3s; display: flex; flex-direction: column;">
+        <div class="doctor-card" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); background: #fff; transition: 0.3s; display: flex; flex-direction: column;">
             
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <span style="background: #0284c7; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">Đang làm việc</span>
