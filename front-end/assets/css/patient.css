@@ -113,6 +113,26 @@
 .qa-page-btn:hover { background: #f1f5f9; }
 .qa-page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+/* Cuộn cho danh sách QA */
+.qa-main-feed {
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
+    padding-right: 10px;
+}
+.qa-main-feed::-webkit-scrollbar { width: 6px; }
+.qa-main-feed::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
+.qa-main-feed::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+.qa-main-feed::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.qa-search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f1f5f9;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
 /* Responsive */
 @media (max-width: 992px) {
     .qa-layout { grid-template-columns: 1fr; }

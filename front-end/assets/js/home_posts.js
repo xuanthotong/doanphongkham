@@ -133,6 +133,15 @@ function showPostDetails(id, event) {
 function returnToHome(event) {
     if (event) event.preventDefault();
     
+    // Nếu có hàm switchTab (ở trang patient), gọi để nó bỏ active của Đội ngũ bác sĩ
+    if (typeof switchTab === 'function') {
+        const fakeEvent = {
+            preventDefault: () => {},
+            currentTarget: document.querySelector('.tab-link[onclick*="tab-trang-chu"]')
+        };
+        switchTab(fakeEvent, 'tab-trang-chu');
+    }
+
     // Khôi phục trang chủ và ẩn các trang phụ
     if(document.getElementById('main-home-content')) document.getElementById('main-home-content').style.display = 'block';
     if(document.getElementById('post-detail-view')) document.getElementById('post-detail-view').style.display = 'none';
@@ -143,5 +152,3 @@ function returnToHome(event) {
 }
 
 document.addEventListener('DOMContentLoaded', initHomePosts);
-
-
