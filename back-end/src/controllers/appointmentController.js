@@ -422,13 +422,14 @@ const deleteAppointment = async (req, res) => {
             return res.status(400).json({ message: 'Chưa đến thời gian cho phép hủy lịch! Admin chỉ có quyền hủy lịch nếu bệnh nhân không đến khi còn cách giờ khám dưới 30 phút.' });
         }
 
-        // KIỂM TRA LOGIC THANH TOÁN (Tránh mất tiền của khách hàng)
+        // KIỂM TRA LOGIC THANH TOÁN
+        let isPaidOnline = false;
         const paymentCheck = await pool.request().input('id', sql.Int, id).query('SELECT phuong_thuc_thanh_toan, trang_thai_thanh_toan FROM ThanhToan WHERE lich_kham_id = @id');
         if (paymentCheck.recordset.length > 0) {
             const payment = paymentCheck.recordset[0];
-            // Chỉ chặn hủy nếu thanh toán Chuyển khoản (transfer) và đã chuyển tiền thành công (1)
+            // Nếu đã thanh toán Online thành công -> Đánh dấu để hiển thị nhắc nhở hoàn tiền, không chặn hủy
             if ((payment.phuong_thuc_thanh_toan === 'transfer' || payment.phuong_thuc_thanh_toan === 'momo') && payment.trang_thai_thanh_toan === 1) {
-                return res.status(400).json({ message: 'Lịch khám này đã được thanh toán Online. Vui lòng liên hệ quầy tiếp đón để hoàn tiền trước khi hủy!' });
+                isPaidOnline = true;
             }
         }
 
@@ -439,7 +440,11 @@ const deleteAppointment = async (req, res) => {
         // Thực hiện Xóa mềm (Soft Delete) - Cập nhật trạng thái thành Cancelled
         await pool.request().input('id', sql.Int, id).query("UPDATE LichKham SET trang_thai = 'Cancelled' WHERE id = @id");
 
-        res.json({ message: 'Hủy lịch hẹn thành công!' });
+        if (isPaidOnline) {
+            res.json({ message: 'Hủy thành công. Vui lòng yêu cầu bệnh nhân đến quầy đối soát giao dịch để hoàn tiền!' });
+        } else {
+            res.json({ message: 'Hủy lịch hẹn thành công!' });
+        }
     } catch (error) {
         console.error('Lỗi hủy lịch hẹn:', error);
         res.status(500).json({ message: 'Lỗi server' });

@@ -168,9 +168,8 @@
                 </div>
 
                 <!-- Container để file home_doctors.js tự động đổ dữ liệu bác sĩ vào đây -->
-                <div id="doctor-list-container"
-                    style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;">
-                    <p style="text-align: center; color: #6b7280; width: 100%;">Đang tải danh sách bác sĩ...</p>
+                <div id="doctor-list-container" class="doctors-grid">
+                    <p style="text-align: center; color: #6b7280; width: 100%; grid-column: 1 / -1;">Đang tải danh sách bác sĩ...</p>
                 </div>
             </div>
         </section>
@@ -263,8 +262,7 @@
                 <p style="color: #6b7280; margin-top: 10px;">Toàn bộ danh sách bác sĩ chuyên khoa đang công tác tại TT
                     Medical</p>
             </div>
-            <div id="all-doctors-list-container"
-                style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;">
+            <div id="all-doctors-list-container" class="doctors-grid">
             </div>
             <div style="margin-top: 50px; text-align: center;">
                 <button onclick="returnToHome(event)" class="btn btn-outline"

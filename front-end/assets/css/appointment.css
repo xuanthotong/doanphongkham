@@ -762,6 +762,12 @@
     cursor: pointer; 
     background: #fff; 
     transition: 0.3s; 
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 .payment-option input[type="radio"]:checked + .payment-card-content { 
     border-color: #0284c7; 
