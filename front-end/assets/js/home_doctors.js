@@ -19,32 +19,27 @@ function generateDoctorCardHTML(doc) {
     const defaultImg = `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.ho_ten)}&background=random`;
     const imgSrc = doc.anh_dai_dien && doc.anh_dai_dien.trim() !== "" ? doc.anh_dai_dien : defaultImg;
 
-    // Logic hiển thị Sao: Nếu chưa ai đánh giá thì mờ đi, nếu có thì hiện màu vàng
     const ratingDisplay = doc.luot_danh_gia > 0 
-        ? `<span style="color: #f59e0b;"><i class="fa-solid fa-star"></i> ${doc.diem_danh_gia}</span> <span style="color: #64748b; font-size: 12px; font-weight: 500;">(${doc.luot_danh_gia})</span>`
-        : `<span style="color: #94a3b8; font-size: 12px; font-weight: 500;">Chưa có đánh giá</span>`;
+        ? `<div class="dc-rating"><i class="fa-solid fa-star star"></i> <span class="score">${doc.diem_danh_gia}</span> <span class="count">(${doc.luot_danh_gia})</span></div>`
+        : `<span class="dc-no-rating">Chưa có đánh giá</span>`;
 
     return `
-        <div class="doctor-card" style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); background: #fff; transition: 0.3s; display: flex; flex-direction: column; height: 100%; box-sizing: border-box;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <span style="background: #0284c7; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">Đang làm việc</span>
-                <div style="font-size: 14px; font-weight: 700;">
-                    ${ratingDisplay}
-                </div>
+        <div class="doctor-card" data-name="${(doc.ho_ten || '').toLowerCase()}" data-spec="${(doc.ten_chuyen_khoa || '').toLowerCase()}">
+            <div class="dc-header-bar">
+                <span class="dc-badge-status">Đang làm việc</span>
+                ${ratingDisplay}
             </div>
-
-            <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-                <img src="${imgSrc}" onerror="this.onerror=null; this.src='${defaultImg}';" alt="${doc.ho_ten}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f9ff;">
+            <div class="dc-avatar-wrap">
+                <img src="${imgSrc}" onerror="this.onerror=null; this.src='${defaultImg}';" alt="${doc.ho_ten}">
             </div>
-
-            <h3 style="font-size: 17px; margin: 0 0 5px 0; color: #0f172a; text-align: left;">${doc.ho_ten}</h3>
-            <p style="color: #0284c7; font-weight: 600; margin: 0 0 5px 0; font-size: 14px; text-align: left;">${doc.ten_chuyen_khoa || 'Chưa cập nhật'}</p>
-            <p style="color: #64748b; font-size: 13px; margin: 0 0 20px 0; text-align: left;">${doc.nam_kinh_nghiem || 0} năm kinh nghiệm</p>
-            
-            <div style="display: flex; gap: 10px; margin-top: auto;">
-                <button class="btn-detail" onclick="showDoctorDetails(${doc.id})" style="flex: 1; padding: 10px; font-size: 14px; border-radius: 8px; cursor: pointer; border: 1px solid #e2e8f0;">Chi tiết</button>
-                <button class="btn-book-sm" onclick="bookDoctor(${doc.id}, event)" style="flex: 1; padding: 10px; font-size: 14px; border-radius: 8px; cursor: pointer; border: none;">Đặt Lịch</button>
+            <div class="dc-info">
+                <h3>${doc.ho_ten}</h3>
+                <p class="dc-spec">${doc.ten_chuyen_khoa || 'Chưa cập nhật'}</p>
+                <p class="dc-exp">${doc.nam_kinh_nghiem || 0} năm kinh nghiệm</p>
+            </div>
+            <div class="dc-actions">
+                <button class="btn-detail" onclick="showDoctorDetails(${doc.id})">Chi tiết</button>
+                <button class="btn-book-sm" onclick="bookDoctor(${doc.id}, event)">Đặt Lịch</button>
             </div>
         </div>
     `;
@@ -81,6 +76,48 @@ function renderAllDoctors(activeDoctors) {
         return;
     }
     container.innerHTML = activeDoctors.map(generateDoctorCardHTML).join('');
+
+    // Cập nhật số lượng bác sĩ
+    const countEl = document.getElementById('allDocsCount');
+    if (countEl) countEl.textContent = activeDoctors.length;
+
+    // Đổ danh sách chuyên khoa vào bộ lọc
+    const specSelect = document.getElementById('allDocsSpecFilter');
+    if (specSelect && specSelect.options.length <= 1) {
+        const specs = [...new Set(activeDoctors.map(d => d.ten_chuyen_khoa).filter(Boolean))].sort();
+        specs.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.toLowerCase();
+            opt.textContent = s;
+            specSelect.appendChild(opt);
+        });
+    }
+}
+
+// HÀM LỌC BÁC SĨ TRÊN TRANG "TẤT CẢ BÁC SĨ"
+function filterAllDoctors() {
+    const searchVal = (document.getElementById('allDocsSearchInput')?.value || '').toLowerCase().trim();
+    const specVal = (document.getElementById('allDocsSpecFilter')?.value || '').toLowerCase();
+    const container = document.getElementById('all-doctors-list-container');
+    if (!container) return;
+
+    const cards = container.querySelectorAll('.doctor-card');
+    let visibleCount = 0;
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name') || '';
+        const spec = card.getAttribute('data-spec') || '';
+        const matchName = !searchVal || name.includes(searchVal);
+        const matchSpec = !specVal || spec === specVal;
+        if (matchName && matchSpec) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const countEl = document.getElementById('allDocsCount');
+    if (countEl) countEl.textContent = visibleCount;
 }
 
 function showAllDoctors(event) {

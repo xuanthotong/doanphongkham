@@ -243,8 +243,7 @@
                                 style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Xem
                                 tất cả &rarr;</button>
                         </div>
-                        <div id="doctor-list-container" class="item-list-container"
-                            style="display: flex; flex-wrap: wrap; gap: 20px;">
+                        <div id="doctor-list-container" class="item-list-container">
                             <p class="loading-text full-width">Đang tải danh sách bác sĩ...</p>
                         </div>
                     </section>
@@ -294,12 +293,23 @@
                 </section>
 
                 <section id="all-doctors-view" style="display: none; padding: 0 0 80px 0;">
-                    <div style="margin-bottom: 40px; text-align: center;">
-                        <h1 style="font-size: 32px; font-weight: 800; color: #0f172a;">Đội ngũ Bác sĩ chuyên môn cao
-                        </h1>
+                    <div class="all-docs-header">
+                        <div class="all-docs-header-content">
+                            <h1><i class="fa-solid fa-user-doctor"></i> Đội ngũ Bác sĩ chuyên môn cao</h1>
+                            <p>Các bác sĩ giàu kinh nghiệm, được đào tạo chuyên sâu tại các trường y khoa uy tín hàng đầu.</p>
+                        </div>
+                        <div class="all-docs-filters">
+                            <div class="all-docs-search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="allDocsSearchInput" placeholder="Tìm kiếm bác sĩ theo tên..." oninput="filterAllDoctors()">
+                            </div>
+                            <select id="allDocsSpecFilter" class="all-docs-spec-select" onchange="filterAllDoctors()">
+                                <option value="">Tất cả chuyên khoa</option>
+                            </select>
+                        </div>
+                        <div class="all-docs-count">Tìm thấy <strong id="allDocsCount">0</strong> bác sĩ</div>
                     </div>
-                    <div id="all-doctors-list-container"
-                        style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%;"></div>
+                    <div id="all-doctors-list-container" class="all-docs-grid"></div>
                     <div style="margin-top: 50px; text-align: center;"><button onclick="returnToHome(event)"
                             class="btn btn-outline"
                             style="padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer;"><i
