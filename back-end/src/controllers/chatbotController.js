@@ -343,7 +343,6 @@ const sendMessage = async (req, res) => {
             .query(`
                 INSERT INTO ChatBot (phien_id, tai_khoan_id, nguoi_gui, noi_dung, ngay_tao)
                 VALUES (@phien_id, @tai_khoan_id, @nguoi_gui, @noi_dung, DATEADD(hour, 7, GETUTCDATE()))
-                VALUES (@phien_id, @tai_khoan_id, @nguoi_gui, @noi_dung, DATEADD(hour, 7, GETUTCDATE()))
             `);
 
         // 2. Lấy CONTEXT CHUNG (cache) + CONTEXT RIÊNG (bệnh nhân đang đăng nhập)

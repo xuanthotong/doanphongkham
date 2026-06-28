@@ -103,7 +103,6 @@ function startHeroSlideInterval() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initHeroSlider();
-    initAIChatbox();
 });
 
 
