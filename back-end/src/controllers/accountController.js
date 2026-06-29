@@ -44,19 +44,19 @@ const deleteAccount = async (req, res) => {
 
             // 2. Cập nhật bài viết (Nếu tài khoản này là Admin có viết bài)
             await transaction.request().input('id', sql.Int, id).query(`UPDATE TinTuc SET tac_gia_id = NULL WHERE tac_gia_id = @id`);
-            
+
             // 3. Xóa các Đánh giá, Hỏi đáp (Nếu là Bệnh nhân)
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM DanhGia WHERE benh_nhan_id = @id`);
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoiDap WHERE benh_nhan_id = @id`);
-            
+
             // 3. Xóa Hồ sơ và ChatBot
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM ChatBot WHERE tai_khoan_id = @id`);
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoBenhNhan WHERE tai_khoan_id = @id`);
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM HoSoNguoiDung WHERE tai_khoan_id = @id`);
-            
+
             // 4. Xóa Tài khoản
             await transaction.request().input('id', sql.Int, id).query(`DELETE FROM TaiKhoan WHERE id = @id`);
-            
+
             await transaction.commit();
             res.status(200).json({ message: 'Xóa tài khoản và các dữ liệu liên quan thành công!' });
         } catch (err) {
@@ -82,7 +82,7 @@ const updateAccount = async (req, res) => {
         const roleResult = await pool.request()
             .input('ten_vai_tro', sql.VarChar, ten_vai_tro)
             .query('SELECT id FROM VaiTro WHERE ten_vai_tro = @ten_vai_tro');
-            
+
         let vai_tro_id = null;
         if (roleResult.recordset.length > 0) {
             vai_tro_id = roleResult.recordset[0].id;
@@ -131,6 +131,26 @@ const updateAccount = async (req, res) => {
                 VALUES (@id, @ho_ten, @so_dien_thoai, @ngay_sinh, @gioi_tinh, @dia_chi)
             END
         `);
+
+        // Tự động tạo hồ sơ tương ứng theo vai trò nếu chưa có
+        if (ten_vai_tro === 'BacSi') {
+            await pool.request().input('id', sql.Int, id).query(`
+                IF NOT EXISTS (SELECT 1 FROM HoSoBacSi WHERE tai_khoan_id = @id)
+                BEGIN
+                    INSERT INTO HoSoBacSi (tai_khoan_id, nam_kinh_nghiem, phi_kham, tieu_su)
+                    VALUES (@id, 0, 0, '')
+                END
+            `);
+        } else if (ten_vai_tro === 'BenhNhan') {
+            await pool.request().input('id', sql.Int, id).query(`
+                IF NOT EXISTS (SELECT 1 FROM HoSoBenhNhan WHERE tai_khoan_id = @id)
+                BEGIN
+                    INSERT INTO HoSoBenhNhan (tai_khoan_id) VALUES (@id)
+                END
+            `);
+        }
+
+
 
         res.status(200).json({ message: 'Cập nhật thành công!' });
     } catch (error) {
@@ -190,12 +210,12 @@ const toggleAccountStatus = async (req, res) => {
         const pool = await connectDB();
         const { id } = req.params;
         const { trang_thai } = req.body;
-        
+
         await pool.request()
             .input('id', sql.Int, id)
             .input('trang_thai', sql.Bit, trang_thai)
             .query(`UPDATE TaiKhoan SET trang_thai = @trang_thai WHERE id = @id`);
-            
+
         res.status(200).json({ message: 'Cập nhật trạng thái tài khoản thành công!' });
     } catch (error) {
         console.error('Lỗi khóa tài khoản:', error);

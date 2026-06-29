@@ -128,6 +128,7 @@ function openAddModal() {
     document.getElementById('d_id').value = '';
     // Đặt lại chữ mờ hướng dẫn cho ô Mật khẩu
     document.getElementById('d_mat_khau').placeholder = 'Nhập mật khẩu mới';
+    document.getElementById('d_mat_khau').required = true;
     
     // Reset ô chọn file ảnh
     const fileInput = document.getElementById('d_anh_file');
@@ -151,6 +152,7 @@ function editDoctor(id) {
     // Làm trống ô mật khẩu để Admin biết. Nếu nhập mới thì sẽ đổi mật khẩu.
     document.getElementById('d_mat_khau').value = ''; 
     document.getElementById('d_mat_khau').placeholder = 'Để trống nếu không đổi mật khẩu';
+    document.getElementById('d_mat_khau').required = false;
     
     document.getElementById('d_email').value = doc.email;
     

@@ -155,7 +155,17 @@ const updateDoctor = async (req, res) => {
                 .input('phi_kham', sql.Decimal(18,2), phi_kham)
                 .input('tieu_su', sql.NVarChar, tieu_su)
                 .input('chuyen_khoa_id', sql.Int, chuyen_khoa_id || null)
-                .query(`UPDATE HoSoBacSi SET nam_kinh_nghiem = @nam_kinh_nghiem, phi_kham = @phi_kham, tieu_su = @tieu_su, chuyen_khoa_id = @chuyen_khoa_id WHERE tai_khoan_id = @tai_khoan_id`);
+                .query(`
+                    UPDATE HoSoBacSi 
+                    SET nam_kinh_nghiem = @nam_kinh_nghiem, phi_kham = @phi_kham, tieu_su = @tieu_su, chuyen_khoa_id = @chuyen_khoa_id 
+                    WHERE tai_khoan_id = @tai_khoan_id;
+
+                    IF @@ROWCOUNT = 0
+                    BEGIN
+                        INSERT INTO HoSoBacSi (tai_khoan_id, nam_kinh_nghiem, phi_kham, tieu_su, chuyen_khoa_id)
+                        VALUES (@tai_khoan_id, @nam_kinh_nghiem, @phi_kham, @tieu_su, @chuyen_khoa_id)
+                    END
+                `);
 
             await transaction.commit();
             res.json({ message: 'Cập nhật thông tin Bác sĩ thành công!' });
