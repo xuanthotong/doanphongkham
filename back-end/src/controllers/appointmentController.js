@@ -801,6 +801,22 @@ const cassoWebhook = async (req, res) => {
                             UPDATE LichLamViec SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 WHERE id = @lich_lam_viec_id;
                         `);
 
+                        // Hỗ trợ khám tổng quát: Nếu lịch này thuộc nhóm, cập nhật slot cho các lịch con khác
+                        const groupCheck = await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
+                            SELECT ma_nhom_kham FROM LichKham WHERE id = @lich_kham_id AND ma_nhom_kham IS NOT NULL
+                        `);
+                        if (groupCheck.recordset.length > 0 && groupCheck.recordset[0].ma_nhom_kham) {
+                            await pool.request()
+                                .input('ma_nhom', sql.VarChar, groupCheck.recordset[0].ma_nhom_kham)
+                                .input('lich_kham_id', sql.Int, appointmentId)
+                                .query(`
+                                    UPDATE llv SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1
+                                    FROM LichLamViec llv
+                                    JOIN LichKham lk ON llv.id = lk.lich_lam_viec_id
+                                    WHERE lk.ma_nhom_kham = @ma_nhom AND lk.id != @lich_kham_id
+                                `);
+                        }
+
                         if (info.email_benh_nhan) {
                             console.log("✅ Gửi email xác nhận...");
                             const tong_tien = Number(info.so_tien).toLocaleString('en-US');
@@ -864,6 +880,22 @@ const payosWebhook = async (req, res) => {
                     UPDATE LichLamViec SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 WHERE id = @lich_lam_viec_id;
                 `);
 
+                // Hỗ trợ khám tổng quát: Nếu lịch này thuộc nhóm, cập nhật slot cho các lịch con khác
+                const groupCheckPayOS = await pool.request().input('lich_kham_id', sql.Int, appointmentId).query(`
+                    SELECT ma_nhom_kham FROM LichKham WHERE id = @lich_kham_id AND ma_nhom_kham IS NOT NULL
+                `);
+                if (groupCheckPayOS.recordset.length > 0 && groupCheckPayOS.recordset[0].ma_nhom_kham) {
+                    await pool.request()
+                        .input('ma_nhom', sql.VarChar, groupCheckPayOS.recordset[0].ma_nhom_kham)
+                        .input('lich_kham_id', sql.Int, appointmentId)
+                        .query(`
+                            UPDATE llv SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1
+                            FROM LichLamViec llv
+                            JOIN LichKham lk ON llv.id = lk.lich_lam_viec_id
+                            WHERE lk.ma_nhom_kham = @ma_nhom AND lk.id != @lich_kham_id
+                        `);
+                }
+
                 if (info.email_benh_nhan) {
                     const tong_tien = Number(info.so_tien).toLocaleString('en-US');
                     sendConfirmationEmail(info.email_benh_nhan, info.ten_benh_nhan, info.ten_bac_si, appointmentId, info.ngay_lam_viec, info.gio_kham, info.mo_ta_trieu_chung, tong_tien, true);
@@ -907,10 +939,22 @@ const deleteUnpaidAppointment = async (req, res) => {
         `);
 
         if (check.recordset.length > 0 && check.recordset[0].trang_thai_thanh_toan === 0) {
-            await pool.request().input('id', sql.Int, id).query(`
-                DELETE FROM ThanhToan WHERE lich_kham_id = @id;
-                DELETE FROM LichKham WHERE id = @id;
+            // Kiểm tra nếu thuộc nhóm khám tổng quát → xóa cả nhóm
+            const groupCheck = await pool.request().input('id', sql.Int, id).query(`
+                SELECT ma_nhom_kham FROM LichKham WHERE id = @id AND ma_nhom_kham IS NOT NULL
             `);
+            if (groupCheck.recordset.length > 0 && groupCheck.recordset[0].ma_nhom_kham) {
+                const ma_nhom = groupCheck.recordset[0].ma_nhom_kham;
+                await pool.request().input('ma_nhom', sql.VarChar, ma_nhom).input('id', sql.Int, id).query(`
+                    DELETE FROM ThanhToan WHERE lich_kham_id = @id;
+                    DELETE FROM LichKham WHERE ma_nhom_kham = @ma_nhom;
+                `);
+            } else {
+                await pool.request().input('id', sql.Int, id).query(`
+                    DELETE FROM ThanhToan WHERE lich_kham_id = @id;
+                    DELETE FROM LichKham WHERE id = @id;
+                `);
+            }
             res.json({ message: 'Đã xóa lịch hẹn chưa thanh toán' });
         } else {
             res.status(400).json({ message: 'Không thể xóa lịch hẹn này' });
@@ -1058,4 +1102,382 @@ const patientCancelAppointment = async (req, res) => {
     }
 };
 
-module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1, createAppointment, getBookedSlots, rateAppointment, cassoWebhook, payosWebhook, checkPaymentStatus, deleteUnpaidAppointment, patientCancelAppointment };
+// =========================================================================
+// KHÁM TỔNG QUÁT: Helper tạo time slots (giống frontend)
+// =========================================================================
+function generateTimeSlotsHelper(startStr, endStr) {
+    const slots = [];
+    let [startH, startM] = startStr.split(':').map(Number);
+    const [endH, endM] = endStr.split(':').map(Number);
+    while (true) {
+        let nextM = startM + 30;
+        let nextH = startH;
+        if (nextM >= 60) { nextM -= 60; nextH++; }
+        if (nextH > endH || (nextH === endH && nextM > endM)) break;
+        slots.push(`${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')} - ${String(nextH).padStart(2, '0')}:${String(nextM).padStart(2, '0')}`);
+        startH = nextH;
+        startM = nextM;
+    }
+    return slots;
+}
+
+// =========================================================================
+// KHÁM TỔNG QUÁT: PREVIEW — Xem trước phân bổ bác sĩ tự động
+// =========================================================================
+const previewGeneralCheckup = async (req, res) => {
+    try {
+        const { ngay_kham } = req.body;
+        if (!ngay_kham) return res.status(400).json({ message: 'Vui lòng chọn ngày khám!' });
+        const pool = await connectDB();
+
+        // 1. Lấy danh sách chuyên khoa tham gia tổng quát
+        const specResult = await pool.request().query(`
+            SELECT id, ten_chuyen_khoa FROM ChuyenKhoa WHERE tham_gia_tong_quat = 1 ORDER BY id ASC
+        `);
+        const specialties = specResult.recordset;
+        if (specialties.length === 0) {
+            return res.status(400).json({ message: 'Chưa có chuyên khoa nào được cấu hình khám tổng quát! Admin cần bật cột tham_gia_tong_quat.' });
+        }
+
+        // 2. Lấy TẤT CẢ bác sĩ có ca làm việc còn trống ngày đó (gộp thông tin)
+        const dataResult = await pool.request()
+            .input('ngay_kham', sql.Date, ngay_kham)
+            .query(`
+                SELECT 
+                    ck.id as chuyen_khoa_id, ck.ten_chuyen_khoa,
+                    bs.tai_khoan_id as bac_si_id, 
+                    ISNULL(nd.ho_ten, tk.ten_dang_nhap) as ten_bac_si,
+                    nd.anh_dai_dien,
+                    bs.phi_kham,
+                    llv.id as lich_lam_viec_id, llv.khung_gio, 
+                    llv.so_luong_toi_da, llv.so_luong_hien_tai
+                FROM ChuyenKhoa ck
+                JOIN HoSoBacSi bs ON bs.chuyen_khoa_id = ck.id
+                JOIN TaiKhoan tk ON bs.tai_khoan_id = tk.id
+                LEFT JOIN HoSoNguoiDung nd ON tk.id = nd.tai_khoan_id
+                JOIN LichLamViec llv ON llv.bac_si_id = bs.tai_khoan_id
+                WHERE ck.tham_gia_tong_quat = 1
+                AND CAST(llv.ngay_lam_viec AS DATE) = CAST(@ngay_kham AS DATE)
+                AND ISNULL(llv.trang_thai, 'Active') = 'Active'
+                AND llv.so_luong_hien_tai < llv.so_luong_toi_da
+                AND tk.trang_thai = 1
+                ORDER BY ck.id, llv.so_luong_hien_tai ASC
+            `);
+
+        // 3. Lấy tất cả slot đã đặt trong ngày
+        const bookedResult = await pool.request()
+            .input('ngay_kham', sql.Date, ngay_kham)
+            .query(`
+                SELECT llv.bac_si_id, lk.gio_kham
+                FROM LichKham lk
+                JOIN LichLamViec llv ON lk.lich_lam_viec_id = llv.id
+                LEFT JOIN ThanhToan tt ON lk.id = tt.lich_kham_id
+                WHERE CAST(llv.ngay_lam_viec AS DATE) = CAST(@ngay_kham AS DATE)
+                AND lk.trang_thai != 'Cancelled'
+                AND lk.gio_kham IS NOT NULL
+                AND (tt.phuong_thuc_thanh_toan = 'cash' OR tt.trang_thai_thanh_toan = 1 OR tt.id IS NULL)
+            `);
+
+        // Build booked map: bac_si_id -> Set of booked slot strings
+        const bookedMap = {};
+        for (const row of bookedResult.recordset) {
+            if (!bookedMap[row.bac_si_id]) bookedMap[row.bac_si_id] = new Set();
+            bookedMap[row.bac_si_id].add(row.gio_kham);
+        }
+
+        // 4. Build availability: chuyên khoa -> { slot -> [doctors] }
+        const availability = {};
+        for (const row of dataResult.recordset) {
+            const specId = row.chuyen_khoa_id;
+            if (!availability[specId]) {
+                availability[specId] = { ten_chuyen_khoa: row.ten_chuyen_khoa, slots: {} };
+            }
+            const [shiftStart, shiftEnd] = row.khung_gio.split(' - ');
+            const slotsOfShift = generateTimeSlotsHelper(shiftStart, shiftEnd);
+            const docBooked = bookedMap[row.bac_si_id] || new Set();
+
+            for (const slot of slotsOfShift) {
+                if (!docBooked.has(slot)) {
+                    if (!availability[specId].slots[slot]) availability[specId].slots[slot] = [];
+                    // Tránh trùng bác sĩ (nếu có nhiều ca trong ngày)
+                    if (!availability[specId].slots[slot].find(d => d.bac_si_id === row.bac_si_id)) {
+                        availability[specId].slots[slot].push({
+                            bac_si_id: row.bac_si_id,
+                            ten_bac_si: row.ten_bac_si,
+                            anh_dai_dien: row.anh_dai_dien,
+                            phi_kham: row.phi_kham || 0,
+                            lich_lam_viec_id: row.lich_lam_viec_id,
+                            so_luong_hien_tai: row.so_luong_hien_tai
+                        });
+                    }
+                }
+            }
+        }
+
+        // 5. Thu thập tất cả slot times, sắp xếp
+        const allSlotTimes = new Set();
+        for (const specId in availability) {
+            for (const slot in availability[specId].slots) allSlotTimes.add(slot);
+        }
+        const sortedSlots = [...allSlotTimes].sort();
+
+        // Lọc bỏ slot đã qua (nếu đặt cho ngày hôm nay)
+        const nowVN = new Date(Date.now() + 7 * 60 * 60 * 1000);
+        const todayStrVN = nowVN.toISOString().split('T')[0];
+        const currentTimeVN = nowVN.toISOString().split('T')[1].substring(0, 5);
+        const isToday = ngay_kham === todayStrVN;
+
+        const filteredSlots = isToday
+            ? sortedSlots.filter(s => s.split(' - ')[0] > currentTimeVN)
+            : sortedSlots;
+
+        // 6. Tìm chuỗi slot liên tiếp (mỗi chuyên khoa 1 slot, liền nhau 30 phút)
+        const specIds = specialties.map(s => s.id);
+        let result = null;
+
+        for (let i = 0; i <= filteredSlots.length - specIds.length; i++) {
+            let allocation = [];
+            let currentSlot = filteredSlots[i];
+            let valid = true;
+            const usedDoctors = new Set();
+
+            for (let j = 0; j < specIds.length; j++) {
+                const specId = specIds[j];
+                const specSlots = availability[specId]?.slots[currentSlot];
+
+                if (!specSlots || specSlots.length === 0) { valid = false; break; }
+
+                // Chọn bác sĩ ít bệnh nhân nhất và chưa được chọn
+                const candidates = specSlots
+                    .filter(d => !usedDoctors.has(d.bac_si_id))
+                    .sort((a, b) => a.so_luong_hien_tai - b.so_luong_hien_tai);
+
+                if (candidates.length === 0) { valid = false; break; }
+
+                const selected = candidates[0];
+                usedDoctors.add(selected.bac_si_id);
+
+                allocation.push({
+                    thu_tu: j + 1,
+                    chuyen_khoa_id: specId,
+                    ten_chuyen_khoa: availability[specId].ten_chuyen_khoa,
+                    bac_si_id: selected.bac_si_id,
+                    ten_bac_si: selected.ten_bac_si,
+                    anh_dai_dien: selected.anh_dai_dien,
+                    phi_kham: selected.phi_kham,
+                    gio_kham: currentSlot,
+                    lich_lam_viec_id: selected.lich_lam_viec_id
+                });
+
+                // Tính slot tiếp theo (+30 phút)
+                const nextStart = currentSlot.split(' - ')[1]; // "08:00 - 08:30" -> "08:30"
+                const [nh, nm] = nextStart.split(':').map(Number);
+                let enm = nm + 30, enh = nh;
+                if (enm >= 60) { enm -= 60; enh++; }
+                currentSlot = `${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')} - ${String(enh).padStart(2, '0')}:${String(enm).padStart(2, '0')}`;
+            }
+
+            if (valid) { result = allocation; break; }
+        }
+
+        if (!result) {
+            // Kiểm tra chi tiết: chuyên khoa nào không có bác sĩ?
+            const missingSpecs = specialties.filter(s => !availability[s.id] || Object.keys(availability[s.id].slots).length === 0);
+            const missingNames = missingSpecs.map(s => s.ten_chuyen_khoa).join(', ');
+            return res.status(400).json({
+                message: missingNames
+                    ? `Không tìm được bác sĩ cho chuyên khoa: ${missingNames}. Vui lòng chọn ngày khác!`
+                    : 'Không tìm được lịch khám tổng quát liên tiếp cho ngày này. Vui lòng chọn ngày khác!'
+            });
+        }
+
+        const tongPhi = result.reduce((sum, item) => sum + (parseFloat(item.phi_kham) || 0), 0);
+        res.json({ ngay_kham, phan_bo: result, tong_phi: tongPhi, so_chuyen_khoa: result.length });
+
+    } catch (error) {
+        console.error('Lỗi preview khám tổng quát:', error);
+        res.status(500).json({ message: 'Lỗi server' });
+    }
+};
+
+// =========================================================================
+// KHÁM TỔNG QUÁT: TẠO LỊCH KHÁM TỔNG QUÁT (Transaction)
+// =========================================================================
+const createGeneralCheckup = async (req, res) => {
+    try {
+        const { benh_nhan_id, ngay_kham, phan_bo, phuong_thuc_thanh_toan, ho_ten, email, mo_ta_trieu_chung } = req.body;
+        if (!benh_nhan_id || !ngay_kham || !phan_bo || phan_bo.length === 0) {
+            return res.status(400).json({ message: 'Thiếu thông tin đặt khám tổng quát!' });
+        }
+
+        const pool = await connectDB();
+        const ptttoan = phuong_thuc_thanh_toan || 'cash';
+
+        // Tạo mã nhóm khám
+        const dateStr = ngay_kham.replace(/-/g, '');
+        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        const ma_nhom_kham = `TQ-${dateStr}-${random}`;
+
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            let firstAppointmentId = null;
+            let tongPhi = 0;
+            const lichTrinhChiTiet = [];
+
+            for (let i = 0; i < phan_bo.length; i++) {
+                const item = phan_bo[i];
+                const phiKham = parseFloat(item.phi_kham) || 0;
+                tongPhi += phiKham;
+
+                // Kiểm tra ca còn trống
+                const shiftCheck = await new sql.Request(transaction)
+                    .input('lich_lam_viec_id', sql.Int, item.lich_lam_viec_id)
+                    .query(`SELECT so_luong_toi_da, so_luong_hien_tai FROM LichLamViec WHERE id = @lich_lam_viec_id`);
+
+                if (shiftCheck.recordset.length === 0 ||
+                    shiftCheck.recordset[0].so_luong_hien_tai >= shiftCheck.recordset[0].so_luong_toi_da) {
+                    await transaction.rollback();
+                    return res.status(400).json({ message: `Ca của BS. ${item.ten_bac_si} (${item.ten_chuyen_khoa}) đã hết chỗ! Vui lòng tìm lại lịch.` });
+                }
+
+                // Mô tả triệu chứng kèm context khám tổng quát
+                const moTa = mo_ta_trieu_chung
+                    ? `[Khám tổng quát - ${item.ten_chuyen_khoa}] ${mo_ta_trieu_chung}`
+                    : `[Khám tổng quát - ${item.ten_chuyen_khoa}] Bước ${item.thu_tu}/${phan_bo.length}`;
+
+                // Tạo LichKham
+                const result = await new sql.Request(transaction)
+                    .input('lich_lam_viec_id', sql.Int, item.lich_lam_viec_id)
+                    .input('benh_nhan_id', sql.Int, benh_nhan_id)
+                    .input('gio_kham', sql.VarChar, item.gio_kham)
+                    .input('mo_ta_trieu_chung', sql.NVarChar, moTa)
+                    .input('trang_thai', sql.VarChar, 'Approved')
+                    .input('ma_nhom_kham', sql.VarChar, ma_nhom_kham)
+                    .query(`
+                        INSERT INTO LichKham (lich_lam_viec_id, benh_nhan_id, mo_ta_trieu_chung, trang_thai, ngay_tao, gio_kham, ma_nhom_kham)
+                        OUTPUT inserted.id
+                        VALUES (@lich_lam_viec_id, @benh_nhan_id, @mo_ta_trieu_chung, @trang_thai, DATEADD(hour, 7, GETUTCDATE()), @gio_kham, @ma_nhom_kham)
+                    `);
+
+                const appointmentId = result.recordset[0].id;
+                if (i === 0) firstAppointmentId = appointmentId;
+
+                lichTrinhChiTiet.push({ id: appointmentId, ...item });
+
+                // Tiền mặt: Tăng slot ngay lập tức
+                if (ptttoan === 'cash') {
+                    await new sql.Request(transaction)
+                        .input('lich_lam_viec_id', sql.Int, item.lich_lam_viec_id)
+                        .query(`UPDATE LichLamViec SET so_luong_hien_tai = ISNULL(so_luong_hien_tai, 0) + 1 WHERE id = @lich_lam_viec_id`);
+                }
+            }
+
+            // Tạo 1 ThanhToan cho lịch đầu tiên với TỔNG PHÍ
+            await new sql.Request(transaction)
+                .input('lich_kham_id', sql.Int, firstAppointmentId)
+                .input('so_tien', sql.Decimal(18, 2), tongPhi)
+                .input('phuong_thuc', sql.VarChar(50), ptttoan)
+                .input('trang_thai_tt', sql.Int, 0)
+                .query(`
+                    INSERT INTO ThanhToan (lich_kham_id, so_tien, phuong_thuc_thanh_toan, trang_thai_thanh_toan, ngay_tao)
+                    VALUES (@lich_kham_id, @so_tien, @phuong_thuc, @trang_thai_tt, DATEADD(hour, 7, GETUTCDATE()))
+                `);
+
+            // Xử lý PayOS QR cho Momo (tái sử dụng logic hiện tại)
+            let payosQrCode = null;
+            if (ptttoan === 'momo') {
+                const crypto = require('crypto');
+                const clientId = process.env.PAYOS_CLIENT_ID;
+                const apiKey = process.env.PAYOS_API_KEY;
+                const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
+                const orderCode = firstAppointmentId;
+                const amount = parseInt(tongPhi) < 2000 ? 2000 : parseInt(tongPhi);
+                const removeAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^a-zA-Z0-9 ]/g, '');
+                const patientNameNoAccent = removeAccents(ho_ten || '').toUpperCase();
+                let description = `TTMED ${firstAppointmentId} TQ ${patientNameNoAccent}`;
+                if (description.length > 25) description = description.substring(0, 25).trim();
+                const cancelUrl = process.env.FRONTEND_URL;
+                const returnUrl = process.env.FRONTEND_URL;
+                const signData = `amount=${amount}&cancelUrl=${cancelUrl}&description=${description}&orderCode=${orderCode}&returnUrl=${returnUrl}`;
+                const signature = crypto.createHmac('sha256', checksumKey).update(signData).digest('hex');
+                const body = { orderCode, amount, description, cancelUrl, returnUrl, signature };
+                const payosRes = await fetch('https://api-merchant.payos.vn/v2/payment-requests', {
+                    method: 'POST',
+                    headers: { 'x-client-id': clientId, 'x-api-key': apiKey, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const payosData = await payosRes.json();
+                if (payosData.code === '00') {
+                    payosQrCode = payosData.data.qrCode;
+                } else {
+                    await transaction.rollback();
+                    return res.status(400).json({ message: 'Lỗi tạo QR thanh toán: ' + payosData.desc });
+                }
+            }
+
+            await transaction.commit();
+
+            // Gửi email xác nhận cho khám tổng quát
+            if (ptttoan === 'cash' && email) {
+                const dateObj = new Date(ngay_kham);
+                const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                const tongTienStr = Number(tongPhi).toLocaleString('en-US');
+
+                let lichTrinhHtml = lichTrinhChiTiet.map(item => `
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0284C7;">${item.gio_kham}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">BS. ${item.ten_bac_si}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${item.ten_chuyen_khoa}</td>
+                    </tr>
+                `).join('');
+
+                const htmlContent = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
+                        <div style="background: linear-gradient(135deg, #0284C7, #10b981); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                            <h2>Xác Nhận Khám Tổng Quát</h2>
+                        </div>
+                        <div style="padding: 20px; line-height: 1.6; color: #334155;">
+                            <p>Xin chào <strong>${ho_ten}</strong>,</p>
+                            <p>Lịch khám tổng quát của bạn đã được ghi nhận. Dưới đây là lịch trình chi tiết:</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                                <tr style="background: #f1f5f9;">
+                                    <th style="padding: 10px; text-align: left;">Giờ khám</th>
+                                    <th style="padding: 10px; text-align: left;">Bác sĩ</th>
+                                    <th style="padding: 10px; text-align: left;">Chuyên khoa</th>
+                                </tr>
+                                ${lichTrinhHtml}
+                            </table>
+                            <p style="margin-top: 15px;"><strong>Ngày khám:</strong> <span style="color: #0284C7; font-weight: bold;">${formattedDate}</span></p>
+                            <p><strong>Tổng phí:</strong> <span style="color: #0284C7; font-weight: bold;">${tongTienStr} VND</span></p>
+                            <p><strong>Trạng thái:</strong> <span style="color: #F59E0B;">Chưa thanh toán (Thu tại quầy)</span></p>
+                            <p style="margin-top: 20px;">Vui lòng có mặt trước 15 phút tại bệnh viện để làm thủ tục check-in.</p>
+                            <p>Trân trọng,<br><strong>Bệnh viện TT Medical</strong></p>
+                        </div>
+                    </div>
+                `;
+                sendEmailBrevo(email, `[TT Medical] Xác nhận Khám Tổng Quát - Mã nhóm ${ma_nhom_kham}`, htmlContent);
+            }
+
+            res.status(201).json({
+                message: 'Đặt lịch khám tổng quát thành công!',
+                appointmentId: firstAppointmentId,
+                ma_nhom_kham,
+                phi_kham: tongPhi,
+                payosQrCode,
+                so_lich: phan_bo.length
+            });
+
+        } catch (transErr) {
+            await transaction.rollback();
+            console.error('Lỗi Transaction khám tổng quát:', transErr);
+            return res.status(500).json({ message: 'Lỗi lưu dữ liệu. Đã hủy bỏ giao dịch!' });
+        }
+    } catch (error) {
+        console.error('Lỗi tạo lịch khám tổng quát:', error);
+        res.status(500).json({ message: 'Lỗi hệ thống' });
+    }
+};
+
+module.exports = { getAllAppointments, getAppointmentsByDoctor, getAppointmentsByPatient, updateAppointmentStatus, updateAppointmentNote, deleteAppointment, createAppointment1, createAppointment, getBookedSlots, rateAppointment, cassoWebhook, payosWebhook, checkPaymentStatus, deleteUnpaidAppointment, patientCancelAppointment, previewGeneralCheckup, createGeneralCheckup };

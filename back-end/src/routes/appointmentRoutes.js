@@ -17,8 +17,14 @@ router.get('/:id/payment-status', appointmentController.checkPaymentStatus);
 // API Hủy lịch hẹn chưa thanh toán (khi quay lại hoặc hết giờ)
 router.delete('/:id/unpaid', appointmentController.deleteUnpaidAppointment);
 
-// 2. API Tạo lịch khám mới (Bệnh nhân đặt lịch)
+// 2. API Tạo lịch khám mới (Bệnh nhân đặt lịch 1-1)
 router.post('/', appointmentController.createAppointment);
+
+// KHÁM TỔNG QUÁT: Preview (xem trước phân bổ bác sĩ)
+router.post('/general-checkup/preview', appointmentController.previewGeneralCheckup);
+
+// KHÁM TỔNG QUÁT: Tạo lịch khám tổng quát
+router.post('/general-checkup', appointmentController.createGeneralCheckup);
 
 // 3. API lấy danh sách lịch sử khám của 1 bệnh nhân
 router.get('/patient/:id', appointmentController.getAppointmentsByPatient);

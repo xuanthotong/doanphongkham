@@ -3,7 +3,7 @@ const { sql, connectDB } = require('../config/db');
 const getAllSpecialties = async (req, res) => {
     try {
         const pool = await connectDB();
-        const result = await pool.request().query('SELECT id, ten_chuyen_khoa, mo_ta FROM ChuyenKhoa ORDER BY id ASC');
+        const result = await pool.request().query('SELECT id, ten_chuyen_khoa, mo_ta, tham_gia_tong_quat FROM ChuyenKhoa ORDER BY id ASC');
         res.json(result.recordset);
     } catch (error) {
         console.error('Lỗi lấy danh sách chuyên khoa:', error);
@@ -13,12 +13,13 @@ const getAllSpecialties = async (req, res) => {
 
 const createSpecialty = async (req, res) => {
     try {
-        const { ten_chuyen_khoa, mo_ta } = req.body;
+        const { ten_chuyen_khoa, mo_ta, tham_gia_tong_quat } = req.body;
         const pool = await connectDB();
         await pool.request()
             .input('ten_chuyen_khoa', sql.NVarChar, ten_chuyen_khoa)
             .input('mo_ta', sql.NVarChar, mo_ta || '')
-            .query('INSERT INTO ChuyenKhoa (ten_chuyen_khoa, mo_ta) VALUES (@ten_chuyen_khoa, @mo_ta)');
+            .input('tham_gia_tong_quat', sql.Bit, tham_gia_tong_quat ? 1 : 0)
+            .query('INSERT INTO ChuyenKhoa (ten_chuyen_khoa, mo_ta, tham_gia_tong_quat) VALUES (@ten_chuyen_khoa, @mo_ta, @tham_gia_tong_quat)');
         res.status(201).json({ message: 'Thêm chuyên khoa thành công!' });
     } catch (error) {
         console.error('Lỗi thêm chuyên khoa:', error);
@@ -29,13 +30,14 @@ const createSpecialty = async (req, res) => {
 const updateSpecialty = async (req, res) => {
     try {
         const { id } = req.params;
-        const { ten_chuyen_khoa, mo_ta } = req.body;
+        const { ten_chuyen_khoa, mo_ta, tham_gia_tong_quat } = req.body;
         const pool = await connectDB();
         await pool.request()
             .input('id', sql.Int, id)
             .input('ten_chuyen_khoa', sql.NVarChar, ten_chuyen_khoa)
             .input('mo_ta', sql.NVarChar, mo_ta || '')
-            .query('UPDATE ChuyenKhoa SET ten_chuyen_khoa = @ten_chuyen_khoa, mo_ta = @mo_ta WHERE id = @id');
+            .input('tham_gia_tong_quat', sql.Bit, tham_gia_tong_quat ? 1 : 0)
+            .query('UPDATE ChuyenKhoa SET ten_chuyen_khoa = @ten_chuyen_khoa, mo_ta = @mo_ta, tham_gia_tong_quat = @tham_gia_tong_quat WHERE id = @id');
         res.json({ message: 'Cập nhật chuyên khoa thành công!' });
     } catch (error) {
         console.error('Lỗi cập nhật chuyên khoa:', error);
