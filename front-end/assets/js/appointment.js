@@ -141,9 +141,45 @@ function switchBookingMethod(mode, btn) {
         specGroup.style.display = mode === 'specialty' ? 'block' : 'none';
     }
 
+    // Xử lý ẩn/hiện UI Khám Tổng Quát
+    const searchBar = document.getElementById('booking_search_bar_container');
+    const doctorList = document.getElementById('booking-doctor-list');
+    const generalPreview = document.getElementById('booking-general-checkup-preview');
+    const rightSidebar = document.getElementById('summary-doctor-section');
+    const timelineContainer = document.getElementById('general-checkup-timeline');
+    
+    if (mode === 'general') {
+        if(searchBar) searchBar.style.display = 'none';
+        if(doctorList) doctorList.style.display = 'none';
+        if(generalPreview) generalPreview.style.display = 'block';
+        if(rightSidebar) rightSidebar.style.display = 'none';
+        
+        // Ẩn khoảng ngày, chỉ cho chọn 1 ngày (dùng ô DateStart làm mốc)
+        const dateEndInput = document.getElementById('sidebar_date_end');
+        if (dateEndInput) dateEndInput.style.display = 'none';
+        const dateArrow = document.querySelector('.sidebar-date-group span');
+        if (dateArrow) dateArrow.style.display = 'none';
+        
+        // Xóa timeline cũ nếu có
+        if (timelineContainer) timelineContainer.innerHTML = '';
+        
+    } else {
+        if(searchBar) searchBar.style.display = 'flex';
+        if(doctorList) doctorList.style.display = 'block';
+        if(generalPreview) generalPreview.style.display = 'none';
+        
+        // Hiện lại chọn khoảng ngày
+        const dateEndInput = document.getElementById('sidebar_date_end');
+        if (dateEndInput) dateEndInput.style.display = 'block';
+        const dateArrow = document.querySelector('.sidebar-date-group span');
+        if (dateArrow) dateArrow.style.display = 'inline-block';
+    }
+
     // Reset selection
     resetBookingSelection();
-    renderDoctorCards();
+    if (mode !== 'general') {
+        renderDoctorCards();
+    }
 }
 
 // ======================================================
@@ -561,17 +597,24 @@ function updateSummary() {
 // ======================================================
 function confirmNewBooking() {
     // Validate
-    if (!bookingData.bac_si_id) {
-        Swal.fire('Thiếu thông tin', 'Vui lòng chọn bác sĩ!', 'warning');
-        return;
-    }
-    if (!bookingData.ngay_kham) {
-        Swal.fire('Thiếu thông tin', 'Vui lòng chọn ngày khám!', 'warning');
-        return;
-    }
-    if (!bookingData.gio_kham) {
-        Swal.fire('Thiếu thông tin', 'Vui lòng chọn giờ khám!', 'warning');
-        return;
+    if (bookingMode === 'general') {
+        if (!generalCheckupData || !generalCheckupData.phan_bo || generalCheckupData.phan_bo.length === 0) {
+            Swal.fire('Thiếu thông tin', 'Vui lòng nhấn Tìm lịch trình để hệ thống sắp xếp lịch trước khi xác nhận!', 'warning');
+            return;
+        }
+    } else {
+        if (!bookingData.bac_si_id) {
+            Swal.fire('Thiếu thông tin', 'Vui lòng chọn bác sĩ!', 'warning');
+            return;
+        }
+        if (!bookingData.ngay_kham) {
+            Swal.fire('Thiếu thông tin', 'Vui lòng chọn ngày khám!', 'warning');
+            return;
+        }
+        if (!bookingData.gio_kham) {
+            Swal.fire('Thiếu thông tin', 'Vui lòng chọn giờ khám!', 'warning');
+            return;
+        }
     }
 
     const trieuChung = document.getElementById('summary_trieu_chung')?.value?.trim();
@@ -701,16 +744,29 @@ async function submitBooking() {
         finalSymptomText += `<br><div class="symptom-images-wrapper" style="display: flex; flex-wrap: wrap; margin-top: 10px;">${imagesStr}</div>`;
     }
 
-    const payload = {
-        benh_nhan_id: userInfo.id,
-        bac_si_id: bookingData.bac_si_id,
-        ngay_lam_viec: bookingData.ngay_kham,
-        khung_gio: bookingData.gio_kham,
-        mo_ta_trieu_chung: finalSymptomText,
-        ho_ten: userInfo.ho_ten || '',
-        email: userInfo.email || '',
-        phuong_thuc_thanh_toan: paymentMethod
-    };
+    let payload;
+    if (bookingMode === 'general') {
+        payload = {
+            benh_nhan_id: userInfo.id,
+            ngay_kham: generalCheckupData.ngay_kham,
+            phan_bo: generalCheckupData.phan_bo,
+            ho_ten: userInfo.ho_ten || '',
+            email: userInfo.email || '',
+            phuong_thuc_thanh_toan: paymentMethod,
+            mo_ta_trieu_chung: finalSymptomText
+        };
+    } else {
+        payload = {
+            benh_nhan_id: userInfo.id,
+            bac_si_id: bookingData.bac_si_id,
+            ngay_lam_viec: bookingData.ngay_kham,
+            khung_gio: bookingData.gio_kham,
+            mo_ta_trieu_chung: finalSymptomText,
+            ho_ten: userInfo.ho_ten || '',
+            email: userInfo.email || '',
+            phuong_thuc_thanh_toan: paymentMethod
+        };
+    }
 
     Swal.fire({
         title: 'Đang xử lý...',
@@ -720,12 +776,7 @@ async function submitBooking() {
     });
 
     try {
-        const res = await fetch(`${API_BASE}/api/appointments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
+        const res = await createAppointmentAPI(payload);
         const result = await res.json();
 
         if (res.ok) {
@@ -809,12 +860,153 @@ function showSuccessScreen() {
     document.querySelectorAll('#booking-payment-view .booking-step').forEach(el => el.classList.remove('active'));
     document.getElementById('step-success').classList.add('active');
 
-    document.getElementById('succ_bac_si').innerText = 'BS. ' + bookingData.bac_si_ten;
-    document.getElementById('succ_chuyen_khoa').innerText = bookingData.chuyen_khoa_ten;
+    if (bookingMode === 'general') {
+        document.getElementById('succ_bac_si').innerText = 'Hệ thống tự động sắp xếp';
+        document.getElementById('succ_chuyen_khoa').innerText = `Khám tổng quát (${generalCheckupData.phan_bo.length} chuyên khoa)`;
+        
+        const d = new Date(generalCheckupData.ngay_kham + 'T00:00:00');
+        document.getElementById('succ_ngay').innerText = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        
+        const firstSlot = generalCheckupData.phan_bo[0].gio_kham.split(' - ')[0];
+        const lastSlot = generalCheckupData.phan_bo[generalCheckupData.phan_bo.length - 1].gio_kham.split(' - ')[1];
+        document.getElementById('succ_gio').innerText = `${firstSlot} - ${lastSlot}`;
+    } else {
+        document.getElementById('succ_bac_si').innerText = 'BS. ' + bookingData.bac_si_ten;
+        document.getElementById('succ_chuyen_khoa').innerText = bookingData.chuyen_khoa_ten;
 
-    const d = new Date(bookingData.ngay_kham + 'T00:00:00');
-    document.getElementById('succ_ngay').innerText = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-    document.getElementById('succ_gio').innerText = bookingData.gio_kham;
+        const d = new Date(bookingData.ngay_kham + 'T00:00:00');
+        document.getElementById('succ_ngay').innerText = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        document.getElementById('succ_gio').innerText = bookingData.gio_kham;
+    }
+}
+
+// ======================================================
+// API: THÊM LỊCH KHÁM
+// ======================================================
+async function createAppointmentAPI(data) {
+    // Nếu là khám tổng quát
+    if (bookingMode === 'general') {
+        return await fetch(`${API_BASE}/api/appointments/general-checkup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    }
+    // Khám 1-1
+    return await fetch(`${API_BASE}/api/appointments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+}
+
+// ======================================================
+// KHÁM TỔNG QUÁT (GENERAL CHECKUP) LOGIC
+// ======================================================
+let generalCheckupData = null;
+
+async function previewGeneralCheckup() {
+    const ngayKham = document.getElementById('sidebar_date_start').value;
+    if (!ngayKham) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Chưa chọn ngày',
+            text: 'Vui lòng chọn ngày khám ở bên trái.'
+        });
+        return;
+    }
+
+    const btn = document.getElementById('btn-preview-general');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tìm lịch...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/appointments/general-checkup/preview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ngay_kham: ngayKham })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            generalCheckupData = data;
+            renderGeneralTimeline(data.phan_bo, data.tong_phi);
+            
+            // Cập nhật thẻ tóm tắt (right sidebar)
+            updateGeneralSummary(data);
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Không thể tìm lịch',
+                text: data.message || 'Không thể tìm lịch tự động lúc này.'
+            });
+            document.getElementById('general-checkup-timeline').innerHTML = '';
+            generalCheckupData = null;
+        }
+    } catch (error) {
+        console.error('Lỗi preview tổng quát:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Có lỗi xảy ra, vui lòng thử lại sau.'
+        });
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+function renderGeneralTimeline(phanBo, tongPhi) {
+    const container = document.getElementById('general-checkup-timeline');
+    if (!container) return;
+
+    let html = '';
+    phanBo.forEach((item, index) => {
+        let avatar = '../assets/images/default-avatar.png';
+        if (item.anh_dai_dien) {
+            if (item.anh_dai_dien.startsWith('data:image') || item.anh_dai_dien.startsWith('http')) {
+                avatar = item.anh_dai_dien;
+            } else {
+                avatar = `${API_BASE}/uploads/${item.anh_dai_dien}`;
+            }
+        }
+        html += `
+            <div class="timeline-item">
+                <div class="timeline-time">${item.gio_kham}</div>
+                <img src="${avatar}" alt="BS" class="timeline-doc-img">
+                <div class="timeline-info">
+                    <h4>BS. ${item.ten_bac_si}</h4>
+                    <p><i class="fa-solid fa-stethoscope"></i> ${item.ten_chuyen_khoa}</p>
+                </div>
+                <div class="timeline-price">${Number(item.phi_kham).toLocaleString('en-US')} VND</div>
+            </div>
+        `;
+    });
+
+    html += `
+        <div style="text-align: right; margin-top: 15px; font-size: 16px;">
+            <strong>Tổng số chuyên khoa:</strong> <span style="color: #0284c7; font-weight: bold;">${phanBo.length}</span><br>
+            <strong>Tổng phí tạm tính:</strong> <span style="color: #ef4444; font-weight: 800; font-size: 20px;">${Number(tongPhi).toLocaleString('en-US')} VND</span>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+function updateGeneralSummary(data) {
+    const section = document.getElementById('summary-doctor-section');
+    if (section) section.style.display = 'block';
+
+    // Ẩn avatar 1 bác sĩ
+    const avatar = document.getElementById('summary_doc_avatar');
+    if (avatar) avatar.style.display = 'none';
+
+    document.getElementById('summary_doc_name').innerHTML = '<i class="fa-solid fa-notes-medical"></i> KHÁM TỔNG QUÁT';
+    document.getElementById('summary_doc_spec').innerHTML = `Gồm ${data.so_chuyen_khoa} chuyên khoa liên tiếp`;
+
+    const btnConfirm = document.getElementById('btn_confirm_booking');
+    if (btnConfirm) btnConfirm.disabled = false;
 }
 
 // ======================================================

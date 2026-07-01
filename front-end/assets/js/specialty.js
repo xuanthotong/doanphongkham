@@ -46,6 +46,8 @@ function renderSpecialtyTable() {
 function openSpecialtyModal() {
     specialtyForm.reset();
     document.getElementById('s_id').value = '';
+    const chk = document.getElementById('s_tham_gia_tong_quat');
+    if (chk) chk.checked = false;
     specialtyModalTitle.innerText = 'Thêm mới Chuyên khoa';
     specialtyModal.style.display = 'flex';
 }
@@ -61,6 +63,11 @@ function editSpecialty(id) {
     document.getElementById('s_id').value = spec.id;
     document.getElementById('s_ten_chuyen_khoa').value = spec.ten_chuyen_khoa;
     document.getElementById('s_mo_ta').value = spec.mo_ta || '';
+    
+    const chk = document.getElementById('s_tham_gia_tong_quat');
+    if (chk) {
+        chk.checked = (spec.tham_gia_tong_quat == 1 || spec.tham_gia_tong_quat === true);
+    }
     
     specialtyModalTitle.innerText = 'Sửa thông tin Chuyên khoa';
     specialtyModal.style.display = 'flex';
@@ -100,7 +107,8 @@ specialtyForm.addEventListener('submit', async (e) => {
     const id = document.getElementById('s_id').value;
     const payload = {
         ten_chuyen_khoa: document.getElementById('s_ten_chuyen_khoa').value,
-        mo_ta: document.getElementById('s_mo_ta').value
+        mo_ta: document.getElementById('s_mo_ta').value,
+        tham_gia_tong_quat: document.getElementById('s_tham_gia_tong_quat') ? (document.getElementById('s_tham_gia_tong_quat').checked ? 1 : 0) : 0
     };
 
     try {
@@ -118,5 +126,3 @@ specialtyForm.addEventListener('submit', async (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', fetchAdminSpecialties);
-
-

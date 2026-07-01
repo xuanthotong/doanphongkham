@@ -145,3 +145,15 @@ CREATE TABLE DonThuoc (
     ghi_chu NVARCHAR(MAX),
     ngay_tao DATETIME DEFAULT GETDATE()
 );
+
+-- =============================================
+-- TÍNH NĂNG: KHÁM TỔNG QUÁT (General Checkup)
+-- =============================================
+-- Thêm cột gom nhóm lịch khám tổng quát (VD: 'TQ-20260701-0001')
+ALTER TABLE LichKham ADD ma_nhom_kham VARCHAR(50) NULL;
+
+-- Đánh dấu chuyên khoa nào tham gia khám tổng quát
+ALTER TABLE ChuyenKhoa ADD tham_gia_tong_quat BIT DEFAULT 0;
+
+-- Bật tất cả chuyên khoa tham gia tổng quát (Admin có thể tắt bớt sau)
+UPDATE ChuyenKhoa SET tham_gia_tong_quat = 1;

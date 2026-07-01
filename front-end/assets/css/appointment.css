@@ -862,3 +862,76 @@
         margin-bottom: 14px;
     }
 }
+
+/* =========================================
+   GENERAL CHECKUP TIMELINE (Khám Tổng Quát)
+========================================= */
+.timeline-item {
+    display: flex;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: #10b981;
+}
+
+.timeline-time {
+    background: #f0fdf4;
+    color: #15803d;
+    font-weight: 800;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 15px;
+    min-width: 120px;
+    text-align: center;
+    border: 1px solid #bbf7d0;
+}
+
+.timeline-doc-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+}
+
+.timeline-info {
+    flex: 1;
+}
+
+.timeline-info h4 {
+    margin: 0 0 5px 0;
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.timeline-info p {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.timeline-price {
+    font-weight: 800;
+    color: #ef4444;
+    font-size: 15px;
+    background: #fef2f2;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
