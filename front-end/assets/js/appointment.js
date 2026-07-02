@@ -963,7 +963,7 @@ function renderGeneralTimeline(phanBo, tongPhi) {
 
     let html = '';
     phanBo.forEach((item, index) => {
-        let avatar = '../assets/images/default-avatar.png';
+        let avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.ten_bac_si)}&background=0284C7&color=fff&rounded=true&bold=true`;
         if (item.anh_dai_dien) {
             if (item.anh_dai_dien.startsWith('data:image') || item.anh_dai_dien.startsWith('http')) {
                 avatar = item.anh_dai_dien;
@@ -971,10 +971,12 @@ function renderGeneralTimeline(phanBo, tongPhi) {
                 avatar = `${API_BASE}/uploads/${item.anh_dai_dien}`;
             }
         }
+        
+        const fallbackSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.ten_bac_si)}&background=0284C7&color=fff&rounded=true&bold=true`;
         html += `
             <div class="timeline-item">
                 <div class="timeline-time">${item.gio_kham}</div>
-                <img src="${avatar}" alt="BS" class="timeline-doc-img">
+                <img src="${avatar}" onerror="this.onerror=null;this.src='${fallbackSrc}'" alt="BS" class="timeline-doc-img">
                 <div class="timeline-info">
                     <h4>BS. ${item.ten_bac_si}</h4>
                     <p><i class="fa-solid fa-stethoscope"></i> ${item.ten_chuyen_khoa}</p>

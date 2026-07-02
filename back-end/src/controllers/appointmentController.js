@@ -1178,11 +1178,12 @@ const previewGeneralCheckup = async (req, res) => {
                 AND (tt.phuong_thuc_thanh_toan = 'cash' OR tt.trang_thai_thanh_toan = 1 OR tt.id IS NULL)
             `);
 
-        // Build booked map: bac_si_id -> Set of booked slot strings
+        // Build booked map: bac_si_id -> { slot -> count }
         const bookedMap = {};
         for (const row of bookedResult.recordset) {
-            if (!bookedMap[row.bac_si_id]) bookedMap[row.bac_si_id] = new Set();
-            bookedMap[row.bac_si_id].add(row.gio_kham);
+            if (!bookedMap[row.bac_si_id]) bookedMap[row.bac_si_id] = {};
+            if (!bookedMap[row.bac_si_id][row.gio_kham]) bookedMap[row.bac_si_id][row.gio_kham] = 0;
+            bookedMap[row.bac_si_id][row.gio_kham]++;
         }
 
         // 4. Build availability: chuyên khoa -> { slot -> [doctors] }
@@ -1194,10 +1195,16 @@ const previewGeneralCheckup = async (req, res) => {
             }
             const [shiftStart, shiftEnd] = row.khung_gio.split(' - ');
             const slotsOfShift = generateTimeSlotsHelper(shiftStart, shiftEnd);
-            const docBooked = bookedMap[row.bac_si_id] || new Set();
+            
+            // Tính số lượng tối đa cho mỗi khung giờ (slot) giống như luồng đặt lịch thường
+            const maxPerSlot = Math.ceil(row.so_luong_toi_da / Math.max(1, slotsOfShift.length));
+            const docBookedCounts = bookedMap[row.bac_si_id] || {};
 
             for (const slot of slotsOfShift) {
-                if (!docBooked.has(slot)) {
+                const countBookedInSlot = docBookedCounts[slot] || 0;
+                
+                // Chỉ loại bỏ slot nếu số người đặt đã đạt giới hạn maxPerSlot
+                if (countBookedInSlot < maxPerSlot) {
                     if (!availability[specId].slots[slot]) availability[specId].slots[slot] = [];
                     // Tránh trùng bác sĩ (nếu có nhiều ca trong ngày)
                     if (!availability[specId].slots[slot].find(d => d.bac_si_id === row.bac_si_id)) {
@@ -1235,7 +1242,7 @@ const previewGeneralCheckup = async (req, res) => {
         const specIds = specialties.map(s => s.id);
         let result = null;
 
-        for (let i = 0; i <= filteredSlots.length - specIds.length; i++) {
+        for (let i = 0; i < filteredSlots.length; i++) {
             let allocation = [];
             let currentSlot = filteredSlots[i];
             let valid = true;
